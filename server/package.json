@@ -1,19 +1,19 @@
 {
-  "name": "partypic",
+  "name": "server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "install": "cd client && npm install && cd ../server && npm install",
-    "start": "npm run server",
-    "server": "cd server && nodemon app.js",
-    "client": "cd client && npm start"
+    "start": "nodemon app.js"
   },
-  "proxy": "http://localhost:3500",
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "http-errors": "^2.0.0"
+  },
   "devDependencies": {
     "cookie-parser": "^1.4.6",
     "debug": "^4.3.4",
