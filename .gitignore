@@ -3,6 +3,8 @@
 /.pnp
 .pnp.js
 /build
+/client/node_modules
+/client/build
 
 # misc
 .DS_Store
