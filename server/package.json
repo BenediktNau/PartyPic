@@ -12,7 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.19.2",
-    "http-errors": "^2.0.0"
+    "http-errors": "^2.0.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "cookie-parser": "^1.4.6",
