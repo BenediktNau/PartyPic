@@ -1,5 +1,7 @@
 import React from "react";
 
+
+
 function LoginPage() {
   return (
     <div className="wrapper, justify-center, w-screen, h-screen">
@@ -13,6 +15,7 @@ function LoginPage() {
             <div className="">
               <button type="submit">Login</button>
             </div>
+
           </form>
         </div>
       </div>

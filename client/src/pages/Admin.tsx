@@ -1,11 +1,12 @@
-import React from 'react'
+import React from "react";
+import FilePond from "../components/filepond";
 
 function AdminPage() {
   return (
     <div>
-      Pinguin
+      Penguin
     </div>
-  )
+  );
 }
 
-export default AdminPage
+export default AdminPage;
