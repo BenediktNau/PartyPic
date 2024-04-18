@@ -20,14 +20,14 @@ registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 //
 //
 function Filepond() {
-  return (
-    <div>
-      <FilePond
-        allowMultiple={true}
-        maxFiles={3}
-        server="http://localhost:3500/upload"
-      />
-    </div>
+    return (
+        <div>
+            <FilePond
+            allowMultiple={true}
+            maxFiles={3}
+            server="http://localhost:3500/upload"
+            />
+        </div>
   );
 }
 
