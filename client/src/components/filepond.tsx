@@ -19,22 +19,16 @@ import 'filepond/dist/filepond.min.css';
 registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 //
 //
-
 function Filepond() {
-    
-  
-
-  const [files, setFiles] = useState([]);
-    return (
-        
-    
-        <div>
-            <FilePond allowMultiple={true} maxFiles={3} server="/api" />
-        </div>
-        
-        
-    )
-  
+  return (
+    <div>
+      <FilePond
+        allowMultiple={true}
+        maxFiles={3}
+        server="http://localhost:3500/upload"
+      />
+    </div>
+  );
 }
 
-export default FilePond;
+export default Filepond;

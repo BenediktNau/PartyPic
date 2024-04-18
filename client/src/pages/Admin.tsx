@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import FilePond from "../components/filepond";
 
 function AdminPage() {
-  const [data1, setData] = useState<{message: string}>({message: ""});
+  const [data1, setData] = useState<{ message: string }>({ message: "" });
 
   console.log(data1!.message);
   const handleClick = async () => {
@@ -20,6 +20,7 @@ function AdminPage() {
   return (
     <div>
       <button onClick={handleClick}> Test </button>
+      <Filepond />
     </div>
   );
 }

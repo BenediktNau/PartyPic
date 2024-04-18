@@ -12,18 +12,16 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
     db.run(
       `CREATE TABLE user (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name text, 
-            cookie text UNIQUE, 
-            password text
+            username text, 
+            password text UNIQUE
             )`,
       (err) => {
         if (err) {
           console.log("Table Already Exist");
         } else {
           console.log("Hallo");
-          var insert =
-            "INSERT INTO user (name, cookie, password) VALUES (?,?,?)";
-          db.run(insert, ["admin", "", "password"]);
+          var insert = "INSERT INTO user (username, password) VALUES (?,?)";
+          db.run(insert, ["admin", "password"]);
         }
       }
     );
