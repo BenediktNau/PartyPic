@@ -1,13 +1,12 @@
-import  FilePond  from '../components/filepond'
-import React from 'react'
-
+import FilePond from "../components/filepond";
+import React from "react";
 
 function Upload() {
   return (
     <div>
-      <FilePond></FilePond>
+      <FilePond />
     </div>
-  )
+  );
 }
 
 export default Upload;
