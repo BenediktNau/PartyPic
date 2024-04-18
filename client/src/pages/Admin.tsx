@@ -1,8 +1,8 @@
 import axios, { AxiosResponse } from "axios";
 import React, { useEffect, useState } from "react";
 
+import Filepond from "../components/filepond";
 
-import FilePond from "../components/filepond";
 
 function AdminPage() {
   const [data1, setData] = useState<{ message: string }>({ message: "" });
