@@ -1,6 +1,7 @@
 import React from "react";
 import { RouterProvider } from "react-router-dom";
 import router from "../components/router";
+import LoginPage from "./login";
 
 function Layout() {
   return (
