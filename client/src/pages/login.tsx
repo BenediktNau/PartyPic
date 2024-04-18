@@ -1,16 +1,20 @@
-import React from 'react'
+import React from "react";
 
 function LoginPage() {
   return (
-    <div className='wrapper'>
-      <form action=''>
-        <h1>Login</h1>
-        <div className='input-box'>
-          <input type="text" placeholder='Username' required/>
+    <div className="wrapper, justify-center, w-screen, h-screen">
+      <div className="h-full, w-full">
+        <div className="flex justify-center">
+          <form action="">
+            <h1 className="flex justify-center">Login</h1>
+            <div className="input-box, border-2">
+              <input type="text" placeholder="Username" required />
+            </div>
+          </form>
         </div>
-      </form>    
+      </div>
     </div>
-  )
+  );
 }
 
-export default LoginPage
+export default LoginPage;
