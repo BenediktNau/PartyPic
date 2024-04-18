@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import AdminPage from "../pages/Admin";
 import LoginPage from "../pages/login";
+import Upload from "../pages/Upload";
 
 const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
     element: <LoginPage />,
   },
   { path: "admin", element: <AdminPage /> },
+  { path: "upload", element: <Upload /> },
 ]);
 
 export default router;
