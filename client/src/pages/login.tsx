@@ -10,6 +10,9 @@ function LoginPage() {
             <div className="input-box, border-2">
               <input type="text" placeholder="Username" required />
             </div>
+            <div className="">
+              <button type="submit">Login</button>
+            </div>
           </form>
         </div>
       </div>
