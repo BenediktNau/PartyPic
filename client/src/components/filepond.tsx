@@ -20,11 +20,16 @@ registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 //
 //
 function Filepond() {
+
+    const [files, setFiles] = useState([]);
     return (
         <div>
             <FilePond
+            files = {files}
             allowMultiple={true}
             maxFiles={3}
+            // instantUpload={false}
+            
             server="http://localhost:3500/upload"
             />
         </div>
