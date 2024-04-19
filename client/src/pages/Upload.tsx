@@ -3,8 +3,8 @@ import React from "react";
 
 function Upload() {
   return (
-    <div>
-      <FilePond />
+    <div className=" flex justify-center">
+          <FilePond />
     </div>
   );
 }
