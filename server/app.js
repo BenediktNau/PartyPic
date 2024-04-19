@@ -32,17 +32,22 @@ app.get("/api/users", (req, res, next) => {
 
 app.post("/upload", function (req, res) {
   console.log("BEGIN /upload");
-  const form = formidable.formidable({ multiples: false });
+  const form = formidable.formidable({
+    multiples: false,
+    uploadDir: "/uploads",
+    filename: (name, ext, part, form) => {
+      return part.originalFilename; // Will be joined with options.uploadDir.
+    },
+  });
 
   form.parse(req, (err, fields, files) => {
     if (err) {
-      next(err);
+      console.log(err);
       return;
     }
     let theFile = files.filepond.path;
     console.log("theFile: " + theFile);
-
-    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.json({ fields, files });
     res.end(theFile);
   });
 });
@@ -50,7 +55,6 @@ app.post("/upload", function (req, res) {
 app.post("/save", function (req, res) {
   console.log("BEGIN /save");
   console.log(`req: ${JSON.stringify(req.body.filepond)}`);
-
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}`));

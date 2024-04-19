@@ -22,25 +22,25 @@ registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 
 function Filepond() {
   const handleClick = () => {
-    axios.get(`http://localhost:3500/save`);
+    axios.get(`http://localhost:3500/save`).then((e) => console.log(e));
   };
 
   return (
-      <div className="w-5/6 sm:w-2/5">
-        <FilePond
-          allowMultiple={true}
-          maxFiles={3}
-          server="http://localhost:3500/upload"
-        />
-        <div className="flex justify-center">
-          <button
-            onClick={handleClick}
-            className="border-b-2 border-gray-700 hover:border-blue-500"
-          >
-            Submit
-          </button>
-        </div>
+    <div className="w-5/6 sm:w-2/5">
+      <FilePond
+        allowMultiple={true}
+        maxFiles={3}
+        server="http://localhost:3500/upload"
+      />
+      <div className="flex justify-center">
+        <button
+          onClick={handleClick}
+          className="border-b-2 border-gray-700 hover:border-blue-500"
+        >
+          Submit
+        </button>
       </div>
+    </div>
   );
 }
 
