@@ -30,7 +30,7 @@ function Upload() {
       <div className=" bg-[#f1f0ef] rounded-lg px-4 space-y-8 ">
         <div className="flex justify-center border-b-2 border-black ">
           <div className="flex   flex-col ">
-            <div>Fotogragiere:</div>
+            <div>Fotografiere:</div>
             <RandomLineFetcher />
           </div>
         </div>
@@ -41,17 +41,17 @@ function Upload() {
       </div>
 
       <Modal
-        className="flex justify-center items-center"
+        className="flex justify-center items-center font-[Myfont] "
         open={openModal}
         onClose={() => {}}
       >
-        <div className="flex w-5/6 h-40 items-center bg-gray-300  p-8 justify-center">
+        <div className="flex w-5/6 h-40 items-center bg-gray-300  p-8 justify-center rounded-md">
           <div className="flex flex-col space-y-2">
             <div>Name:</div>
             <input
               type="text"
               onChange={(e) => setName(e.target.value)}
-              className="border-b-2 p-2 border-black"
+              className="border-b-2 p-2 border-black rounded-md"
             />
             <button
               className="border-black border-2 rounded-md"
