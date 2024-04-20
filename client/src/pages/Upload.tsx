@@ -27,11 +27,14 @@ function Upload() {
 
   return (
     <div className=" flex justify-center w-full flex-col space-y-4">
-      <div className="flex justify-center">
-        <RandomLineFetcher />
-      </div>
-      <div className="flex justify-center w-full">
-        <FilePond />
+      <div className="bg-[#f1f0ef]">
+        <div className="flex justify-center">
+          <RandomLineFetcher />
+        </div>
+
+        <div className="flex justify-center w-full">
+          <FilePond />
+        </div>
       </div>
 
       <Modal
@@ -46,7 +49,7 @@ function Upload() {
               type="text"
               onChange={(e) => setName(e.target.value)}
               className="border-b-2 p-2 border-black"
-            /> 
+            />
             <button
               className="border-black border-2 rounded-md"
               onClick={() => {

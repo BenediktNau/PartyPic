@@ -60,43 +60,43 @@ app.post("/save", function (req, res) {
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
 
-
 //SQL table with prompts
 
 //Retrieving the table
-app.get('/read-file', (req, res) =>{
-  const filePath = './promptList';
+app.get("/read-file", (req, res) => {
+  const filePath = "./promptList";
 
-  const lineReader = readLine.createInterface({
-    input: fs.createReadStream(filePath),
-  })
-
-  lineReader.on('line', (line) => {
-    db.run("INSERT INTO your table (data) VALUES (?)", [line], (err) =>{
-      if(err){
-        console.error('Error inserting data into database: ', err);
-        console.log('Error inserting data into database');
+  lineReader.on("line", (line) => {
+    db.run("INSERT INTO your table (data) VALUES (?)", [line], (err) => {
+      if (err) {
+        console.error("Error inserting data into database: ", err);
+        console.log("Error inserting data into database");
       }
     });
   });
 
-  lineReader.on('close', () =>{
-    res.send('File data inserted into database');
-    console.log('File data inserted into database');
+  lineReader.on("close", () => {
+    res.send("File data inserted into database");
+    console.log("File data inserted into database");
   });
-})
+});
 
 //line Output
-app.get('/random-line', (req, res) => {
-  db.get('SELECT data FROM prompt ORDER BY RAND() LIMIT 16', (err, row) => {
-    if (err) {
-      console.error('Error retrieving random line:', err);
-      res.status(500).send('Internal server error');
-    } else if (!row) {
-      res.status(404).send('No data found in the database');
-    } else {
-      res.send(row.data);
-      console.log(row.data)
+app.get("/random-line", (req, res) => {
+  
+  db.get(
+    `SELECT description FROM prompt ORDER BY RANDOM() `,
+    (err, row) => {
+      if (err) {
+        console.error("Error retrieving random line:", err);
+        res.status(500).send("Internal server error");
+      } else if (!row) {
+        res.status(404).send("No data found in the database");
+      } else {
+        var q = {id: row.id ,description: row.description }
+        res.send(q);
+        console.log(q)
+      }
     }
-  }); 
+  );
 });

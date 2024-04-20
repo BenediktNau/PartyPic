@@ -2,11 +2,14 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 
 function RandomLineFetcher() {
-  const [randomLine, setRandomLine] = useState("Await Promt");
+  const [randomLine, setRandomLine] = useState<{
+    id: number | null;
+    description: string;
+  }>({ id: null, description: "Await Prompt" });
 
   useEffect(() => {
     fetchRandomLine();
-  });
+  }, []);
 
   const fetchRandomLine = async () => {
     try {
@@ -21,7 +24,7 @@ function RandomLineFetcher() {
     }
   };
 
-  return <div>{randomLine}</div>;
+  return <div>{randomLine.description}</div>;
 }
 
 export default RandomLineFetcher;
