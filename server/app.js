@@ -88,7 +88,7 @@ app.get('/read-file', (req, res) =>{
 
 //line Output
 app.get('/random-line', (req, res) => {
-  db.get('SELECT data FROM your_table ORDER BY RAND() LIMIT 16', (err, row) => {
+  db.get('SELECT data FROM prompt ORDER BY RAND() LIMIT 16', (err, row) => {
     if (err) {
       console.error('Error retrieving random line:', err);
       res.status(500).send('Internal server error');
@@ -96,6 +96,7 @@ app.get('/random-line', (req, res) => {
       res.status(404).send('No data found in the database');
     } else {
       res.send(row.data);
+      console.log(row.data)
     }
-  });
+  }); 
 });

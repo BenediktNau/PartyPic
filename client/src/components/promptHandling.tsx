@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 
 function RandomLineFetcher() {
-  const [randomLine, setRandomLine] = useState('');
+  const [randomLine, setRandomLine] = useState("Await Promt");
+
+  useEffect(() => {
+    fetchRandomLine();
+  });
 
   const fetchRandomLine = async () => {
     try {
-      const response = await fetch('/random-line');
-      if (!response.ok) {
-        throw new Error('Failed to fetch random line');
+      const response = await axios.get("http://localhost:3500/random-line");
+      if (!response.data) {
+        throw new Error("Failed to fetch random line");
       }
-      const data = await response.text();
+      const data = await response.data;
       setRandomLine(data);
     } catch (error) {
-      console.error('Error fetching random line:', error);
+      console.error("Error fetching random line:", error);
     }
   };
 
-  return (
-    <div>
-      <button onClick={fetchRandomLine}>Get Random Line</button>
-      <p>{randomLine}</p>
-    </div>
-  );
+  return <div>{randomLine}</div>;
 }
 
 export default RandomLineFetcher;

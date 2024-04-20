@@ -9,22 +9,31 @@ import {
 import FilePond from "../components/filepond";
 import React, { useEffect, useState } from "react";
 import { getCookie, setCookie } from "typescript-cookie";
+import RandomLineFetcher from "../components/promptHandling";
 
 function Upload() {
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [name, setName] = useState<string>("");
 
   useEffect(() => {
-    console.log(getCookie("KekseFürAlle"))
-    if (getCookie("KekseFürAlle") === "" || getCookie("KekseFürAlle") === undefined) {
+    console.log(getCookie("KekseFürAlle"));
+    if (
+      getCookie("KekseFürAlle") === "" ||
+      getCookie("KekseFürAlle") === undefined
+    ) {
       setOpenModal(true);
     }
   });
 
-
   return (
-    <div className=" flex justify-center ">
-      <FilePond />
+    <div className=" flex justify-center w-full flex-col space-y-4">
+      <div className="flex justify-center">
+        <RandomLineFetcher />
+      </div>
+      <div className="flex justify-center w-full">
+        <FilePond />
+      </div>
+
       <Modal
         className="flex justify-center items-center"
         open={openModal}
@@ -37,12 +46,12 @@ function Upload() {
               type="text"
               onChange={(e) => setName(e.target.value)}
               className="border-b-2 p-2 border-black"
-            />
+            /> 
             <button
               className="border-black border-2 rounded-md"
               onClick={() => {
                 setCookie("KekseFürAlle", name);
-                setOpenModal(false)
+                setOpenModal(false);
               }}
             >
               PicME

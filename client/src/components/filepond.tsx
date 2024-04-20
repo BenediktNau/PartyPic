@@ -18,7 +18,7 @@ registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 
 function Filepond() {
   return (
-    <div>
+    <div className="w-5/6 sm:w-2/5">
       <FilePond
         allowMultiple={true}
         maxFiles={3}

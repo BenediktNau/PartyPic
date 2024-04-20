@@ -21,9 +21,9 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
           console.log("Table Already Exist");
         } else {
           console.log("Hallo");
-          var insert = "INSERT INTO user (description) VALUES (?)";
+          var insert = "INSERT INTO prompt (description) VALUES (?)";
           db.run(insert,["text"])
-        }
+        } 
       }
     );
   }
