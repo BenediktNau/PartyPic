@@ -5,9 +5,11 @@ import React from "react";
 function Upload() {
   return (
     <div className=" flex justify-center">
-      <FilePond />
-      <div>
-        Hallo <div>Test </div>Welt
+      <div className="w-5/6 sm:w-2/5">
+        <div className="flex justify-center  ">
+          <div className="">placeHolder</div>
+        </div>
+        <FilePond />
       </div>
     </div>
   );

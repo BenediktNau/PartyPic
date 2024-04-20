@@ -26,7 +26,7 @@ function Filepond() {
   };
 
   return (
-    <div className="w-5/6 sm:w-2/5">
+    <div>
       <FilePond
         allowMultiple={true}
         maxFiles={3}
