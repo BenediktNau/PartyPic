@@ -1,3 +1,5 @@
+const { text } = require("express");
+
 var sqlite3 = require("sqlite3").verbose();
 
 const DBSOURCE = "db.sqlite";
@@ -10,18 +12,17 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
   } else {
     console.log("Connected to the SQLite database.");
     db.run(
-      `CREATE TABLE user (
+      `CREATE TABLE prompt (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username text, 
-            password text UNIQUE
+            description text,
             )`,
       (err) => {
         if (err) {
           console.log("Table Already Exist");
         } else {
           console.log("Hallo");
-          var insert = "INSERT INTO user (username, password) VALUES (?,?)";
-          db.run(insert, ["admin", "password"]);
+          var insert = "INSERT INTO user (description) VALUES (?)";
+          db.run(insert,["text"])
         }
       }
     );
