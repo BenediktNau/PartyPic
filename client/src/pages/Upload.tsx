@@ -1,18 +1,55 @@
-import { useCookies } from "react-cookie";
+import {
+  Box,
+  InputAdornment,
+  Modal,
+  TextField,
+  Typography,
+  createTheme,
+} from "@mui/material";
 import FilePond from "../components/filepond";
-import React from "react";
-import RandomLineFetcher from "../components/promptHandling";
-
+import React, { useEffect, useState } from "react";
+import { getCookie, setCookie } from "typescript-cookie";
 
 function Upload() {
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [name, setName] = useState<string>("");
+
+  useEffect(() => {
+    console.log(getCookie("KekseFürAlle"))
+    if (getCookie("KekseFürAlle") === "" || getCookie("KekseFürAlle") === undefined) {
+      setOpenModal(true);
+    }
+  });
+
+
   return (
-    <div className=" flex justify-center">
-      <div className="w-5/6 sm:w-2/5">
-        <div className="flex justify-center  ">
-          <RandomLineFetcher/>
+    <div className=" flex justify-center ">
+      <FilePond />
+      <Modal
+        className="flex justify-center items-center"
+        open={openModal}
+        onClose={() => {}}
+      >
+        <div className="flex w-5/6 h-40 items-center bg-gray-300  p-8 justify-center">
+          <div className="flex flex-col space-y-2">
+            <div>Name:</div>
+            <input
+              type="text"
+              onChange={(e) => setName(e.target.value)}
+              className="border-b-2 p-2 border-black"
+            />
+            <button
+              className="border-black border-2 rounded-md"
+              onClick={() => {
+                setCookie("KekseFürAlle", name);
+                setOpenModal(false)
+              }}
+            >
+              PicME
+            </button>
+          </div>
         </div>
-        <FilePond />
-      </div>
+      </Modal>
     </div>
   );
 }
