@@ -32,7 +32,7 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
     console.log("Connected to the SQLite database.");
     db.run(
       `CREATE TABLE prompt (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         description text
         )`,
       (err) => {
