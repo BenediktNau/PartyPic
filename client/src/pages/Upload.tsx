@@ -27,9 +27,12 @@ function Upload() {
 
   return (
     <div className=" flex justify-center w-full flex-col space-y-4">
-      <div className="bg-[#f1f0ef]">
-        <div className="flex justify-center">
-          <RandomLineFetcher />
+      <div className=" bg-[#f1f0ef] rounded-lg px-4 space-y-8 ">
+        <div className="flex justify-center border-b-2 border-black ">
+          <div className="flex   flex-col ">
+            <div>Fotogragiere:</div>
+            <RandomLineFetcher />
+          </div>
         </div>
 
         <div className="flex justify-center w-full">

@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import Layout from "./Layout";
 
 function App() {
-  return <Layout />;
+  return (
+    <div>
+      <Layout />
+    </div>
+  );
 }
 export default App;

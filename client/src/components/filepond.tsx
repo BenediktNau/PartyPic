@@ -19,8 +19,9 @@ registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 
 function Filepond() {
   return (
-    <div className="w-5/6 sm:w-2/5">
+    <div className=" w-5/6 sm:w-2/5">
       <FilePond
+        credits={false}
         allowMultiple={true}
         maxFiles={3}
         server="http://localhost:3500/upload"

@@ -10,6 +10,7 @@ import AdminPage from "../pages/Admin";
 import LoginPage from "../pages/login";
 import Upload from "../pages/Upload";
 
+
 const router = createBrowserRouter([
   {
     path: "/",

@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+.filepond--panel-root {
+  filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07));
+  filter: drop-shadow(0 20px 13px rgb(0 0 0 / 0.03))
+    drop-shadow(0 8px 5px rgb(0 0 0 / 0.08));
+}
+
 @font-face {
   font-family: "MyFont";
   src: local("MyFont"), url(./assets/JetBrainsMonoNL-Medium.ttf);
