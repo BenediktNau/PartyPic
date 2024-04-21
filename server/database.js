@@ -47,7 +47,7 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
     db.run(
       `CREATE TABLE pictures (
         id INTEGER PRIMARY KEY,
-        filepath text,
+        name text,
         promptid INTEGER,
         user text
         )`,

@@ -32,6 +32,8 @@ function Filepond(): JSX.Element {
   useEffect(() => {
     fetchRandomLine();
   }, []);
+
+  
   const fetchRandomLine = async () => {
     try {
       const response = await axios.get("http://localhost:3500/random-line");
@@ -60,7 +62,6 @@ function Filepond(): JSX.Element {
           <FilePond
             credits={false}
             allowMultiple={true}
-            maxFiles={3}
             server={{
               url: "http://localhost:3500/upload",
               headers: {

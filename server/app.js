@@ -22,7 +22,9 @@ app.post("/upload", async function (req, res) {
     uploadDir: "/uploads",
     filename: (name, ext, part, form) => {
       db.run(
-        `INSERT INTO pictures(filepath, promptid, user) VALUES("/uploads/${part.originalFilename}", ${req.header("id")}, "${req.header("name")}")`
+        `INSERT INTO pictures(name, promptid, user) VALUES("${
+          part.originalFilename
+        }", ${req.header("id")}, "${req.header("name")}")`
       );
       return part.originalFilename; // Will be joined with options.uploadDir.
     },
@@ -38,11 +40,6 @@ app.post("/upload", async function (req, res) {
     res.json({ fields, files });
     res.end(theFile);
   });
-});
-
-app.post("/save", function (req, res) {
-  console.log("BEGIN /save");
-  console.log(`req: ${JSON.stringify(req.body.filepond)}`);
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
@@ -63,15 +60,38 @@ app.get("/random-line", (req, res) => {
   });
 });
 
-app.post("/getfotos", (req, res) => {
-  const rowsArray = [];
-  db.each(
-    `SELECT * FROM pictures WHERE promptid = ${req.body.id}`,
-    (err, row) => {
-      rowsArray.push(row.filepath);
+//Fetch Prompt
+app.get("/getPrompts", (req, res) => {
+  db.all(`SELECT * FROM prompt `, (err, rows) => {
+    if (!!rows) {
+      res.send(rows);
+    } else {
+      res.send([(id = null), (description = "No Photos found!")]);
+    }
+
+  });
+});
+
+app.post("/getfotopaths", (req, res) => {
+  console.log(req.body.id);
+  db.all(
+    `SELECT * FROM pictures WHERE promptid = ${Number(req.body.id)}`,
+    (err, rows) => {
+      var arr = [];
+      console.log(rows)
+      if (!!rows) {
+        rows.forEach((row) => {
+          arr.push(row.name);
+        });
+      }
+      res.send(arr);
     }
   );
-  console.log(rowsArray);
+});
+
+app.get("/images/:imageName", (req, res) => {
+  const imageName = req.params.imageName;
+  res.sendFile(`/uploads/${imageName}`);
 });
 
 //Retrieving promtList.txt
