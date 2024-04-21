@@ -9,6 +9,7 @@ const { info, Console } = require("console");
 
 const corsOptions = {
   origin: "http://localhost:3000",
+  origin: "*"
 };
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
@@ -85,7 +86,7 @@ app.get("/read-file", (req, res) => {
 app.get("/random-line", (req, res) => {
   
   db.get(
-    `SELECT description FROM prompt ORDER BY RANDOM() `,
+    `SELECT * FROM prompt ORDER BY RANDOM() `,
     (err, row) => {
       if (err) {
         console.error("Error retrieving random line:", err);
