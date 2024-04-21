@@ -27,15 +27,7 @@ function Upload() {
   return (
     <div className=" flex justify-center w-full flex-col space-y-4">
       <div className=" bg-[#f1f0ef] rounded-lg px-4 space-y-8 ">
-        <div className="flex justify-center border-b-2 border-black ">
-          <div className="flex   flex-col ">
-            <div>Fotografiere:</div>
-          </div>
-        </div>
-
-        <div className="flex justify-center w-full">
-          <FilePond />
-        </div>
+        <FilePond/>
       </div>
 
       <Modal

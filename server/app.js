@@ -21,12 +21,12 @@ app.post("/upload", async function (req, res) {
     multiples: false,
     uploadDir: "/uploads",
     filename: (name, ext, part, form) => {
+      db.run(
+        `INSERT INTO pictures(filepath, promptid, user) VALUES("/uploads/${part.originalFilename}", ${req.header("id")}, "${req.header("name")}")`
+      );
       return part.originalFilename; // Will be joined with options.uploadDir.
     },
   });
-
-
-  const metadata = req.body.metadata
 
   form.parse(req, (err, fields, files) => {
     if (err) {
@@ -34,8 +34,7 @@ app.post("/upload", async function (req, res) {
       return;
     }
     let theFile = files.filepond.path;
-    test = theFile
-    console.log("theFile: " + theFile);
+    test = theFile;
     res.json({ fields, files });
     res.end(theFile);
   });

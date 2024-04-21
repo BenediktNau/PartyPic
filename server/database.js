@@ -7,9 +7,6 @@ var sqlite3 = require("sqlite3").verbose();
 const DBSOURCE = "db.sqlite";
 
 const initializePrompts = () => {
-  db.run(`Delete from prompt;
-  DELETE FROM SQLITE_SEQUENCE WHERE name='prompt'
-  `);
   var insert = "INSERT INTO prompt (description) VALUES (?)";
   const fileStream = fs.createReadStream("./promptList.txt");
   const rl = readline.createInterface({
@@ -40,6 +37,9 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
           console.log("Table Already Exist");
           initializePrompts();
         } else {
+          db.run(
+            `Delete from prompt; DELETE FROM SQLITE_SEQUENCE WHERE name='prompt'`
+          );
           initializePrompts();
         }
       }
@@ -54,10 +54,8 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
       (err) => {
         if (err) {
           console.log("picture Table Already Exist");
-         
         } else {
           console.log("picture Table Created");
-          
         }
       }
     );
