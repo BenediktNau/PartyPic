@@ -29,10 +29,6 @@ registerPlugin(
 );
 
 function Filepond(): JSX.Element {
-  const handleInit = () => {
-    console.log("Filepond initialized");
-  };
-
   const [randomLine, setRandomLine] = useState<{
     id: number | null;
     description: string;
@@ -53,6 +49,8 @@ function Filepond(): JSX.Element {
       console.error("Error fetching random line:", error);
     }
   };
+  console.log(randomLine)
+
 
   const handleProcessFile = (
     fieldName: string,
@@ -105,7 +103,7 @@ function Filepond(): JSX.Element {
           },
           url: "http://localhost:3500/upload",
         }}
-        oninit={() => handleInit()}
+        oninit={() => {}}
       />
     </div>
   );
