@@ -49,30 +49,7 @@ function Filepond(): JSX.Element {
       console.error("Error fetching random line:", error);
     }
   };
-  console.log(randomLine)
-
-
-  const handleProcessFile = (
-    fieldName: string,
-    file: ActualFileObject,
-    metadata: any,
-    load: Function,
-    error: Function,
-    progress: Function,
-    abort: Function
-  ) => {
-    // You can access metadata here and perform any required actions
-    const randomNumber = Math.floor(Math.random() * 1000);
-
-    // Add the random number to the metadata
-    const updatedMetadata = { ...metadata, randomNumber };
-
-    // You can access metadata here and perform any required actions
-    console.log("Metadata with Random Number:", updatedMetadata);
-
-    // To handle file processing, you can use the provided functions
-    load(file);
-  };
+  console.log(randomLine);
 
   return (
     <div className=" w-5/6 sm:w-2/5">
@@ -81,26 +58,8 @@ function Filepond(): JSX.Element {
         allowMultiple={true}
         maxFiles={3}
         allowFileMetadata={true}
+        fileMetadataObject={{ hallo: "sdad" }}
         server={{
-          process: (
-            fieldName,
-            file,
-            metadata,
-            load,
-            error,
-            progress,
-            abort
-          ) => {
-            handleProcessFile(
-              fieldName,
-              file,
-              metadata,
-              load,
-              error,
-              progress,
-              abort
-            );
-          },
           url: "http://localhost:3500/upload",
         }}
         oninit={() => {}}

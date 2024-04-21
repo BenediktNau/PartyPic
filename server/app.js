@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 
 //upload Picture
-app.post("/upload", function (req, res) {
+app.post("/upload", async function (req, res) {
   console.log("BEGIN /upload");
   const form = formidable.formidable({
     multiples: false,
@@ -25,12 +25,16 @@ app.post("/upload", function (req, res) {
     },
   });
 
+
+  const metadata = req.body.metadata
+
   form.parse(req, (err, fields, files) => {
     if (err) {
       console.log(err);
       return;
     }
     let theFile = files.filepond.path;
+    test = theFile
     console.log("theFile: " + theFile);
     res.json({ fields, files });
     res.end(theFile);
@@ -62,13 +66,16 @@ app.get("/random-line", (req, res) => {
 
 app.post("/getfotos", (req, res) => {
   const rowsArray = [];
-  db.each(`SELECT * FROM pictures WHERE promptid = ${req.body.id}`, (err, row) => {
-    rowsArray.push(row.filepath)
-  });
-  console.log(rowsArray)
+  db.each(
+    `SELECT * FROM pictures WHERE promptid = ${req.body.id}`,
+    (err, row) => {
+      rowsArray.push(row.filepath);
+    }
+  );
+  console.log(rowsArray);
 });
 
-//Retrieving promtList.txt 
+//Retrieving promtList.txt
 //app.get("/read-file", (req, res) => {
 //  const filePath = "./promptList";
 //
