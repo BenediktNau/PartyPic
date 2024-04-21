@@ -9,7 +9,6 @@ import {
 import FilePond from "../components/filepond";
 import React, { useEffect, useState } from "react";
 import { getCookie, setCookie } from "typescript-cookie";
-import RandomLineFetcher from "../components/promptHandling";
 
 function Upload() {
   const [openModal, setOpenModal] = useState<boolean>(false);
