@@ -9,6 +9,7 @@ import {
 import AdminPage from "../pages/Admin";
 import Upload from "../pages/Upload";
 
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -16,6 +17,7 @@ const router = createBrowserRouter([
   },
 
   { path: "admin", element: <AdminPage /> },
+
 ]);
 
 export default router;
