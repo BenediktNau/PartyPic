@@ -9,29 +9,12 @@ const { info, Console } = require("console");
 
 const corsOptions = {
   origin: "http://localhost:3000",
-  origin: "*"
+  origin: "*",
 };
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 
-app.get("/api", (req, res) => {
-  res.send({ message: "Hello from Express!" });
-});
-app.get("/api/users", (req, res, next) => {
-  var sql = "select * from user";
-  var params = [];
-  db.all(sql, params, (err, rows) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
-    res.json({
-      message: "success",
-      data: rows,
-    });
-  });
-});
-
+//upload Picture
 app.post("/upload", function (req, res) {
   console.log("BEGIN /upload");
   const form = formidable.formidable({
@@ -61,43 +44,45 @@ app.post("/save", function (req, res) {
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
 
-//SQL table with prompts
-
-//Retrieving the table
-app.get("/read-file", (req, res) => {
-  const filePath = "./promptList";
-
-  lineReader.on("line", (line) => {
-    db.run("INSERT INTO your table (data) VALUES (?)", [line], (err) => {
-      if (err) {
-        console.error("Error inserting data into database: ", err);
-        console.log("Error inserting data into database");
-      }
-    });
-  });
-
-  lineReader.on("close", () => {
-    res.send("File data inserted into database");
-    console.log("File data inserted into database");
-  });
-});
-
-//line Output
+//API Give Random Prompt from Promt Database
 app.get("/random-line", (req, res) => {
-  
-  db.get(
-    `SELECT * FROM prompt ORDER BY RANDOM() `,
-    (err, row) => {
-      if (err) {
-        console.error("Error retrieving random line:", err);
-        res.status(500).send("Internal server error");
-      } else if (!row) {
-        res.status(404).send("No data found in the database");
-      } else {
-        var q = {id: row.id ,description: row.description }
-        res.send(q);
-        console.log(q)
-      }
+  db.get(`SELECT * FROM prompt ORDER BY RANDOM() `, (err, row) => {
+    if (err) {
+      console.error("Error retrieving random line:", err);
+      res.status(500).send("Internal server error");
+    } else if (!row) {
+      res.status(404).send("No data found in the database");
+    } else {
+      var q = { id: row.id, description: row.description };
+      res.send(q);
+      console.log(q);
     }
-  );
+  });
 });
+
+app.post("/getfotos", (req, res) => {
+  const rowsArray = [];
+  db.each(`SELECT * FROM pictures WHERE promptid = ${req.body.id}`, (err, row) => {
+    rowsArray.push(row.filepath)
+  });
+  console.log(rowsArray)
+});
+
+//Retrieving promtList.txt 
+//app.get("/read-file", (req, res) => {
+//  const filePath = "./promptList";
+//
+//  lineReader.on("line", (line) => {
+//    db.run("INSERT INTO your table (data) VALUES (?)", [line], (err) => {
+//      if (err) {
+//        console.error("Error inserting data into database: ", err);
+//        console.log("Error inserting data into database");
+//      }
+//    });
+//  });
+//
+//  lineReader.on("close", () => {
+//    res.send("File data inserted into database");
+//    console.log("File data inserted into database");
+//  });
+//});

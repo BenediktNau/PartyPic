@@ -44,6 +44,23 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
         }
       }
     );
+    db.run(
+      `CREATE TABLE pictures (
+        id INTEGER PRIMARY KEY,
+        filepath text,
+        promptid INTEGER,
+        user text
+        )`,
+      (err) => {
+        if (err) {
+          console.log("picture Table Already Exist");
+         
+        } else {
+          console.log("picture Table Created");
+          
+        }
+      }
+    );
   }
 });
 

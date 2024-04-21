@@ -31,7 +31,6 @@ function Upload() {
         <div className="flex justify-center border-b-2 border-black ">
           <div className="flex   flex-col ">
             <div>Fotografiere:</div>
-            <RandomLineFetcher />
           </div>
         </div>
 
