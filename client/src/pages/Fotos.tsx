@@ -10,7 +10,9 @@ function Fotos() {
 
   useEffect(() => {
     test();
-    fetchFotoPath(3);
+    for (let index = 1; index <= prompts.length; index++) {
+      fetchFotoPath(index);
+    }
   }, []);
 
   const test = async () => {
@@ -21,6 +23,7 @@ function Fotos() {
     const data = await response.data;
     setPrompts(data);
   };
+  console.log(fotoPaths)
 
   const fetchFotoPath = (id: number) => {
     axios
@@ -44,7 +47,6 @@ function Fotos() {
   const fetchFoto = (fileName: string) => {
     return axios.get(`http://localhost:3500/images/${fileName}`);
   };
-  console.log(fotoPaths);
 
   return (
     <div className="flex justify-center">
@@ -57,11 +59,15 @@ function Fotos() {
             <div key={elem.id}>
               <div className="flex  flex-col text-xl">
                 <div>{elem.description}:</div>
-                <div>
-                  {
-                    fotoPaths[elem.id].map((e)=> <img src={`http://localhost:3500/images/${e}`}></img>)
-                  }
-                  
+                <div className="grid-cols-3">
+                  {fotoPaths[elem.id - 1]
+                    ? fotoPaths[elem.id - 1].map((e) => (
+                        <img
+                          key={e}
+                          src={`http://localhost:3500/images/${e}`}
+                        ></img>
+                      ))
+                    : ""}
                 </div>
               </div>
             </div>
