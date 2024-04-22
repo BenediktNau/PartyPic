@@ -16,10 +16,10 @@ import {
   ProgressServerConfigFunction,
   create,
 } from "filepond";
-import { getCookie } from "typescript-cookie";
 import "filepond/dist/filepond.min.css";
 import { styled } from "@mui/material";
 import axios from "axios";
+import { getCookie, setCookie, removeCookie } from "typescript-cookie";
 
 registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 
@@ -33,20 +33,29 @@ function Filepond(): JSX.Element {
     fetchRandomLine();
   }, []);
 
-  
   const fetchRandomLine = async () => {
-    try {
-      const response = await axios.get("http://localhost:3500/random-line");
-      if (!response.data) {
-        throw new Error("Failed to fetch random line");
+    if (!(getCookie("prompt") === "")) {
+      console.log(getCookie("prompt"));
+      setRandomLine(JSON.parse(getCookie("prompt")!));
+    } else {
+      try {
+        const response = await axios.get("http://localhost:3500/random-line");
+        if (!response.data) {
+          throw new Error("Failed to fetch random line");
+        }
+        const data = await response.data;
+        setRandomLine(data);
+        setCookie("prompt", JSON.stringify(data));
+      } catch (error) {
+        console.error("Error fetching random line:", error);
       }
-      const data = await response.data;
-      setRandomLine(data);
-    } catch (error) {
-      console.error("Error fetching random line:", error);
     }
   };
   console.log(randomLine);
+
+  document
+    .querySelector(".filepond--root")
+    ?.addEventListener("FilePond:processfiles", (e) => {});
 
   return (
     <React.Fragment>
@@ -62,6 +71,7 @@ function Filepond(): JSX.Element {
           <FilePond
             credits={false}
             allowMultiple={true}
+            maxFiles={1}
             server={{
               url: "http://localhost:3500/upload",
               headers: {
@@ -69,7 +79,10 @@ function Filepond(): JSX.Element {
                 Id: `${randomLine.id}`,
               },
             }}
-            oninit={() => {}}
+            onprocessfiles={() => {
+              removeCookie("prompts", { path: "" });
+              fetchRandomLine();
+            }}
           />
         </div>
       </div>

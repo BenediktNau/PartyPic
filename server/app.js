@@ -68,25 +68,15 @@ app.get("/getPrompts", (req, res) => {
     } else {
       res.send([(id = null), (description = "No Photos found!")]);
     }
-
   });
 });
 
 app.post("/getfotopaths", (req, res) => {
-  console.log(req.body.id);
-  db.all(
-    `SELECT * FROM pictures WHERE promptid = ${Number(req.body.id)}`,
-    (err, rows) => {
-      var arr = [];
-      console.log(rows)
-      if (!!rows) {
-        rows.forEach((row) => {
-          arr.push(row.name);
-        });
-      }
-      res.send(arr);
-    }
-  );
+  db.all(`SELECT * FROM pictures `, (err, rows) => {
+    console.log(rows);
+
+    res.send(rows);
+  });
 });
 
 app.get("/images/:imageName", (req, res) => {

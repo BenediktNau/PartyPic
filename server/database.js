@@ -35,6 +35,9 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
       (err) => {
         if (err) {
           console.log("Table Already Exist");
+          db.run(
+            `Delete from prompt; DELETE FROM SQLITE_SEQUENCE WHERE name='prompt'`
+          );
           initializePrompts();
         } else {
           db.run(

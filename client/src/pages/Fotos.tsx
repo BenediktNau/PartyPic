@@ -6,14 +6,21 @@ function Fotos() {
     { id: number | 0; description: string }[]
   >([]);
 
-  const [tests, setFilePaths] = useState<{ file: string; id: number }[]>([]);
+  const [fotoPaths, setFilePaths] = useState<
+    { id: number; name: string; promptid: number; user: string }[]
+  >([]);
 
   useEffect(() => {
-    test();
-    fetchFotoPath(3);
+    fetchPromps();
   }, []);
 
-  const test = async () => {
+  useEffect(() => {
+    fetchFotoPath(prompts.length);
+
+    setFilePaths([]);
+  }, [prompts]);
+
+  const fetchPromps = async () => {
     const response = await axios.get("http://localhost:3500/getPrompts");
     if (!response.data) {
       throw new Error("Failed to fetch Prompts");
@@ -21,6 +28,7 @@ function Fotos() {
     const data = await response.data;
     setPrompts(data);
   };
+  console.log(fotoPaths);
 
   const fetchFotoPath = (id: number) => {
     axios
@@ -34,9 +42,7 @@ function Fotos() {
         }
       )
       .then(function (response) {
-        response.data.forEach(() => {
-          console.log(response.data);
-        });
+        !!response.data ? setFilePaths(response.data) : setFilePaths([]);
       })
       .catch(function (error) {
         console.log(error);
@@ -49,18 +55,33 @@ function Fotos() {
 
   return (
     <div className="flex justify-center">
-      <div className="flex flex-col w-5/6 ">
+      <div className="flex flex-col w-5/6 space-y-4 ">
         <div className="text-3xl text-center border-b-2 border-black font-bold ">
           Promts And Fotos:
         </div>
-        <div>
+        <div className="space-y-4 p-2">
           {prompts.map((elem) => (
             <div key={elem.id}>
-              <div className="flex  flex-col text-xl">
+              <div className="flex  flex-col text-xl border-black border-2 p-2">
                 <div>{elem.description}:</div>
-                <div>
-                  <img src="http://localhost:3500/images/pexels-talha-riaz-3822048.jpg"></img>
-                </div>
+                {fotoPaths.find((e) => e.promptid === elem.id) ? (
+                  <div className="grid-cols-3">
+                    {fotoPaths.map((e) => {
+                      if (e.promptid === elem.id) {
+                        return (
+                          <div>
+                            <img
+                              className="w-1/3"
+                              src={`http://localhost:3500/images/${e.name}`}
+                            ></img>
+                          </div>
+                        );
+                      }
+                    })}
+                  </div>
+                ) : (
+                  <div>Noch kein BILD!</div>
+                )}
               </div>
             </div>
           ))}
