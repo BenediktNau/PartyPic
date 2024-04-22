@@ -6,7 +6,7 @@ function Fotos() {
     { id: number | 0; description: string }[]
   >([]);
 
-  const [tests, setFilePaths] = useState<{ file: string; id: number }[]>([]);
+  const [fotoPaths, setFilePaths] = useState<string[][]>([]);
 
   useEffect(() => {
     test();
@@ -34,9 +34,7 @@ function Fotos() {
         }
       )
       .then(function (response) {
-        response.data.forEach(() => {
-          console.log(response.data);
-        });
+        setFilePaths([...fotoPaths, response.data]);
       })
       .catch(function (error) {
         console.log(error);
@@ -46,6 +44,7 @@ function Fotos() {
   const fetchFoto = (fileName: string) => {
     return axios.get(`http://localhost:3500/images/${fileName}`);
   };
+  console.log(fotoPaths);
 
   return (
     <div className="flex justify-center">
@@ -59,7 +58,10 @@ function Fotos() {
               <div className="flex  flex-col text-xl">
                 <div>{elem.description}:</div>
                 <div>
-                  <img src="http://localhost:3500/images/pexels-talha-riaz-3822048.jpg"></img>
+                  {
+                    fotoPaths[elem.id].map((e)=> <img src={`http://localhost:3500/images/${e}`}></img>)
+                  }
+                  
                 </div>
               </div>
             </div>
