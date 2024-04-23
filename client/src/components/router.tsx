@@ -10,6 +10,7 @@ import AdminPage from "../pages/Admin";
 import Upload from "../pages/Upload";
 import Fotos from "../pages/Fotos";
 import UserView from "../pages/UserView";
+import SeeAllFotos from "../pages/SeeAllFotos";
 
 
 const router = createBrowserRouter([
@@ -17,7 +18,7 @@ const router = createBrowserRouter([
     path: "/",
     element: <UserView />,
   },
-  { path: "fotos", element: <Fotos /> },
+  { path: "fotos", element: <SeeAllFotos /> },
   { path: "admin", element: <AdminPage /> },
 
 ]);
