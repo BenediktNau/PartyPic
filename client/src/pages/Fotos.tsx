@@ -24,7 +24,7 @@ function Fotos() {
   }, [prompts]);
 
   const fetchPromps = async () => {
-    const response = await axios.get("http://localhost:3500/getPrompts");
+    const response = await axios.get("http://81.173.113.131:3500/getPrompts");
     if (!response.data) {
       throw new Error("Failed to fetch Prompts");
     }
@@ -36,7 +36,7 @@ function Fotos() {
   const fetchFotoPath = (id: number) => {
     axios
       .post(
-        "http://localhost:3500/getfotopaths",
+        "http://81.173.113.131:3500/getfotopaths",
         { id: id },
         {
           headers: {
@@ -53,7 +53,7 @@ function Fotos() {
   };
 
   const fetchFoto = (fileName: string) => {
-    return axios.get(`http://localhost:3500/images/${fileName}`);
+    return axios.get(`http://81.173.113.131:3500/images/${fileName}`);
   };
 
   return (
@@ -83,7 +83,7 @@ function Fotos() {
                         return (
                           <div className="w-1/3">
                             <img
-                              src={`http://localhost:3500/images/${e.name}`}
+                              src={`http://81.173.113.131:3500/images/${e.name}`}
                             ></img>
                           </div>
                         );

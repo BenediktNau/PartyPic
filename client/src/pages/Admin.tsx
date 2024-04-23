@@ -9,7 +9,7 @@ function AdminPage() {
   console.log(data1!.message);
   const handleClick = async () => {
     try {
-      const data = await axios.get(`http://localhost:3500/api`);
+      const data = await axios.get(`http://81.173.113.131:3500/api`);
       setData(data.data);
     } catch (err) {
       console.log(err);
