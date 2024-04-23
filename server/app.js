@@ -6,7 +6,6 @@ const cors = require("cors");
 const formidable = require("formidable");
 const fs = require("fs");
 const { info, Console } = require("console");
-const path = require("path");
 
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -15,17 +14,6 @@ const corsOptions = {
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 
-
-
-app.use(express.static(path.join(__dirname, "../client/build")))
-
-routes() {
-  this.app.get("*", (req, res) => {
-    res.sendFile(
-      path.join(__dirname, "../client/build/index.html")
-    );
-  });
-}
 
 
 //upload Picture
