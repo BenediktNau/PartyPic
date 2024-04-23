@@ -34,7 +34,7 @@ function Filepond(): JSX.Element {
   }, []);
 
   const fetchRandomLine = async () => {
-    if (!(getCookie("prompt") === "")) {
+    if ((getCookie("prompt"))) {
       console.log(getCookie("prompt"));
       setRandomLine(JSON.parse(getCookie("prompt")!));
     } else {
@@ -79,8 +79,8 @@ function Filepond(): JSX.Element {
                 Id: `${randomLine.id}`,
               },
             }}
-            onprocessfiles={() => {
-              removeCookie("prompts", { path: "" });
+            onprocessfile={() => {
+              removeCookie("prompt");
               fetchRandomLine();
             }}
           />
