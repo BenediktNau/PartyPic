@@ -3,7 +3,6 @@ import { FilePond, registerPlugin, FilePondProps } from "react-filepond";
 // Import FilePond styles
 import "filepond/dist/filepond.min.css";
 
-
 import React, { useEffect, useState } from "react";
 import FilePondPluginImagePreview from "filepond-plugin-image-preview";
 import FilePondPluginImageExifOrientation from "filepond-plugin-image-exif-orientation";
@@ -12,6 +11,7 @@ import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
 import "filepond/dist/filepond.min.css";
 import axios from "axios";
 import { getCookie, setCookie, removeCookie } from "typescript-cookie";
+import { Session } from "inspector";
 
 registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 
@@ -26,7 +26,7 @@ function Filepond(): JSX.Element {
   }, []);
 
   const fetchRandomLine = async () => {
-    if ((getCookie("prompt"))) {
+    if (getCookie("prompt")) {
       console.log(getCookie("prompt"));
       setRandomLine(JSON.parse(getCookie("prompt")!));
     } else {
@@ -69,6 +69,7 @@ function Filepond(): JSX.Element {
               headers: {
                 Name: `${getCookie("KekseFürAlle")}`,
                 Id: `${randomLine.id}`,
+                sessionId: `${getCookie("sessionId")}`,
               },
             }}
             onprocessfile={() => {

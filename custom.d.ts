@@ -6,3 +6,4 @@ declare module "*.svg" {
 }
 
 declare module "react-swipeable-views";
+declare module "random-token";

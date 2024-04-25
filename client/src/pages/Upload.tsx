@@ -1,9 +1,8 @@
-import {
-  Modal,
-} from "@mui/material";
+import { Modal } from "@mui/material";
 import FilePond from "../components/filepond";
 import React, { useEffect, useState } from "react";
 import { getCookie, setCookie } from "typescript-cookie";
+import randomToken from "random-token";
 
 function Upload() {
   const [openModal, setOpenModal] = useState<boolean>(false);
@@ -22,7 +21,7 @@ function Upload() {
   return (
     <div className=" flex justify-center w-full flex-col space-y-4">
       <div className=" bg-[#f1f0ef] rounded-lg px-4 space-y-8 ">
-        <FilePond/>
+        <FilePond />
       </div>
 
       <Modal
@@ -42,6 +41,7 @@ function Upload() {
               className="border-black border-2 rounded-md"
               onClick={() => {
                 setCookie("KekseFürAlle", name);
+                setCookie("sessionId", String(randomToken(16)));
                 setOpenModal(false);
               }}
             >

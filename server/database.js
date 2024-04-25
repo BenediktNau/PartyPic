@@ -51,7 +51,8 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
         id INTEGER PRIMARY KEY,
         name text,
         promptid INTEGER,
-        user text
+        user text,
+        sessionId text
         )`,
       (err) => {
         if (err) {

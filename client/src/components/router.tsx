@@ -1,5 +1,4 @@
 import path from "path";
-import { createRoot } from "react-dom/client";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -12,7 +11,6 @@ import Fotos from "../pages/Fotos";
 import UserView from "../pages/UserView";
 import SeeAllFotos from "../pages/SeeAllFotos";
 
-
 const router = createBrowserRouter([
   {
     path: "/",
@@ -20,7 +18,6 @@ const router = createBrowserRouter([
   },
   { path: "fotos", element: <SeeAllFotos /> },
   { path: "admin", element: <AdminPage /> },
-
 ]);
 
 export default router;

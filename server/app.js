@@ -23,9 +23,11 @@ app.post("/upload", async function (req, res) {
     uploadDir: "/uploads",
     filename: (name, ext, part, form) => {
       db.run(
-        `INSERT INTO pictures(name, promptid, user) VALUES("${
+        `INSERT INTO pictures(name, promptid, user, sessionId) VALUES("${
           part.originalFilename
-        }", ${req.header("id")}, "${req.header("name")}")`
+        }", ${req.header("id")}, "${req.header("name")}", "${req.header(
+          "sessionId"
+        )}")`
       );
       return part.originalFilename; // Will be joined with options.uploadDir.
     },
@@ -82,10 +84,33 @@ app.get("/images/:imageName", (req, res) => {
   res.sendFile(`/uploads/${imageName}`);
 });
 
-app.get("/people", (req, res) => {
-  console.log("Hallo");
-  db.all(`SELECT * FROM pictures `, (err, rows) => {
-    console.log(rows);
-    res.send(rows);
+app.get("/people",
+  (req, res) => {
+    db.all(
+      `SELECT user, sessionId, COUNT(name) AS uploads_count FROM pictures GROUP BY user, sessionId;`,
+      (err, rows) => {
+        console.log(rows)
+        res.send("rows");
+      }
+    );
+    
   });
-});
+
+//Retrieving promtList.txt
+//app.get("/read-file", (req, res) => {
+//  const filePath = "./promptList";
+//
+//  lineReader.on("line", (line) => {
+//    db.run("INSERT INTO your table (data) VALUES (?)", [line], (err) => {
+//      if (err) {
+//        console.error("Error inserting data into database: ", err);
+//        console.log("Error inserting data into database");
+//      }
+//    });
+//  });
+//
+//  lineReader.on("close", () => {
+//    res.send("File data inserted into database");
+//    console.log("File data inserted into database");
+//  });
+//});
