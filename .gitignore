@@ -5,7 +5,7 @@
 /build
 /client/node_modules
 /client/build
-.sqlite
+./server/db.sqlite
 
 # misc
 .DS_Store
