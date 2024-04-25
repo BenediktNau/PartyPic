@@ -11,10 +11,9 @@ const corsOptions = {
   origin: "http://localhost:3000",
   origin: "*",
 };
+
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
-
-
 
 //upload Picture
 app.post("/upload", async function (req, res) {
@@ -57,7 +56,6 @@ app.get("/random-line", (req, res) => {
     } else {
       var q = { id: row.id, description: row.description };
       res.send(q);
-      console.log(q);
     }
   });
 });
@@ -75,8 +73,6 @@ app.get("/getPrompts", (req, res) => {
 
 app.post("/getfotopaths", (req, res) => {
   db.all(`SELECT * FROM pictures `, (err, rows) => {
-    console.log(rows);
-
     res.send(rows);
   });
 });
@@ -86,21 +82,10 @@ app.get("/images/:imageName", (req, res) => {
   res.sendFile(`/uploads/${imageName}`);
 });
 
-//Retrieving promtList.txt
-//app.get("/read-file", (req, res) => {
-//  const filePath = "./promptList";
-//
-//  lineReader.on("line", (line) => {
-//    db.run("INSERT INTO your table (data) VALUES (?)", [line], (err) => {
-//      if (err) {
-//        console.error("Error inserting data into database: ", err);
-//        console.log("Error inserting data into database");
-//      }
-//    });
-//  });
-//
-//  lineReader.on("close", () => {
-//    res.send("File data inserted into database");
-//    console.log("File data inserted into database");
-//  });
-//});
+app.get("/people", (req, res) => {
+  console.log("Hallo");
+  db.all(`SELECT * FROM pictures `, (err, rows) => {
+    console.log(rows);
+    res.send(rows);
+  });
+});

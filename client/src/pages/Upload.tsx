@@ -1,10 +1,5 @@
 import {
-  Box,
-  InputAdornment,
   Modal,
-  TextField,
-  Typography,
-  createTheme,
 } from "@mui/material";
 import FilePond from "../components/filepond";
 import React, { useEffect, useState } from "react";

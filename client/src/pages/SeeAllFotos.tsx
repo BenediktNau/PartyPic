@@ -21,7 +21,7 @@ function SeeAllFotos() {
   }, [prompts]);
 
   const fetchPromps = async () => {
-    const response = await axios.get("http://81.173.113.131:3500/getPrompts");
+    const response = await axios.get("http://localhost:3500/getPrompts");
     if (!response.data) {
       throw new Error("Failed to fetch Prompts");
     }
@@ -33,7 +33,7 @@ function SeeAllFotos() {
   const fetchFotoPath = (id: number) => {
     axios
       .post(
-        "http://81.173.113.131:3500/getfotopaths",
+        "http://localhost:3500/getfotopaths",
         { id: id },
         {
           headers: {
@@ -57,11 +57,11 @@ function SeeAllFotos() {
         </div>
         <div className="space-y-4 p-2">
           <div className="flex  flex-col text-xl border-black border-2 p-2">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 ">
               {fotoPaths.map((e) => {
                 return (
                   
-                    <img className="h-40 max-w-full rounded-lg object-cover object-center md:h-60" src={`http://81.173.113.131:3500/images/${e.name}`}></img>
+                    <img className="h-40 max-w-full rounded-lg object-cover object-center md:h-60" src={`http://localhost:3500/images/${e.name}`}></img>
                 
                 );
               })}

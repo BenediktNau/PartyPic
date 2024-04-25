@@ -16,7 +16,6 @@ const initializePrompts = () => {
   });
   rl.on("line", (line) => {
     db.run(insert, [line]);
-    console.log(line);
   });
 };
 

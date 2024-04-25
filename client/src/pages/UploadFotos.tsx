@@ -2,23 +2,8 @@ import { FilePond, registerPlugin, FilePondProps } from "react-filepond";
 
 // Import FilePond styles
 import "filepond/dist/filepond.min.css";
-
-//
-//Imports for preview
-//
-
-import React, { useEffect, useState } from "react";
-import FilePondPluginImagePreview from "filepond-plugin-image-preview";
-import FilePondPluginImageExifOrientation from "filepond-plugin-image-exif-orientation";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
-import {
-  ActualFileObject,
-  ProgressServerConfigFunction,
-  create,
-} from "filepond";
 import "filepond/dist/filepond.min.css";
-import { styled } from "@mui/material";
-import axios from "axios";
 import { getCookie } from "typescript-cookie";
 function FotosFree() {
   return (
@@ -36,7 +21,7 @@ function FotosFree() {
                 credits={false}
                 allowMultiple={true}
                 server={{
-                  url: "http://81.173.113.131:3500/upload",
+                  url: "http://localhost:3500/upload",
                   headers: {
                     Name: `${getCookie("KekseFürAlle")}`,
                     Id: `100`,
@@ -45,7 +30,6 @@ function FotosFree() {
               />
             </div>
           </div>
-          
         </div>
       </div>
     </div>

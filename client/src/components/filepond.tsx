@@ -3,21 +3,13 @@ import { FilePond, registerPlugin, FilePondProps } from "react-filepond";
 // Import FilePond styles
 import "filepond/dist/filepond.min.css";
 
-//
-//Imports for preview
-//
 
 import React, { useEffect, useState } from "react";
 import FilePondPluginImagePreview from "filepond-plugin-image-preview";
 import FilePondPluginImageExifOrientation from "filepond-plugin-image-exif-orientation";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
-import {
-  ActualFileObject,
-  ProgressServerConfigFunction,
-  create,
-} from "filepond";
+
 import "filepond/dist/filepond.min.css";
-import { styled } from "@mui/material";
 import axios from "axios";
 import { getCookie, setCookie, removeCookie } from "typescript-cookie";
 
@@ -39,7 +31,7 @@ function Filepond(): JSX.Element {
       setRandomLine(JSON.parse(getCookie("prompt")!));
     } else {
       try {
-        const response = await axios.get("http://81.173.113.131:3500/random-line");
+        const response = await axios.get("http://localhost:3500/random-line");
         if (!response.data) {
           throw new Error("Failed to fetch random line");
         }
@@ -73,7 +65,7 @@ function Filepond(): JSX.Element {
             allowMultiple={true}
             maxFiles={1}
             server={{
-              url: "http://81.173.113.131:3500/upload",
+              url: "http://localhost:3500/upload",
               headers: {
                 Name: `${getCookie("KekseFürAlle")}`,
                 Id: `${randomLine.id}`,

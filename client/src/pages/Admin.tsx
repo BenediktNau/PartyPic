@@ -6,10 +6,9 @@ import Filepond from "../components/filepond";
 function AdminPage() {
   const [data1, setData] = useState<{ message: string }>({ message: "" });
 
-  console.log(data1!.message);
   const handleClick = async () => {
     try {
-      const data = await axios.get(`http://81.173.113.131:3500/api`);
+      const data = await axios.get('http://localhost:3500/people');
       setData(data.data);
     } catch (err) {
       console.log(err);
@@ -19,7 +18,6 @@ function AdminPage() {
   return (
     <div>
       <button onClick={handleClick}> Test </button>
-      <Filepond />
     </div>
   );
 }
