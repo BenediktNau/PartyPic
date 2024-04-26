@@ -24,7 +24,7 @@ function Fotos() {
   }, [prompts]);
 
   const fetchPromps = async () => {
-    const response = await axios.get("http://localhost:3500/getPrompts");
+    const response = await axios.get("http://81.173.113.131:3500/getPrompts");
     if (!response.data) {
       throw new Error("Failed to fetch Prompts");
     }
@@ -35,7 +35,7 @@ function Fotos() {
   const fetchFotoPath = (id: number) => {
     axios
       .post(
-        "http://localhost:3500/getfotopaths",
+        "http://81.173.113.131:3500/getfotopaths",
         { id: id },
         {
           headers: {
