@@ -26,18 +26,43 @@ function Filepond(): JSX.Element {
   }, []);
 
   const fetchRandomLine = async () => {
+    
+    console.log("Prompt wird geprüft");
+    
     if (getCookie("prompt")) {
       console.log(getCookie("prompt"));
       setRandomLine(JSON.parse(getCookie("prompt")!));
+
+      console.log("Prompt wurde erfolgreich geprüft");
     } else {
       try {
+        
         const response = await axios.get("http://localhost:3500/random-line");
         if (!response.data) {
           throw new Error("Failed to fetch random line");
         }
-        const data = await response.data;
+        
+        
+        let data = await response.data;
+        //Checken ob Prompt bereits drankam
+        
+        while(getCookie(JSON.stringify(data.id)))
+        {
+            const response = await axios.get("http://localhost:3500/random-line");
+            if (!response.data) {
+              throw new Error("Failed to fetch random line");
+            }
+        
+            
+            data = await response.data;
+        }
+        console.log("Prompt wurde erfolgreich geprüft");
         setRandomLine(data);
         setCookie("prompt", JSON.stringify(data));
+        
+        /* Setze Cookie */
+        setCookie(JSON.stringify(data.id),JSON.stringify(data.id));
+
       } catch (error) {
         console.error("Error fetching random line:", error);
       }
