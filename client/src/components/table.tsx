@@ -21,10 +21,19 @@ export default function DataTable() {
     fetchScores();
   }, []);
 
-  console.log(scorebord)
+  function getRowId(row: {
+    user: string;
+    sessionId: string;
+    uploads_count: number;
+  }) {
+    return row.sessionId;
+  }
+
+  console.log(scorebord);
   return (
     <div style={{ height: "400px", width: "100%" }}>
-      <DataGrid getRowId={}
+      <DataGrid
+        getRowId={getRowId}
         rows={scorebord}
         columns={columns}
         initialState={{
