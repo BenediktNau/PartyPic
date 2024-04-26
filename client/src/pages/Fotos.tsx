@@ -77,6 +77,7 @@ function Fotos() {
                       if (e.promptid === elem.id) {
                         return (
                           <img
+                            key={e.id}
                             className="h-40 max-w-full rounded-lg object-cover object-center md:h-60"
                             onClick={() => {}}
                             src={`http://localhost:3500/images/${e.name}`}

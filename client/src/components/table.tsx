@@ -1,15 +1,15 @@
 import * as React from "react";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const columns: GridColDef[] = [
-  { field: "user", headerName: "User", width: 160 },
-  { field: "sessionId", headerName: "SessionID", width: 160 },
-  { field: "uploads_count", headerName: "Uploads", width: 170 },
-];
-
-export default function DataTable() {
+export default function BasicTable() {
   const [scorebord, setscorebord] = useState<
     { user: string; sessionId: string; uploads_count: number }[]
   >([]);
@@ -20,30 +20,33 @@ export default function DataTable() {
     }
     fetchScores();
   }, []);
-
-  function getRowId(row: {
-    user: string;
-    sessionId: string;
-    uploads_count: number;
-  }) {
-    return row.sessionId;
-  }
-
   console.log(scorebord);
+
   return (
-    <div style={{ height: "400px", width: "100%" }}>
-      <DataGrid
-        getRowId={getRowId}
-        rows={scorebord}
-        columns={columns}
-        initialState={{
-          pagination: {
-            paginationModel: { page: 0, pageSize: 5 },
-          },
-        }}
-        pageSizeOptions={[10, 20, 100]}
-        checkboxSelection
-      />
-    </div>
+    <TableContainer component={Paper}>
+      <Table sx={{ width: "100%" }} aria-label="simple table">
+        <TableHead>
+          <TableRow>
+            <TableCell>Uploads</TableCell>
+            <TableCell align="right">Name</TableCell>
+            <TableCell align="right">SessionId</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {scorebord.map((row) => (
+            <TableRow
+              key={row.sessionId}
+              sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+            >
+              <TableCell component="th" scope="row" align="center">
+                {row.uploads_count}
+              </TableCell>
+              <TableCell align="right">{row.user}</TableCell>
+              <TableCell align="right">{row.sessionId}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }

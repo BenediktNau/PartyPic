@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@mui/x-data-grid": "^7.3.0",
+    "@mui/x-data-grid-premium": "^7.3.1",
     "axios": "^1.6.8",
     "filepond-plugin-image-exif-orientation": "^1.0.11",
     "filepond-plugin-image-preview": "^4.6.12",

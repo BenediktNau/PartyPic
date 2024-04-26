@@ -87,14 +87,21 @@ app.get("/images/:imageName", (req, res) => {
 app.get("/people",
   (req, res) => {
     db.all(
-      `SELECT user, sessionId, COUNT(name) AS uploads_count FROM pictures GROUP BY user, sessionId;`,
+      `SELECT user, sessionId, COUNT(name) AS uploads_count FROM pictures GROUP BY user, sessionId ORDER BY uploads_count DESC;`,
       (err, rows) => {
         console.log(rows)
-        res.send("rows");
+        res.send(rows);
       }
     );
     
   });
+
+
+app.post("/addprompt", (req, res) => {
+  db.all(
+    `INSERT INTO prompt (description) VALUES (${req.header("prompt")})`
+  )
+})
 
 //Retrieving promtList.txt
 //app.get("/read-file", (req, res) => {
