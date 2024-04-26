@@ -16,7 +16,7 @@ export default function BasicTable() {
 
   useEffect(() => {
     async function fetchScores() {
-      setscorebord((await axios.get("http://localhost:3500/people")).data);
+      setscorebord((await axios.get("http://81.173.113.131:3500/people")).data);
     }
     fetchScores();
   }, []);

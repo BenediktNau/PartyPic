@@ -21,7 +21,7 @@ function FotosFree() {
                 credits={false}
                 allowMultiple={true}
                 server={{
-                  url: "http://localhost:3500/upload",
+                  url: "http://81.173.113.131:3500/upload",
                   headers: {
                     Name: `${getCookie("KekseFürAlle")}`,
                     Id: `100`,

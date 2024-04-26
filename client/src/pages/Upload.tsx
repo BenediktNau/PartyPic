@@ -3,8 +3,11 @@ import FilePond from "../components/filepond";
 import React, { useEffect, useState } from "react";
 import { getCookie, setCookie } from "typescript-cookie";
 import randomToken from "random-token";
+import { useNavigate } from "react-router";
 
 function Upload() {
+  const navigate = useNavigate();
+
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [name, setName] = useState<string>("");
 
@@ -23,6 +26,14 @@ function Upload() {
       <div className=" bg-[#f1f0ef] rounded-lg px-4 space-y-8 ">
         <FilePond />
       </div>
+      <button
+        onClick={() => {
+          navigate("/scoreboard");
+        }}
+        className="flex justify-center pt-12"
+      >
+        Hier geht´s zum Scoreboard!
+      </button>
 
       <Modal
         className="flex justify-center items-center font-[Myfont] "

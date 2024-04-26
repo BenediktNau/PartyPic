@@ -17,7 +17,7 @@ const router = createBrowserRouter([
     element: <UserView />,
   },
   { path: "fotos", element: <SeeAllFotos /> },
-  { path: "admin", element: <AdminPage /> },
+  { path: "scoreboard", element: <AdminPage /> },
 ]);
 
 export default router;

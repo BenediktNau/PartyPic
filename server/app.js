@@ -97,11 +97,7 @@ app.get("/people",
   });
 
 
-app.post("/addprompt", (req, res) => {
-  db.all(
-    `INSERT INTO prompt (description) VALUES (${req.header("prompt")})`
-  )
-})
+
 
 //Retrieving promtList.txt
 //app.get("/read-file", (req, res) => {
