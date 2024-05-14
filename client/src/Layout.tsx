@@ -1,19 +1,11 @@
-import React from "react";
-import { RouterProvider } from "react-router-dom";
-import router from "./components/router";
-import { ReactComponent as Logo } from "./assets/logo.svg";
+import React from 'react'
+import { RouterProvider } from 'react-router-dom'
+import AppRouter from './util/router/router'
 
 function Layout() {
   return (
-    <div className="pt-10 w-screen h-full bg-[#f1f0ef] font-[MyFont] space-y-6">
-      <div className="mt-[-2em] mx-2">
-        <a href="/"><Logo className="w-[150px] " /></a>
-        
-      </div>
-
-      <RouterProvider router={router} />
-    </div>
-  );
+    <RouterProvider router={AppRouter}/>
+  )
 }
 
-export default Layout;
+export default Layout
