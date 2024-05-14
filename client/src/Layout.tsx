@@ -1,11 +1,13 @@
-import React from 'react'
-import { RouterProvider } from 'react-router-dom'
-import AppRouter from './util/router/router'
+import React from "react";
+import { RouterProvider } from "react-router-dom";
+import AppRouter from "./util/router/router";
 
 function Layout() {
   return (
-    <RouterProvider router={AppRouter}/>
-  )
+    <div className="w-full h-full">
+      <RouterProvider router={AppRouter} />
+    </div>
+  );
 }
 
-export default Layout
+export default Layout;

@@ -3,7 +3,7 @@ import Layout from "./Layout";
 
 function App() {
   return (
-    <div>
+    <div className="w-screen h-screen">
       <Layout />
     </div>
   );
