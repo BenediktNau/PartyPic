@@ -1,28 +1,38 @@
-import React from 'react'
-import Webcam from 'react-webcam';
-
+import React, { useCallback, useRef, useState } from "react";
+import Webcam from "react-webcam";
 
 const videoConstraints = {
-    width: 1280,
-    height: 720,
-    facingMode: "user"
-  };
-  
-  const WebcamCapture = () => (
-    <Webcam
-      audio={false}
-      height={720}
-      screenshotFormat="image/jpeg"
-      width={1280}
-      videoConstraints={videoConstraints}
-    >
-    </Webcam>
-  );
+  aspectRatio: 1.666667,
+  width: { min: 480 },
+  height: { min: 960 },
+};
 
-function CameraModule() {
+const CameraModule = () => {
+  const webcamRef = useRef(null);
+  const [imgSrc, setImgSrc] = useState(null);
+
+  const capture = useCallback(() => {
+    if (webcamRef.current) {
+      //Fix getScreenshot Error!!!!!!!!!!!!!!!!!
+      // Dont do @ts-ignore
+      // @ts-ignore
+      const imageSrc = webcamRef.current.getScreenshot();
+      setImgSrc(imageSrc);
+    } else setImgSrc(null);
+  }, [webcamRef, setImgSrc]);
+  console.log(imgSrc);
   return (
-    <div><div><WebcamCapture/></div></div>
-  )
-}
+    <div className="text-text">
+      <Webcam
+        audio={false}
+        ref={webcamRef}
+        screenshotFormat="image/jpeg"
+        videoConstraints={videoConstraints}
+        className="w-full h-full rounded-3xl border-4 border-borders"
+      />
+      <button onClick={capture}>Capture photo</button>
+    </div>
+  );
+};
 
-export default CameraModule
+export default CameraModule;
