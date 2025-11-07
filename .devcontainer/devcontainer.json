@@ -1,0 +1,17 @@
+{
+  "name": "PartyPic Devcontainer",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers"
+      ]
+    }
+  },
+  "postStartCommand": "echo 'Installing server & client deps...' && cd /workspace/party-pic_server && npm install || npm install && cd /workspace/party-pic_client && npm install || npm install && echo 'Deps installed.'|| true",
+  "remoteUser": "vscode"
+}

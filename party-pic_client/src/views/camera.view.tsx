@@ -12,10 +12,15 @@ function cameraView() {
 
 
     return (
-        <div className="p-4 flex flex-col w-screen h-screen items-center  justify-center ">
-            <h1 >Camera View</h1>
-            <WebcamCapture ref={webcamRef} className='flex-1'/>
-            <button onClick={capturePic}>Capture photo</button>
+        <div className="flex flex-col w-full h-dvh items-center justify-center">
+
+            <div className="p-4">
+                <WebcamCapture ref={webcamRef} className='flex-1 min-h-0 w-screen' />
+            </div>
+
+            <button onClick={capturePic} className="p-4">
+                Capture photo
+            </button>
         </div>
     )
 

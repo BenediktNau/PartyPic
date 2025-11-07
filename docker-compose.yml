@@ -1,0 +1,100 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: partyuser
+      POSTGRES_PASSWORD: partypass
+      POSTGRES_DB: partydb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  minio:
+    image: minio/minio:latest
+    container_name: local_minio_s3
+    restart: always
+    ports:
+      - "9000:9000" # Der S3-API-Port
+      - "9001:9001" # Die Web-GUI von MinIO
+    environment:
+      MINIO_ROOT_USER: minioadmin      # Dein S3 Access Key
+      MINIO_ROOT_PASSWORD: minioadmin  # Dein S3 Secret Key
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+
+  devcontainer:
+    build:
+      context: ./.devcontainer
+      dockerfile: Dockerfile
+    image: party-pic-devcontainer:local
+    restart: no
+    tty: true
+    volumes:
+      - ./:/workspace:cached
+    working_dir: /workspace
+    depends_on:
+      - db
+      - minio
+    environment:
+      # make the db host visible inside the container
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: partyuser
+      DB_PASSWORD: partypass
+      DB_NAME: partydb
+
+      S3_ENDPOINT: "http://minio:9000" 
+      S3_ACCESS_KEY: "minioadmin"
+      S3_SECRET_KEY: "minioadmin"
+      S3_BUCKET_NAME: "dev-foto-bucket" # Name für deinen Test-Bucket
+      S3_REGION: "us-east-1"
+      S3_FORCE_PATH_STYLE: "true" # Wichtig für MinIO!
+    command: sleep infinity
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80" # Host port 8080 -> pgAdmin 80
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - db
+
+
+  #server:
+  #  build:
+  #    context: ./party-pic_server
+  #    dockerfile: dockerfile
+  #    target: runner
+  #  restart: unless-stopped
+  #  env_file: 
+  #    - ./party-pic_server/.env.dev
+  #  environment:
+  #    # fallback defaults (can be overridden by .env.dev)
+  #    DATABASE_URL: postgres://partyuser:partypass@db:5432/partydb
+  #    PORT: 3000
+  #    NODE_ENV: development
+  #  ports:
+  #    - "3000:3000"
+  #  depends_on:
+  #    db:
+  #      condition: service_healthy
+  #  volumes:
+  #    - ./party-pic_server:/app:cached
+  #    - /app/node_modules
+
+volumes:
+  db-data:
+  minio-data:
+  pgadmin-data:
+
+
