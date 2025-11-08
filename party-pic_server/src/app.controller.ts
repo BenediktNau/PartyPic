@@ -8,7 +8,7 @@ import { PicturesController } from './pictures/pictures.controller';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService
-    , private readonly pictureService: PicturesController
+
   ) { }
 
   @Get()
@@ -16,11 +16,6 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return this.pictureService.uploadPicture(file, { session_id: "test", u_name: "test" });
-  }
 
 
 

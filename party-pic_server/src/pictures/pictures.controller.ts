@@ -34,6 +34,7 @@ export class PicturesController {
         @UploadedFile() file: Express.Multer.File,
         @Body() body: UploadMetaDto,
     ) {
+        console.log(file)
         // 1. Datei zu S3 (MinIO) hochladen
         const s3Data = await this.storageService.uploadFile(file, body.session_id);
 
@@ -43,6 +44,8 @@ export class PicturesController {
             session_id: body.session_id,
             ...s3Data, // Enthält s3_key, s3_bucket, original_filename etc.
         });
+
+
 
         return dbEntry;
     }

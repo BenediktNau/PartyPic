@@ -1,6 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { Pool } from 'pg'; // Annahme: Du nutzt 'pg'
 
+interface IpictureData {
+  u_name: string;
+  session_id: string;
+  original_filename: string;
+  s3_key: string;
+  s3_bucket: string;
+  mimetype: string;
+  filesize_bytes: number;
+}
+
+
 @Injectable()
 export class PicturesDbService {
   private pool: Pool; // Annahme: Pool wird hier initialisiert
@@ -13,15 +24,9 @@ export class PicturesDbService {
     });
   }
 
-  async createPicture(pictureData: {
-    u_name: string;
-    session_id: string;
-    original_filename: string;
-    s3_key: string;
-    s3_bucket: string;
-    mimetype: string;
-    filesize_bytes: number;
-  }) {
+
+
+  async createPicture(pictureData: IpictureData) {
     const {
       u_name,
       session_id,
@@ -40,7 +45,7 @@ export class PicturesDbService {
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *; 
     `;
-    
+
     const values = [
       u_name,
       session_id,

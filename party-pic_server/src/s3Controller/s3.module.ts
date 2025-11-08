@@ -15,6 +15,7 @@ import { StorageService } from './s3.service';
         
         if (isDevelopment) {
           // Konfiguration für MinIO (Lokal)
+          console.log("DEVS3")
           return new S3Client({
             region: configService.getOrThrow<string>('S3_REGION'),
             endpoint: configService.getOrThrow<string>('S3_ENDPOINT'),
@@ -27,7 +28,9 @@ import { StorageService } from './s3.service';
         } else {
           // Konfiguration für AWS S3 (Produktion)
           // Auf ECS/AWS werden Credentials automatisch über die IAM-Rolle bezogen
+          console.log("PRODS3")
           return new S3Client({
+            
             region: configService.getOrThrow<string>('S3_REGION'),
           });
         }
