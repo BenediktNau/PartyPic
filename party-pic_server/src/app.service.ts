@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { postPictureToDB } from './postrgeController/postrges';
 import { picture } from './models/picture.model';
 
 @Injectable()

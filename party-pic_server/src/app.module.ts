@@ -6,17 +6,21 @@ import { PicturesDbService } from './pictures/pictures.db.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { StorageModule } from './s3Controller/s3.module';
 import { Pool } from 'pg';
+import { SessionsController } from './sessions/sessions.controller';
 
 @Module({
   imports: [
     // 3. Lade .env-Variablen global
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env.dev'
+    }),
 
     // 4. Importiere das StorageModule.
     //    Es stellt S3Client bereit UND exportiert StorageService.
     StorageModule,
   ],
-  controllers: [AppController, PicturesController],
+  controllers: [AppController, PicturesController, SessionsController],
   providers: [
     AppService,
     PicturesDbService,
@@ -34,11 +38,7 @@ import { Pool } from 'pg';
           database: configService.get<string>('DB_NAME'),
         });
       },
-    },
-
-    // 6. ENTFERNE StorageService und ConfigService von hier.
-    // StorageService kommt jetzt aus dem importierten StorageModule.
-    // ConfigService kommt aus dem importierten ConfigModule.
+    }
   ],
 })
 export class AppModule { }

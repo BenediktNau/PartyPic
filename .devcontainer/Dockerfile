@@ -7,7 +7,9 @@ RUN apt-get update \
   && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
   && apt-get install -y --no-install-recommends nodejs build-essential \
   && apt-get install -y --no-install-recommends postgresql-client \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && sudo npm install -g @nestjs/cli
+
 
 # Create workspace user is already 'vscode' in base image; ensure node_modules permission compatibility
 USER vscode

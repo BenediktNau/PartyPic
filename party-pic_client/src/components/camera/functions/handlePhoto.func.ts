@@ -8,7 +8,7 @@ export const handlePhotoShoot = (base64Image: string) => {
 
     formData.append("file", blob, fileName)
     formData.append('u_name', 'test_user');
-    formData.append('session_id', 'deine-session-uuid');
+    formData.append('session_id', '550e8400-e29b-41d4-a716-446655440000');
 
     return formData
 

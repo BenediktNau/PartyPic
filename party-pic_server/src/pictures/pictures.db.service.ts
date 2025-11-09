@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Pool } from 'pg'; // Annahme: Du nutzt 'pg'
 
 interface IpictureData {
@@ -14,17 +15,12 @@ interface IpictureData {
 
 @Injectable()
 export class PicturesDbService {
-  private pool: Pool; // Annahme: Pool wird hier initialisiert
 
-  constructor() {
-    // ... Initialisierung deines DB-Pools ...
-    this.pool = new Pool({
-      host: process.env.DB_HOST,
-      // ...
-    });
-  }
+  constructor(
+    @Inject('PG_POOL') private readonly pool: Pool
+  ) {}
 
-
+  
 
   async createPicture(pictureData: IpictureData) {
     const {
