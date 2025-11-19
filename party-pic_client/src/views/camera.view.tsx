@@ -9,8 +9,7 @@ function cameraView() {
 
     const pictureUpload = useMutation(
         {
-            mutationFn: (formData: FormData) => postPicture(formData)
-            ,
+            mutationFn: (formData: FormData) => postPicture(formData),
             onError: (error) => { console.log(error) }
         })
 
@@ -21,8 +20,6 @@ function cameraView() {
             pictureUpload.mutate(data)
         }
 
-        console.log(imageSrc);
-
     }, [webcamRef]);
 
 
@@ -30,7 +27,7 @@ function cameraView() {
         <div className="flex flex-col w-full h-dvh items-center justify-center">
 
             <div className="p-4">
-                <WebcamCapture ref={webcamRef} className='flex-1 min-h-0 w-screen' />
+                <WebcamCapture ref={webcamRef} className=' min-h-0  max-h-5/6' />
             </div>
 
             <button onClick={capturePic} className="p-4">

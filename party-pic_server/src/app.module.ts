@@ -4,9 +4,13 @@ import { AppService } from './app.service';
 import { PicturesController } from './pictures/pictures.controller';
 import { PicturesDbService } from './pictures/pictures.db.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { StorageModule } from './s3Controller/s3.module';
+import { StorageModule } from './s3/s3.module';
 import { Pool } from 'pg';
 import { SessionsController } from './sessions/sessions.controller';
+import { AuthController } from './auth/auth.controller';
+import { AuthService } from './auth/auth.service';
+import { UsersService } from './users/users.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -20,11 +24,14 @@ import { SessionsController } from './sessions/sessions.controller';
     //    Es stellt S3Client bereit UND exportiert StorageService.
     StorageModule,
   ],
-  controllers: [AppController, PicturesController, SessionsController],
+  controllers: [AppController, PicturesController, SessionsController, AuthController],
   providers: [
     AppService,
     PicturesDbService,
-
+    AuthService,
+    UsersService,
+    JwtService,
+    
     // 5. Stelle den DB-Pool für AppService und PicturesDbService bereit
     {
       provide: 'PG_POOL',

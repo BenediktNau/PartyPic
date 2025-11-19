@@ -8,7 +8,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { PicturesDbService } from './pictures.db.service'; // Dein DB-Service (siehe unten)
-import { StorageService } from 'src/s3Controller/s3.service';
+import { StorageService } from 'src/s3/s3.service';
 
 // DTO für zusätzliche Daten, die als Text mitgesendet werden
 class UploadMetaDto {

@@ -18,6 +18,17 @@ CREATE TABLE pictures (
     CONSTRAINT unique_s3_key UNIQUE(s3_key)
 );
 
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    
+    CONSTRAINT unique_email UNIQUE(email)
+);
+
 
 
 Indezes für Schnelle Suche möglicherweise später Interessant?
