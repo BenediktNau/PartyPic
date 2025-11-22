@@ -17,8 +17,10 @@ export class AuthController {
     @Post('login')
     async login(@Request() req) {
         // req.user wurde vom LocalAuthGuard (via LocalStrategy) angehängt
-        if (await this.authService.validateUser(req.body.email, req.body.password)) {
-            return this.authService.login(req.body);
+        const user = await this.authService.validateUser(req.body.email, req.body.password)
+        if (user) {
+            console.log("User validated:", user);
+            return this.authService.login(user);
         }
         else {
             return { message: 'Unauthorized' };

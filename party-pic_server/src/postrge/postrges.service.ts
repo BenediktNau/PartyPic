@@ -1,4 +1,4 @@
-import { picture } from "src/models/picture.model"
+import { picture } from "src/models/pictures/picture.model"
 
 const Pool = require('pg-pool')
 const url = require('url')

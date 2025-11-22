@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor( configService: ConfigService) {
+  constructor(configService: ConfigService) {
     console.log('JWT_SECRET:', configService.get<string>('JWT_SECRET'));
     super({
       // Sagt Passport, wie der Token gefunden wird (als Bearer Token im Header)
@@ -21,6 +21,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    */
   async validate(payload: any) {
     // Payload ist der entschlüsselte Token: { email: '...', sub: '...' }
-    return { userId: payload.sub, email: payload.email };
+    return payload;
   }
 }

@@ -31,7 +31,7 @@ export class AuthService {
     const payload = { email: user.email, sub: user.id };
     return {
       access_token: this.jwtService.sign(payload, { secret: process.env.JWT_SECRET }),
-      user: user,
+      user: payload,
 
     };
   }
@@ -42,5 +42,16 @@ export class AuthService {
   async register(name: string, email: string, pass: string) {
     // Hier könntest du Logik einbauen (z.B. "E-Mail bereits vergeben?")
     return this.usersService.create(name, email, pass);
+  }
+
+
+
+  async decryptToken(token: string) {
+    try {
+      const decoded = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+      return decoded;
+    } catch (e) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 }

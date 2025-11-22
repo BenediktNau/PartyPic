@@ -11,6 +11,9 @@ import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { UsersService } from './users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { SessionsDbService } from './sessions/sessions.db.service';
+import { AuthModule } from './auth/auth.module';
+import { JwtStrategy } from './auth/jwt.strategy';
 
 @Module({
   imports: [
@@ -27,11 +30,14 @@ import { JwtService } from '@nestjs/jwt';
   controllers: [AppController, PicturesController, SessionsController, AuthController],
   providers: [
     AppService,
+    AuthModule,
     PicturesDbService,
+    SessionsDbService,
     AuthService,
     UsersService,
+    JwtStrategy,
     JwtService,
-    
+
     // 5. Stelle den DB-Pool für AppService und PicturesDbService bereit
     {
       provide: 'PG_POOL',

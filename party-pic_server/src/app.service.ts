@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { picture } from './models/picture.model';
+import { picture } from './models/pictures/picture.model';
 
 @Injectable()
 export class AppService {

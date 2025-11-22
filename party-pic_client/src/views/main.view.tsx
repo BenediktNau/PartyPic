@@ -1,8 +1,8 @@
-import React from 'react'
+
 import LogAndReg from '../components/Profile/LogAndReg.comp'
 import { animateScroll as scroll } from 'react-scroll';
 import { useAuth } from '../auth.context';
-import { createSession } from '../api/session/session.api';
+import { useCreateSession } from '../api/session/session.hooks';
 
 
 function Main() {
@@ -10,6 +10,16 @@ function Main() {
     const scrollToBottom = () => {
         scroll.scrollToBottom();
     };
+
+    const _useCreateSession = useCreateSession();
+
+    const handleClick = async () => {
+        if (!auth.isAuthenticated) {
+            scrollToBottom();
+        } else {
+            _useCreateSession.mutate();
+        }
+    }
 
     const auth = useAuth();
     console.log("Auth Status im Main View:", auth.isAuthenticated);
@@ -22,7 +32,7 @@ function Main() {
                         Herzlich Willkommen bei Party-Pic!
                     </h1>
                     <div className='text-xl'>Starte jetzt deine Session!</div>
-                    <button onClick={() => { if (false) { scrollToBottom } else { createSession() } }}>Clicke Hier</button>
+                    <button onClick={() => { handleClick() }}>Clicke Hier</button>
                 </div>
 
             </div>

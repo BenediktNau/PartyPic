@@ -26,7 +26,7 @@ export const useLogin = () => {
         mutationFn: (loginData) =>
             axios.post('/auth/login', loginData)
                 .then(res => res.data),
-
+        
         onSuccess: (data) => {
             setAuthData({ token: data.access_token, user: data.user });
         },

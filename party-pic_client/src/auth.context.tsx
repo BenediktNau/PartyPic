@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Funktion, um Benutzerdaten nach erfolgreichem Login zu setzen
   const setAuthData = (data: { token: string; user: any }) => {
+    console.log("Setting auth data:", data);
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem('authToken', data.token);
@@ -39,8 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setUser(null);
     localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
-  };
+    localStorage.removeItem('authUser'); 
+  }; 
 
   const isAuthenticated = !!token;
 
