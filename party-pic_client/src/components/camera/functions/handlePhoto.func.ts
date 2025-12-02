@@ -1,15 +1,16 @@
 
 
-export const handlePhotoShoot = (base64Image: string) => {
+export const handlePhotoShoot = (base64Image: string, sessionId: string) => {
     const blob = dataURLtoBlob(base64Image);
+    console.log("Blob created:", blob);
     const formData = new FormData();
 
     const fileName = (new Date().toISOString()).split(".")[0] + ".jpg"
 
     formData.append("file", blob, fileName)
     formData.append('u_name', 'test_user');
-    formData.append('session_id', '550e8400-e29b-41d4-a716-446655440000');
-
+    formData.append('session_id', sessionId);
+    console.log("FormData prepared:", formData.getAll("file"));
     return formData
 
 

@@ -7,10 +7,6 @@ import { IpictureData } from 'src/models/pictures/picture.model';
 
 @Injectable()
 export class PicturesDbService {
-
-  
-
-
   constructor(
     @Inject('PG_POOL') private readonly pool: Pool
   ) { }

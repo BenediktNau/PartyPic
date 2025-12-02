@@ -8,5 +8,5 @@ export const Route = createFileRoute('/session/$sessionId')({
 
 function RouteComponent() {
     const { sessionId } = Route.useParams()
-    return <div>Welcome to Session {sessionId}<CameraView /></div>
+    return <div><CameraView sessionId={sessionId} /></div>
 }

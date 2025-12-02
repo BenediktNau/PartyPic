@@ -8,7 +8,9 @@ axios.interceptors.request.use(function (config) {
 
     // Do something before request is sent
     config.baseURL = import.meta.env.VITE_API_URL
-    config.headers['Content-Type'] = 'application/json';
+    if (!(config.data instanceof FormData)) {
+        config.headers['Content-Type'] = 'application/json';
+    }
 
     if (!!token) {
         config.headers['Authorization'] = `Bearer ${token}`;

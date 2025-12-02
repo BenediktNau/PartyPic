@@ -4,11 +4,13 @@ import {
     UploadedFile,
     UseInterceptors,
     Body,
+    Request
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { PicturesDbService } from './pictures.db.service'; // Dein DB-Service (siehe unten)
 import { StorageService } from 'src/s3/s3.service';
+import { SessionsDbService } from 'src/sessions/sessions.db.service';
 
 // DTO für zusätzliche Daten, die als Text mitgesendet werden
 class UploadMetaDto {
@@ -21,6 +23,7 @@ export class PicturesController {
     constructor(
         private readonly storageService: StorageService,
         private readonly picturesDbService: PicturesDbService,
+        private readonly sessionDbService: SessionsDbService,
     ) { }
 
     @Post('upload')
@@ -34,7 +37,10 @@ export class PicturesController {
         @UploadedFile() file: Express.Multer.File,
         @Body() body: UploadMetaDto,
     ) {
-        console.log(file)
+        if (this.sessionDbService.getSessionById(body.session_id) == null) {
+            throw new Error('Session does not exist');
+        }
+
         // 1. Datei zu S3 (MinIO) hochladen
         const s3Data = await this.storageService.uploadFile(file, body.session_id);
 

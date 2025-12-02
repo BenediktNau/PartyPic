@@ -8,7 +8,28 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends nodejs build-essential \
   && apt-get install -y --no-install-recommends postgresql-client \
   && rm -rf /var/lib/apt/lists/* \
-  && sudo npm install -g @nestjs/cli
+  && sudo npm install -g @nestjs/cli 
+
+RUN sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+
+RUN wget -O- https://apt.releases.hashicorp.com/gpg | \
+  gpg --dearmor | \
+  sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+
+RUN gpg --no-default-keyring \
+  --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+  --fingerprint
+
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+
+RUN sudo apt update
+
+RUN sudo apt-get install terraform
+
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN unzip awscliv2.zip
+RUN sudo ./aws/install
+
 
 
 # Create workspace user is already 'vscode' in base image; ensure node_modules permission compatibility

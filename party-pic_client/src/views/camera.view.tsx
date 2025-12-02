@@ -4,7 +4,11 @@ import { useMutation } from '@tanstack/react-query';
 import { postPicture } from '../api/pictures/pictures.api';
 import { handlePhotoShoot } from '../components/camera/functions/handlePhoto.func';
 
-function cameraView() {
+interface CameraViewProps {
+    sessionId: string;
+}
+
+function cameraView({ sessionId }: CameraViewProps) {
     const webcamRef = React.useRef<any>(null);
 
     const pictureUpload = useMutation(
@@ -16,7 +20,8 @@ function cameraView() {
     const capturePic = useCallback(() => {
         const imageSrc = webcamRef.current.getScreenshot()
         if (imageSrc) {
-            const data = handlePhotoShoot(imageSrc);
+            const data = handlePhotoShoot(imageSrc, sessionId);
+            console.log(data.get("file"));
             pictureUpload.mutate(data)
         }
 
