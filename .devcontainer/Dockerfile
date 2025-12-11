@@ -30,8 +30,6 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 RUN unzip awscliv2.zip
 RUN sudo ./aws/install
 
-
-
 # Create workspace user is already 'vscode' in base image; ensure node_modules permission compatibility
 USER vscode
 

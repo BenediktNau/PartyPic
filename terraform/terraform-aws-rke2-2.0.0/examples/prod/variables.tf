@@ -16,11 +16,12 @@ variable "identifier" {
 variable "zone" {
   type        = string
   description = "The dns zone to add domains under, must already exist in AWS Route53."
+  default = "us-east-1"
 }
 variable "rke2_version" {
   type        = string
   description = "The rke2 version to install."
-  default     = "v1.34.1+rke2r1"
+  default     = "v1.33.6+rke2r1"
 }
 variable "os" {
   type        = string
