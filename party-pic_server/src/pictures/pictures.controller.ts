@@ -24,6 +24,7 @@ export class PicturesController {
         private readonly storageService: StorageService,
         private readonly picturesDbService: PicturesDbService,
         private readonly sessionDbService: SessionsDbService,
+
     ) { }
 
     @Post('upload')
@@ -40,6 +41,7 @@ export class PicturesController {
         if (this.sessionDbService.getSessionById(body.session_id) == null) {
             throw new Error('Session does not exist');
         }
+        console.log('Received file:', file.originalname, 'for user:', body.u_name, 'in session:', body.session_id);
 
         // 1. Datei zu S3 (MinIO) hochladen
         const s3Data = await this.storageService.uploadFile(file, body.session_id);
@@ -49,6 +51,7 @@ export class PicturesController {
             u_name: body.u_name,
             session_id: body.session_id,
             ...s3Data, // Enthält s3_key, s3_bucket, original_filename etc.
+            mission_id: body.session_id, // Füge mission_id hinzu, hier als null gesetzt
         });
 
 

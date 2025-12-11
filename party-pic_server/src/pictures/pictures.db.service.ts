@@ -20,14 +20,15 @@ export class PicturesDbService {
       s3_bucket,
       mimetype,
       filesize_bytes,
+      mission_id,
     } = pictureData;
 
     // Dein INSERT-Befehl (mit allen Metadaten)
     const queryText = `
       INSERT INTO pictures (
-        u_name, session_id, original_filename, s3_key, s3_bucket, mimetype, filesize_bytes
+        u_name, session_id, original_filename, s3_key, s3_bucket, mimetype, filesize_bytes, mission_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *; 
     `;
 
@@ -39,6 +40,7 @@ export class PicturesDbService {
       s3_bucket,
       mimetype,
       filesize_bytes,
+      mission_id
     ];
 
     const result = await this.pool.query(queryText, values);

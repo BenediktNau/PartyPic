@@ -14,7 +14,7 @@ export class SessionsDbService {
     // Dein INSERT-Befehl (mit allen Metadaten)
     const queryText = `
       INSERT INTO sessions (
-        user_id
+        user_id, settings, missions
       )
       VALUES ($1)
       RETURNING *; 

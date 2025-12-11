@@ -10,6 +10,7 @@ interface CameraViewProps {
 
 function cameraView({ sessionId }: CameraViewProps) {
     const webcamRef = React.useRef<any>(null);
+    const [portraitMode, setPortraitMode] = React.useState<boolean>(true);
 
     const pictureUpload = useMutation(
         {
@@ -29,10 +30,10 @@ function cameraView({ sessionId }: CameraViewProps) {
 
 
     return (
-        <div className="flex flex-col w-full h-dvh items-center justify-center">
+        <div className={portraitMode ? "flex flex-col  w-screen h-dvh items-center justify-center " : "flex flex-row w-screen h-dvh items-center"} >
 
             <div className="p-4">
-                <WebcamCapture ref={webcamRef} className=' min-h-0  max-h-5/6' />
+                <WebcamCapture Portraitmode={(e) => setPortraitMode(e)} ref={webcamRef} className=' min-h-0  max-h-5/6' />
             </div>
 
             <button onClick={capturePic} className="p-4">

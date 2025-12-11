@@ -4,6 +4,7 @@ import { useOrientation } from './hooks/useOrientation';
 
 interface Props {
     ref: React.Ref<Webcam>;
+    Portraitmode: React.Dispatch<React.SetStateAction<boolean>>;
     className?: string;
 }
 
@@ -11,7 +12,7 @@ interface Props {
 function WebcamCapture(Props: Props) {
 
     const orientation = useOrientation();
-
+    Props.Portraitmode(orientation === 'portrait');
     //calculate video constraints based on screen orientation
     const videoConstraints = useMemo(() => {
         // Start with ideal resolution for 4K cameras
@@ -22,7 +23,7 @@ function WebcamCapture(Props: Props) {
         const commonConstraints = {
             frameRate: { ideal: 30 },
             facingMode: { ideal: "environment" }
-            
+
         };
 
         //Setting on Portrait or Landscape (Setting Width and Height accordingly)

@@ -16,4 +16,5 @@ export interface IpictureData {
     s3_bucket: string;
     mimetype: string;
     filesize_bytes: number;
+    mission_id: string;
 }
