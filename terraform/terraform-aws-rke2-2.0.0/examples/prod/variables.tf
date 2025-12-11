@@ -1,14 +1,17 @@
 variable "key_name" {
   type        = string
   description = "The name of an ssh key that already exists in AWS of that you want to create."
+  default     = "test"
 }
 variable "key" {
   type        = string
   description = "The content of an ssh key for server access. The key must be loaded into the running ssh agent."
+  default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIzG4JHCPuBQASJfAmyof6noYDSMVmkawzWzeQASwX7F simon@Simomsius"
 }
 variable "identifier" {
   type        = string
   description = "A random alphanumeric string that is unique and less than 10 characters."
+  default     = "PartyPic"
 }
 variable "zone" {
   type        = string
@@ -17,6 +20,7 @@ variable "zone" {
 variable "rke2_version" {
   type        = string
   description = "The rke2 version to install."
+  default     = "v1.34.1+rke2r1"
 }
 variable "os" {
   type        = string
