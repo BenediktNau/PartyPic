@@ -1,3 +1,5 @@
 *node_modules
 .pnpm-store/
 test.pem
+.terraform*
+rke2/
