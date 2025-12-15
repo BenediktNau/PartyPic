@@ -1,7 +1,10 @@
 
 import { useNavigate } from "@tanstack/react-router";
-import { createSession } from "./session.api"
-import { useMutation } from "@tanstack/react-query";
+import { createSession, getMissions, setMissionsAsync } from "./session.api"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { mission } from "../../models/sessions/missions.model";
+import { useContext } from "react";
+import SessionContext from "../../utils/contexts/session.context";
 
 export const useCreateSession = () => {
 
@@ -22,3 +25,39 @@ export const useCreateSession = () => {
         }
     });
 }
+
+export const useSetMissions = () => {
+    const { sessionId } = useContext(SessionContext);
+    const queryClient = useQueryClient();
+
+    return useMutation<any, Error, mission[]>({
+        mutationFn: async (missions: mission[]) => {
+            if (!sessionId) throw new Error("No Session ID available");
+            console.log("Setting Missions for ID:", sessionId);
+            // Wir übergeben die sessionId hier explizit an die API
+            return await setMissionsAsync(missions, sessionId);
+        },
+        onSuccess: () => {
+            // Optional: Aktualisiert die Missions-Daten nach dem Speichern automatisch
+            queryClient.invalidateQueries({ queryKey: ["missions", sessionId] });
+        }
+    });
+};
+
+export const useGetMissions = () => {
+    const { sessionId } = useContext(SessionContext);
+
+    return useQuery({
+        // Der Key identifiziert die Daten (wichtig für Caching)
+        queryKey: ["missions", sessionId], 
+        
+        // Die Funktion wird nur ausgeführt, wenn wir eine SessionId haben
+        queryFn: async () => {
+            if (!sessionId) throw new Error("No Session ID");
+            return await getMissions(sessionId);
+        },
+        
+        // 'enabled' verhindert, dass der Request feuert, bevor die ID da ist
+        enabled: !!sessionId, 
+    });
+};

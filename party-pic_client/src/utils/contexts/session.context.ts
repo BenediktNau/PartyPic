@@ -1,13 +1,12 @@
 import { createContext } from "react";
+import type { Session } from "../../models/sessions/session.model";
 
-export interface SessionContextType {
-    sessionId: string | null;
-    sessionSettings: Record<string, any>;
-};
 
-const SessionContext = createContext<SessionContextType>({
+
+const SessionContext = createContext<Session>({
     sessionId: null,
     sessionSettings: {},
+    sessionMissions: []
 });
 
 export default SessionContext;

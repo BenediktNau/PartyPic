@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import CameraView from '../../views/camera.view'
 import { useRef, useState } from 'react'
-import type { SessionContextType } from '../../utils/contexts/session.context'
 import SessionContext from '../../utils/contexts/session.context'
 import { useAuth } from '../../auth.context'
 import AdminPage from '../../views/admin.view'
+import type { Session } from '../../models/sessions/session.model'
 const MainView = () => <div className="w-full h-full bg-white text-black flex items-center justify-center">🏠 Main Feed</div>;
 const SettingsView = () => <div className="w-full h-full bg-gray-100 text-black flex items-center justify-center">⚙️ Settings</div>;
 
@@ -15,9 +15,10 @@ export const Route = createFileRoute('/session/$sessionId')({
 function RouteComponent() {
     const { sessionId } = Route.useParams()
 
-    const [session, setSession] = useState<SessionContextType>({
+    const [session, setSession] = useState<Session>({
         sessionId: sessionId,
         sessionSettings: {},
+        sessionMissions: []
     });
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
