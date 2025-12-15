@@ -141,7 +141,7 @@ data "aws_availability_zones" "available" {
 }
 
 module "initial" {
-  source                              = "../../"
+  source                              = "../"
   project_use_strategy                = "create"
   project_vpc_use_strategy            = "create"
   project_vpc_name                    = "${local.project_name}-vpc"
