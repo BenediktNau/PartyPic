@@ -49,8 +49,6 @@ export class SessionsDbService {
 
   // --- NEU HINZUGEFÜGT ---
   async updateMissions(sessionId: string, missions: any[]) {
-    // Falls deine DB-Spalte 'missions' vom Typ JSONB ist, übergibst du 'missions' direkt.
-    // Falls es TEXT ist, nutze: JSON.stringify(missions)
     
     const queryText = `
       UPDATE sessions
@@ -58,12 +56,12 @@ export class SessionsDbService {
       WHERE id = $1
       RETURNING *;
     `;
-
-    // Annahme: Spalte ist JSONB, daher übergeben wir das Array direkt.
-    // Der 'pg' Treiber wandelt das JS-Array automatisch in JSON um.
+    
     const values = [sessionId, JSON.stringify(missions)]; 
-
+    
     const result = await this.pool.query(queryText, values);
+    console.log(values)
+    console.log(result)
     return result.rows[0];
   }
 }

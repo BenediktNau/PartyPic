@@ -9,8 +9,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { PicturesDbService } from './pictures.db.service'; // Dein DB-Service (siehe unten)
-import { StorageService } from 'src/s3/s3.service';
-import { SessionsDbService } from 'src/sessions/sessions.db.service';
+import { StorageService } from '../s3/s3.service';
+import { SessionsDbService } from '../sessions/sessions.db.service';
 
 // DTO für zusätzliche Daten, die als Text mitgesendet werden
 class UploadMetaDto {
@@ -53,8 +53,6 @@ export class PicturesController {
             ...s3Data, // Enthält s3_key, s3_bucket, original_filename etc.
             mission_id: body.session_id, // Füge mission_id hinzu, hier als null gesetzt
         });
-
-
 
         return dbEntry;
     }

@@ -1,8 +1,8 @@
 import { Controller, Get, Post, UseGuards, Request, Param, HttpException, Query, HttpStatus, Body } from '@nestjs/common';
-import { AuthService } from 'src/auth/auth.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { SessionsDbService } from './sessions.db.service';
-import * as sessionsModel from 'src/models/sessions/sessions.model';
+import { AuthService } from '../auth/auth.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import * as sessionsModel from '../models/sessions/sessions.model';
 
 interface CreateSessionDto {
     user_id: string;
@@ -47,10 +47,12 @@ export class SessionsController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Post('setmissions') // Kleinschreibung beachten, falls Frontend das so sendet
-    async setMissions(@Body() body: sessionsModel.session, @Request() req) {
-        const { sessionId, sessionMissions } = body;
-        const userId = req.user.sub;
+    @Post('setmissions')
+    async setMissions(@Body() body: {missions: {}[], sessionId: string}, @Request() req) {
+        console.log(body)
+        const { sessionId,  missions} = body;
+        const userId : string = req.user.sub;
+        
 
         // Sicherheitscheck (Optional aber empfohlen): 
         // Gehört die Session wirklich dem User, der gerade angeloggt ist?
@@ -58,13 +60,16 @@ export class SessionsController {
         if (!session) {
              throw new HttpException('Session not found', HttpStatus.NOT_FOUND);
         }
+        const userFromSession : string = session.user_id
+
+        
         // Annahme: session hat ein 'userId' Feld
-        if (session.userId !== userId) {
+        if ( userFromSession !== userId) {
              throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
         }
 
-        // Speichern in der DB
-        const updatedSession = await this.sessionsDBService.updateMissions(sessionId, sessionMissions);
+        console.log(missions)
+        const updatedSession = await this.sessionsDBService.updateMissions(sessionId, missions);
         
         return { 
             message: 'Missions updated successfully', 

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool } from 'pg'; // Annahme: Du nutzt 'pg'
-import { IpictureData } from 'src/models/pictures/picture.model';
+import { IpictureData } from '../models/pictures/picture.model';
 
 
 

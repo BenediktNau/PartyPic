@@ -1,6 +1,6 @@
 
 import { useNavigate } from "@tanstack/react-router";
-import { createSession, getMissions, setMissionsAsync } from "./session.api"
+import { createSession, getSession, setMissionsAsync } from "./session.api"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { mission } from "../../models/sessions/missions.model";
 import { useContext } from "react";
@@ -44,7 +44,7 @@ export const useSetMissions = () => {
     });
 };
 
-export const useGetMissions = () => {
+export const useGetSession = () => {
     const { sessionId } = useContext(SessionContext);
 
     return useQuery({
@@ -54,7 +54,7 @@ export const useGetMissions = () => {
         // Die Funktion wird nur ausgeführt, wenn wir eine SessionId haben
         queryFn: async () => {
             if (!sessionId) throw new Error("No Session ID");
-            return await getMissions(sessionId);
+            return await getSession(sessionId);
         },
         
         // 'enabled' verhindert, dass der Request feuert, bevor die ID da ist

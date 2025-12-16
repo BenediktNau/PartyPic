@@ -2,6 +2,7 @@ import { useContext } from "react"
 import type { mission } from "../../models/sessions/missions.model.ts"
 import SessionContext from "../../utils/contexts/session.context.ts"
 import axios from "../api-client.ts"
+import type { Session } from "../../models/sessions/session.model.ts"
 
 
 export const createSession = async () => {
@@ -10,9 +11,10 @@ export const createSession = async () => {
 
 } 
 
-export const getMissions = async (sessionId : string) => {
+export const getSession = async (sessionId : string) => {
     const response = await axios.get("/sessions/get", {params: {sessionId: sessionId}})
-    return response.data
+    const returnedSession: Session = response.data
+    return returnedSession
 }
 
 
