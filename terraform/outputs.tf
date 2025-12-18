@@ -1,6 +1,6 @@
 output "ssh_command_server" {
   description = "Command to SSH into the Server"
-  value       = "ssh ec2-user@${aws_instance.rke2_server.public_ip}"
+  value       = "ssh ubuntu@${aws_instance.rke2_server.public_ip}"
 }
 
 output "server_public_ip" {

@@ -25,7 +25,7 @@ variable "cluster_name" {
 variable "worker_count" {
   description = "Number of worker nodes to create"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "rke2_token" {
@@ -33,4 +33,20 @@ variable "rke2_token" {
   type        = string
   sensitive   = true
   default     = "my-super-secret-rpc-password" 
+}
+
+# --- NEW: Credentials Variables ---
+variable "aws_access_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "aws_secret_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "aws_session_token" {
+  type      = string
+  sensitive = true  
 }

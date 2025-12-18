@@ -22,7 +22,7 @@ function AdminPage() {
       description: missionText,
     };
 
-    console.log(Session?.sessionMissions)
+    console.log(Session?.missions)
     const currentMissions = Session?.sessionMissions || [];
     const updatedMissions = [...currentMissions, newMission];
 
