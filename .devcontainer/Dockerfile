@@ -26,9 +26,20 @@ RUN sudo apt update
 
 RUN sudo apt-get install terraform
 
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-RUN unzip awscliv2.zip
-RUN sudo ./aws/install
+# Installiere AWS CLI v2 abhängig von der Systemarchitektur
+RUN ARCH=$(uname -m) && \
+  if [ "$ARCH" = "x86_64" ]; then \
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"; \
+  elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"; \
+  else \
+    echo "Unsupported architecture: $ARCH" && exit 1; \
+  fi && \
+  unzip awscliv2.zip && \
+  sudo ./aws/install && \
+  rm -rf aws awscliv2.zip
+
+
 
 # Create workspace user is already 'vscode' in base image; ensure node_modules permission compatibility
 USER vscode
