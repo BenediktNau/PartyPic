@@ -39,14 +39,17 @@ variable "rke2_token" {
 variable "aws_access_key" {
   type      = string
   sensitive = true
+  default = "ASIAW4VVHQ7RATSNX2IB"
 }
 
 variable "aws_secret_key" {
   type      = string
   sensitive = true
+  default = "9KIavLP6jk2iYvKiLNyumnHNb6uTBUWCwT5Nz17pNvHB0rZ"
 }
 
 variable "aws_session_token" {
   type      = string
-  sensitive = true  
+  sensitive = true
+  default = "IQoJb3JpZ2luX2VjEM///////////wEaCXVzLXdlc3QtMiJIMEYCIQD6OK5zZ/JDC/7zZavQIqXKU5RA+bI/IaOYfy+lYjW0NQIhAOyDueQj3a7zsxJbvAabf2X9GE7yan89g0uf5Eb4XzrNKsYCCJj//////////wEQABoMNDczOTAwMjIyNDM0IgwS+ebU69NL+gpES+sqmgK5WfgOXDJxn1QXsEKIOu/wgKSEt7wPwju2+m/pN/5Ytctc/4rm04jK0l51uT+fq/pYBa8IqcJoBb4FMzsSsWNmTinaZIXKtaY3UvzdpMS9WdSr4OVEW0cphZl1CVu4/0tIh7PECbvStnt7n4CI0/Dn3ALQQhtf61zKAxuM3lh/dQDSAUASsIGlDPj6sXXCC19PNJLvQBxac7K98t1+9bGCboZBZKTlget/uI59Gr9SuRll0pfu0t4HVahG8b1omFOOQeIT4YM+WEEKC1OCER6LqNfHBxowpytOeRt/W1wCuq4WICfd6u8f9to3TFUv7L5g8+CTzDHC/7HUoVVnua5nfpwwZZf805ke3p9+is82V3IXNxm4BLidczMwkKCQygY6nAF924TOnLCgG7KdzQ60XGbMOov2s2HUp/Dp0HZzK8wHn6Wd/GGhN3tvTPpaU1nvlqQCqZ0hMqE0ReiU0Ssm/5eondRRQyzuVfCTmlg/xFFgQWJjIlw1fpPlR4zF7KzRYXnPtqfhOLcl8IwTB3HI4O/XKGxHNiV3Pwjdj6SGoaTrMTYlby+AYe5gm7n52AfTY/ehDWKiJ9coadRsxbo="
 }
