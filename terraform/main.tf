@@ -1,3 +1,13 @@
+data "external" "env" {
+  program = ["${path.module}/env.sh"]
+}
+
+locals {
+  aws_access_key = data.external.env.result["aws_access_key"]
+  aws_secret_key = data.external.env.result["aws_secret_key"]
+  aws_session_token = data.external.env.result["aws_session_token"]
+}
+
 terraform {
   required_providers {
     aws = {
@@ -159,8 +169,8 @@ resource "null_resource" "sync_manifests" {
     # If the template file changes, re-run this
     ccm_content = templatefile("${path.module}/manifest/aws-cloud-controller-manager.yaml.tpl", {
       cluster_name   = var.cluster_name
-      aws_access_key = var.aws_access_key
-      aws_secret_key = var.aws_secret_key
+      aws_access_key = local.aws_access_key
+      aws_secret_key = local.aws_secret_key
     })
   }
 
