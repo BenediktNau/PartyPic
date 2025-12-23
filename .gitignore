@@ -4,3 +4,4 @@ test.pem
 .terraform*
 rke2/
 terraform.tfstate
+./terraform/input.txt
