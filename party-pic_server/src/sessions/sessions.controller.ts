@@ -49,7 +49,6 @@ export class SessionsController {
     @UseGuards(JwtAuthGuard)
     @Post('setmissions')
     async setMissions(@Body() body: {missions: {}[], sessionId: string}, @Request() req) {
-        console.log(body)
         const { sessionId,  missions} = body;
         const userId : string = req.user.sub;
         
@@ -68,12 +67,21 @@ export class SessionsController {
              throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
         }
 
-        console.log(missions)
         const updatedSession = await this.sessionsDBService.updateMissions(sessionId, missions);
         
         return { 
             message: 'Missions updated successfully', 
             data: updatedSession 
         };
+    }
+
+    @Post('LoginSessionUser')
+    async loginSessionUser(@Body() body: {username: string}) {
+        const { username } = body;
+        let sessionUser = await this.sessionsDBService.getSessionUserByName(username);
+        if (!sessionUser) {
+            sessionUser = await this.sessionsDBService.addSessionUser(username);
+        }
+        return sessionUser;
     }
 }

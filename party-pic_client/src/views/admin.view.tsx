@@ -22,7 +22,6 @@ function AdminPage() {
       description: missionText,
     };
 
-    console.log(Session?.missions)
     const currentMissions = Session?.sessionMissions || [];
     const updatedMissions = [...currentMissions, newMission];
 
@@ -34,7 +33,7 @@ function AdminPage() {
 
   const handleRemoveMission = (id: string) => {
     if(!!Session?.sessionMissions){
-    const updatedMissions = Session.sessionMissions
+    const updatedMissions = Session.sessionMissions.filter(e => e.id !== id);
     saveMissions(updatedMissions);}
   };
 

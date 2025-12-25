@@ -27,6 +27,7 @@ export class SessionsDbService {
     return result.rows[0];
   }
 
+  //Needs to be made type safe with session model and be mapped so idont need to do it on frontend
   async getSessionById(sessionId: string) {
     const queryText = `
       SELECT * FROM sessions WHERE id = $1;
@@ -60,8 +61,28 @@ export class SessionsDbService {
     const values = [sessionId, JSON.stringify(missions)]; 
     
     const result = await this.pool.query(queryText, values);
-    console.log(values)
-    console.log(result)
+    return result.rows[0];
+  }
+
+  async addSessionUser(userName: string) {
+    const queryText = `
+      INSERT INTO session_users (user_name)
+      VALUES ($1)
+      RETURNING *;
+    `;
+    const values = [userName];
+    
+    const result = await this.pool.query(queryText, values);
+    return result.rows[0];
+  }
+
+  async getSessionUserByName(userName: string) {
+    const queryText = `
+      SELECT * FROM session_users WHERE user_name = $1;
+    `;
+    const values = [userName];
+
+    const result = await this.pool.query(queryText, values);
     return result.rows[0];
   }
 }

@@ -5,8 +5,9 @@ import SessionContext from '../../utils/contexts/session.context'
 import { useAuth } from '../../auth.context'
 import AdminPage from '../../views/admin.view'
 import type { Session } from '../../models/sessions/session.model'
+import Modal from '../../components/Modal/Modal.comp'
+import { loginSessionUser } from '../../api/session/session.api'
 const MainView = () => <div className="w-full h-full bg-white text-black flex items-center justify-center">🏠 Main Feed</div>;
-const SettingsView = () => <div className="w-full h-full bg-gray-100 text-black flex items-center justify-center">⚙️ Settings</div>;
 
 export const Route = createFileRoute('/session/$sessionId')({
     component: RouteComponent,
@@ -72,21 +73,36 @@ function RouteComponent() {
                 className="flex overflow-x-auto w-screen h-screen snap-x snap-mandatory no-scrollbar scroll-smooth"
             >
                 {/* VIEW 3: SETTINGS (Right) */}
-                {auth.isAuthenticated ? <div className="w-screen h-screen flex-shrink-0 snap-center">
+                {auth.isAuthenticated ? <div className="w-screen h-screen shrink-0 snap-center">
                     <AdminPage />
                 </div> : <div ></div>}
 
                 {/* VIEW 1: CAMERA (Left) */}
-                <div className="w-screen h-screen flex-shrink-0 snap-center">
+                <div className="w-screen h-screen shrink-0 snap-center">
                     <CameraView sessionId={sessionId} />
                 </div>
 
                 {/* VIEW 2: MAIN (Center - Default) */}
-                <div className="w-screen h-screen flex-shrink-0 snap-center relative">
+                <div className="w-screen h-screen shrink-0 snap-center relative">
                     <MainView />
                 </div>
 
+                <Modal title="Login" onClose={() => {console.log("gogo Gaga")}} makeOnCloseOptional={true} open={true} >
+                    <p>Falls du noch nicht deinen Namen veraten hast, oder wir den Namen vergessen haben, gib ihn bitte nochmal an:</p>
+                    <form className="mt-4" onSubmit={(e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        const username = formData.get("username") as string;
+                        loginSessionUser(username).then((user) => {
+                            console.log("Eingeloggter User:", user);
+                            e.currentTarget.reset();
+                        });
 
+                    }}>
+                        <input type="text" name="username" placeholder="Dein Name" className="w-full p-2 rounded border border-gray-300 mb-4 text-black" required />
+                        <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">Absenden</button>
+                    </form>
+                </Modal>
 
             </div>
         </SessionContext.Provider>

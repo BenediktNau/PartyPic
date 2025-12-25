@@ -38,9 +38,13 @@ CREATE TABLE sessions (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     ends_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '7 days',
 
-    user_id UUID REFERENCES users(id)
+    user_id UUID REFERENCES users(id),
+
+    session_users
 
 );
+
+
 
 
 Indezes für Schnelle Suche möglicherweise später Interessant?

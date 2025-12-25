@@ -11,7 +11,6 @@ export class UsersService {
     const res = await this.pool.query('SELECT * FROM users WHERE email = $1', [
       email,
     ]);
-    console.log("Found user:", res.rows[0]);
     return res.rows[0];
   }
 
