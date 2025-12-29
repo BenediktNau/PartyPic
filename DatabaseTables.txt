@@ -38,12 +38,16 @@ CREATE TABLE sessions (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     ends_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '7 days',
 
-    user_id UUID REFERENCES users(id),
-
-    session_users
+    user_id UUID REFERENCES users(id)
 
 );
 
+CREATE TABLE session_users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_name VARCHAR(50),
+    session_id UUID REFERENCES sessions(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 
 

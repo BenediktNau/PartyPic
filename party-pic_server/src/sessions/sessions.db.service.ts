@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { session } from 'passport';
 import { Pool } from 'pg';
 // import { session } from 'src/models/sessions/sessions.model'; // Optional, falls du Typen hast
 
@@ -64,14 +65,17 @@ export class SessionsDbService {
     return result.rows[0];
   }
 
-  async addSessionUser(userName: string) {
+  async addSessionUser(userName: string, sessionId: string) {
     const queryText = `
-      INSERT INTO session_users (user_name)
-      VALUES ($1)
-      RETURNING *;
+      INSERT INTO session_users (
+        user_name, session_id, created_at
+      )
+      VALUES ($1, $2, $3)
+      RETURNING *; 
     `;
-    const values = [userName];
-    
+    const values = [
+      userName, sessionId, new Date(),
+    ];
     const result = await this.pool.query(queryText, values);
     return result.rows[0];
   }
@@ -81,6 +85,15 @@ export class SessionsDbService {
       SELECT * FROM session_users WHERE user_name = $1;
     `;
     const values = [userName];
+
+    const result = await this.pool.query(queryText, values);
+    return result.rows[0];
+  }
+  async getSessionUserById(Id: string) {
+    const queryText = `
+      SELECT * FROM session_users WHERE id = $1;
+    `;
+    const values = [Id];
 
     const result = await this.pool.query(queryText, values);
     return result.rows[0];

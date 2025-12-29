@@ -24,7 +24,12 @@ export const setMissionsAsync = async (missions: mission[], sessionId: string) =
     return response.data
 }
 
-export const loginSessionUser = async (username: string) => {
-    const response = await axios.post('/sessions/LoginSessionUser', { username });
+export const registerSessionUser = async (username: string, sessionId: string) => {
+    const response = await axios.post('/sessions/registerSessionUser', { username, sessionId });
+    return response.data;
+}
+
+export const loginSessionUserWithId = async (userId: string, sessionId: string) => {
+    const response = await axios.post('/sessions/loginSessionUser', { userId, sessionId});
     return response.data;
 }
