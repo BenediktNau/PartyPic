@@ -58,6 +58,13 @@ resource "aws_security_group" "rke2_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  # Kubernetes NodePort range
+  ingress {
+    from_port   = 30000
+    to_port     = 32767
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   # Internal Cluster Traffic
   ingress {
     from_port = 0
@@ -93,8 +100,11 @@ resource "aws_instance" "rke2_server" {
 
   vpc_security_group_ids = [aws_security_group.rke2_sg.id]
 
-  # CRITICAL: We create the config.yaml BEFORE installing RKE2
-    user_data = <<-EOF
+  root_block_device {
+    volume_size = 30
+  }
+
+  user_data = <<-EOF
     #!/bin/bash
     apt-get update -y
     apt-get install -y curl
@@ -116,9 +126,13 @@ resource "aws_instance" "rke2_server" {
     chmod 700 get_helm.sh
     ./get_helm.sh
 
-    # Setup environment
-    echo 'export PATH=$PATH:/var/lib/rancher/rke2/bin' >> /home/ubuntu/.bashrc
-    echo 'export KUBECONFIG=/etc/rancher/rke2/rke2.yaml' >> /home/ubuntu/.bashrc
+    # Setup kubectl for all users
+    cat <<'PROFILE' > /etc/profile.d/rke2.sh
+export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+export PATH=$PATH:/var/lib/rancher/rke2/bin
+alias k=kubectl
+PROFILE
+    chmod +x /etc/profile.d/rke2.sh
     chmod 644 /etc/rancher/rke2/rke2.yaml
   EOF
 
@@ -128,8 +142,7 @@ resource "aws_instance" "rke2_server" {
   }
 }
 
-# --- 2. RKE2 WORKERS ---
-
+# RKE2 Workers
 resource "aws_instance" "rke2_worker" {
   count         = var.worker_count
   ami           = "ami-0ecb62995f68bb549"
@@ -137,6 +150,11 @@ resource "aws_instance" "rke2_worker" {
   key_name      = aws_key_pair.local_key.key_name
 
   vpc_security_group_ids = [aws_security_group.rke2_sg.id]
+
+  root_block_device {
+    volume_size = 30
+    volume_type = "gp3"
+  }
 
   user_data = <<-EOF
     #!/bin/bash
@@ -161,23 +179,33 @@ resource "aws_instance" "rke2_worker" {
   depends_on = [aws_instance.rke2_server]
 }
 
-# --- 3. MANIFEST SYNC ---
-
+# Sync manifests to RKE2 server
 resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
+  
   triggers = {
-    # If the template file changes, re-run this
     ccm_content = templatefile("${path.module}/manifest/aws-cloud-controller-manager.yaml.tpl", {
       cluster_name   = var.cluster_name
       aws_access_key = local.aws_access_key
       aws_secret_key = local.aws_secret_key
     })
+    local_path_content = file("${path.module}/manifest/local-path-provisioner.yaml.tpl")
+    prometheus_content = templatefile("${path.module}/manifest/prometheus-stack.yaml.tpl", {
+      cluster_name = var.cluster_name
+      environment  = var.environment
+    })
+    loki_content    = file("${path.module}/manifest/loki-stack.yaml.tpl")
+    grafana_content = templatefile("${path.module}/manifest/grafana.yaml.tpl", {
+      grafana_admin_password = var.grafana_admin_password
+    })
   }
 
   connection {
-    type = "ssh"
-    user = "ubuntu"
-    host = aws_instance.rke2_server.public_ip
+    type        = "ssh"
+    user        = "ubuntu"
+    host        = aws_instance.rke2_server.public_ip
+    private_key = var.private_key_path != "" ? file(pathexpand(var.private_key_path)) : null
+    agent       = var.private_key_path == ""
   }
 
   provisioner "file" {
@@ -185,11 +213,35 @@ resource "null_resource" "sync_manifests" {
     destination = "/tmp/aws-cloud-controller-manager.yaml"
   }
 
+  provisioner "file" {
+    content     = self.triggers.local_path_content
+    destination = "/tmp/local-path-provisioner.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.prometheus_content
+    destination = "/tmp/prometheus-stack.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.loki_content
+    destination = "/tmp/loki-stack.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.grafana_content
+    destination = "/tmp/grafana.yaml"
+  }
+
   provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
-      "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml",
-      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml"
+      "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/",
+      "sudo mv /tmp/local-path-provisioner.yaml /var/lib/rancher/rke2/server/manifests/",
+      "sudo mv /tmp/prometheus-stack.yaml /var/lib/rancher/rke2/server/manifests/",
+      "sudo mv /tmp/loki-stack.yaml /var/lib/rancher/rke2/server/manifests/",
+      "sudo mv /tmp/grafana.yaml /var/lib/rancher/rke2/server/manifests/",
+      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml"
     ]
   }
 }

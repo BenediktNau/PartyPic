@@ -16,6 +16,12 @@ variable "public_key" {
   default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIzG4JHCPuBQASJfAmyof6noYDSMVmkawzWzeQASwX7F simon@Simomsius"
 }
 
+variable "private_key_path" {
+  description = "Path to private SSH key. Empty = use SSH agent"
+  type        = string
+  default     = ""
+}
+
 variable "cluster_name" {
   description = "Name tag for the RKE2 cluster resources"
   type        = string
@@ -32,5 +38,19 @@ variable "rke2_token" {
   description = "Shared secret for nodes to join the cluster"
   type        = string
   sensitive   = true
-  default     = "my-super-secret-rpc-password" 
+  default     = "my-super-secret-rpc-password"
+}
+
+# Monitoring
+variable "environment" {
+  description = "Environment label for metrics (dev/staging/production)"
+  type        = string
+  default     = "production"
+}
+
+variable "grafana_admin_password" {
+  description = "Grafana admin password"
+  type        = string
+  sensitive   = true
+  default     = "my-super-secret-grafana-password"
 }
