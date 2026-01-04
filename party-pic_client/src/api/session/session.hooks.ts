@@ -54,10 +54,13 @@ export const useGetSession = () => {
         // Die Funktion wird nur ausgeführt, wenn wir eine SessionId haben
         queryFn: async () => {
             if (!sessionId) throw new Error("No Session ID");
-            return await getSession(sessionId);
+            const session = await getSession(sessionId);
+
+            return session;
         },
         
         // 'enabled' verhindert, dass der Request feuert, bevor die ID da ist
         enabled: !!sessionId, 
     });
 };
+

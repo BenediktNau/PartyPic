@@ -12,6 +12,10 @@
 }
 
 
+html { overflow: hidden; width: 100%; }
+body { height: 100vh; overflow-y: scroll; position: fixed; }
+
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;

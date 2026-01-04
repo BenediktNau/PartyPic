@@ -6,8 +6,7 @@ const url = require('url')
 const params = url.parse(process.env.DATABASE_URL)
 const auth = params.auth.split(':')
 
-console.log(auth[1]);
-console.log(test);
+
 const config = {
     user: auth[0],
     password: auth[1],
