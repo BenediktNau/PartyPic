@@ -1,35 +1,14 @@
 # =============================================================================
-# LOKI STACK - Minimales HelmChart für Log-Aggregation
+# LOKI STACK - Log Aggregation
 # =============================================================================
+# Komponenten:
+# - Loki Server: Speichert und indiziert Logs
+# - Promtail: DaemonSet, sammelt Logs von allen Nodes
 #
-# ERKLÄRUNG:
-# ----------
-# Loki ist ein Log-Aggregationssystem von Grafana Labs, optimiert für
-# Kubernetes. Es ist das "Prometheus für Logs" - leichtgewichtig und
-# effizient durch Label-basierte Indexierung.
-#
-# KOMPONENTEN:
-# ------------
-# Loki (Server):
-#   - Empfängt Logs von Promtail
-#   - Speichert Logs komprimiert auf Disk
-#   - Bietet LogQL-Abfragesprache (ähnlich PromQL)
-#   - Exponiert API für Grafana
-#
-# Promtail (Agent):
-#   - Läuft als DaemonSet auf jedem Node
-#   - Liest Container-Logs aus /var/log/pods
-#   - Fügt Labels hinzu (namespace, pod, container)
-#   - Sendet Logs an Loki
-#
-# DATENFLUSS:
+# SKALIERUNG:
 # -----------
-# Container → stdout/stderr → Docker/containerd → /var/log/pods
-#     ↓
-# Promtail (liest Logs) → fügt Labels hinzu → Loki (speichert)
-#     ↓
-# Grafana (Explore) ← LogQL-Query ← Loki
-#
+# Promtail läuft automatisch auf jedem Node (DaemonSet)
+# Bei worker_count Erhöhung = automatisch mehr Log-Collector
 # =============================================================================
 
 apiVersion: helm.cattle.io/v1
@@ -40,17 +19,22 @@ metadata:
 spec:
   repo: https://grafana.github.io/helm-charts
   chart: loki-stack
-  version: "2.10.0"
-  targetNamespace: monitoring
+  version: "${loki_version}"
+  targetNamespace: ${monitoring_namespace}
   createNamespace: true
   
   valuesContent: |-
+    # LOKI SERVER
     loki:
       enabled: true
+      
+      # Persistence
       persistence:
-        enabled: true
-        size: 10Gi
+        enabled: ${loki_storage_enabled}
+        size: ${loki_storage_size}
         storageClassName: local-path
+      
+      # Minimal Config
       config:
         auth_enabled: false
         server:
@@ -65,56 +49,33 @@ spec:
                 prefix: index_
                 period: 24h
       
-      #
-      # LIVENESS PROBE
-      # Prüft: Ist der Loki-Prozess noch am Leben?
-      # httpGet /ready: Loki-spezifischer Health-Endpoint
-      # initialDelaySeconds: 45s warten bis Container startet
-      # failureThreshold: 3 = Nach 3 Fehlschlägen → Restart
-      #
+      # Health Checks
       livenessProbe:
         httpGet:
           path: /ready
           port: http-metrics
         initialDelaySeconds: 45
         periodSeconds: 10
-        failureThreshold: 3
       
-      #
-      # READINESS PROBE
-      # Prüft: Kann Loki Anfragen verarbeiten?
-      # Unterschied zu Liveness: Readiness entfernt Pod aus Service
-      # aber startet ihn NICHT neu
-      #
       readinessProbe:
         httpGet:
           path: /ready
           port: http-metrics
         initialDelaySeconds: 45
         periodSeconds: 10
-        failureThreshold: 3
 
-    #
-    # PROMTAIL - Log Collection Agent
-    # DaemonSet: Läuft auf JEDEM Node im Cluster
-    #
+    # PROMTAIL - Log Collector (DaemonSet)
     promtail:
       enabled: true
-      
       config:
-        # Wohin Logs gesendet werden
         lokiAddress: http://loki:3100/loki/api/v1/push
       
-      #
-      # PROBES für Promtail
-      #
       livenessProbe:
         httpGet:
           path: /ready
           port: http-metrics
         initialDelaySeconds: 10
         periodSeconds: 10
-        failureThreshold: 3
       
       readinessProbe:
         httpGet:
@@ -122,4 +83,3 @@ spec:
           port: http-metrics
         initialDelaySeconds: 10
         periodSeconds: 10
-        failureThreshold: 3

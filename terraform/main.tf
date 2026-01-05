@@ -58,7 +58,7 @@ resource "aws_security_group" "rke2_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  # Kubernetes NodePort range
+  # Kubernetes NodePort Range (für Grafana:30080, Prometheus:30090)
   ingress {
     from_port   = 30000
     to_port     = 32767
@@ -168,6 +168,34 @@ resource "aws_instance" "rke2_server" {
     curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
     chmod 700 get_helm.sh
     ./get_helm.sh
+
+    # 9. Auto-Remove Cloud Provider Taint (Background Job)
+    # Der AWS CCM funktioniert ohne IAM Role nicht - daher entfernen wir den Taint manuell
+    # Das Script läuft im Hintergrund und wartet bis kubectl funktioniert
+    cat <<'TAINT_SCRIPT' > /usr/local/bin/remove-cloud-taint.sh
+    #!/bin/bash
+    export PATH=/var/lib/rancher/rke2/bin:$PATH
+    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+    
+    # Warte bis kubectl funktioniert (max 5 Minuten)
+    for i in {1..60}; do
+      if kubectl get nodes &>/dev/null; then
+        break
+      fi
+      sleep 5
+    done
+    
+    # Warte noch 30 Sekunden damit der Node registriert ist
+    sleep 30
+    
+    # Entferne den Cloud-Provider Taint von allen Nodes
+    kubectl taint nodes --all node.cloudprovider.kubernetes.io/uninitialized- 2>/dev/null || true
+    
+    echo "$(date): Cloud provider taint removed" >> /var/log/taint-removal.log
+    TAINT_SCRIPT
+    
+    chmod +x /usr/local/bin/remove-cloud-taint.sh
+    nohup /usr/local/bin/remove-cloud-taint.sh &>/var/log/taint-removal.log &
   EOF
 
   tags = {
@@ -218,20 +246,44 @@ resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
   
   triggers = {
+    # AWS Cloud Controller Manager
     ccm_content = templatefile("${path.module}/manifest/aws-cloud-controller-manager.yaml.tpl", {
-      cluster_name   = var.cluster_name
-      aws_access_key = local.aws_access_key
-      aws_secret_key = local.aws_secret_key
+      cluster_name      = var.cluster_name
+      aws_access_key    = local.aws_access_key
+      aws_secret_key    = local.aws_secret_key
       aws_session_token = local.aws_session_token
     })
-    local_path_content = file("${path.module}/manifest/local-path-provisioner.yaml.tpl")
+    
+    # Prometheus Stack (inkl. Local-Path-Provisioner, Node-Exporter, Kube-State-Metrics)
     prometheus_content = templatefile("${path.module}/manifest/prometheus-stack.yaml.tpl", {
-      cluster_name = var.cluster_name
-      environment  = var.environment
+      cluster_name               = var.cluster_name
+      environment                = var.environment
+      monitoring_namespace       = var.monitoring_namespace
+      prometheus_version         = var.prometheus_version
+      prometheus_nodeport        = var.prometheus_nodeport
+      prometheus_retention       = var.prometheus_retention
+      prometheus_scrape_interval = var.prometheus_scrape_interval
+      prometheus_storage_enabled = var.prometheus_storage_enabled
+      prometheus_storage_size    = var.prometheus_storage_size
+      alertmanager_enabled       = var.alertmanager_enabled
     })
-    loki_content    = file("${path.module}/manifest/loki-stack.yaml.tpl")
+    
+    # Loki Stack (Loki + Promtail)
+    loki_content = templatefile("${path.module}/manifest/loki-stack.yaml.tpl", {
+      monitoring_namespace = var.monitoring_namespace
+      loki_version         = var.loki_version
+      loki_storage_enabled = var.loki_storage_enabled
+      loki_storage_size    = var.loki_storage_size
+    })
+    
+    # Grafana (Visualization)
     grafana_content = templatefile("${path.module}/manifest/grafana.yaml.tpl", {
-      grafana_admin_password = var.grafana_admin_password
+      monitoring_namespace    = var.monitoring_namespace
+      grafana_version         = var.grafana_version
+      grafana_admin_password  = var.grafana_admin_password
+      grafana_nodeport        = var.grafana_nodeport
+      grafana_storage_enabled = var.grafana_storage_enabled
+      grafana_storage_size    = var.grafana_storage_size
     })
   }
 
@@ -246,11 +298,6 @@ resource "null_resource" "sync_manifests" {
   provisioner "file" {
     content     = self.triggers.ccm_content
     destination = "/tmp/aws-cloud-controller-manager.yaml"
-  }
-
-  provisioner "file" {
-    content     = self.triggers.local_path_content
-    destination = "/tmp/local-path-provisioner.yaml"
   }
 
   provisioner "file" {
@@ -272,7 +319,6 @@ resource "null_resource" "sync_manifests" {
     inline = [
       "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
       "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/",
-      "sudo mv /tmp/local-path-provisioner.yaml /var/lib/rancher/rke2/server/manifests/",
       "sudo mv /tmp/prometheus-stack.yaml /var/lib/rancher/rke2/server/manifests/",
       "sudo mv /tmp/loki-stack.yaml /var/lib/rancher/rke2/server/manifests/",
       "sudo mv /tmp/grafana.yaml /var/lib/rancher/rke2/server/manifests/",

@@ -1,67 +1,69 @@
 # =============================================================================
-# PROMETHEUS STACK - Minimales HelmChart für RKE2
+# PROMETHEUS STACK + LOCAL-PATH-PROVISIONER
 # =============================================================================
+# Kombiniertes Manifest für:
+# - Local-Path-Provisioner (StorageClass für Persistent Volumes)
+# - Prometheus (Metrics Collection)
+# - Node-Exporter (Hardware-Metriken)
+# - Kube-State-Metrics (Kubernetes-Metriken)
 #
-# ERKLÄRUNG:
-# ----------
-# Diese Datei ist ein RKE2 HelmChart-Manifest. RKE2 erkennt automatisch alle
-# YAML-Dateien im Ordner /var/lib/rancher/rke2/server/manifests/ und wendet
-# sie auf den Cluster an.
-#
-# Das HelmChart "kube-prometheus-stack" ist ein Meta-Chart, das folgende
-# Komponenten bündelt:
-#   - Prometheus (Metrics-Server)
-#   - Node-Exporter (Hardware/OS-Metriken von jedem Node)
-#   - Kube-State-Metrics (Kubernetes-Objektzustände)
-#   - Alertmanager (Alert-Routing)
-#
-# NODE-EXPORTER vs. KUBE-STATE-METRICS:
-# -------------------------------------
-# Node-Exporter:
-#   - Läuft als DaemonSet (1 Pod pro Node)
-#   - Liest aus /proc und /sys des Host-Systems
-#   - Liefert: CPU%, RAM%, Disk I/O, Network Traffic
-#   - Beispiel-Metrik: node_cpu_seconds_total
-#
-# Kube-State-Metrics:
-#   - Läuft als einzelnes Deployment (1 Pod im Cluster)
-#   - Fragt die Kubernetes API ab
-#   - Liefert: Pod-Status, Deployment-Replicas, PVC-Zustände
-#   - Beispiel-Metrik: kube_pod_status_phase
-#
-# SCRAPING-LOGIK:
-# ---------------
-# Prometheus nutzt "Service Discovery" um Targets zu finden:
-# 1. ServiceMonitor-Ressourcen definieren, welche Services gescraped werden
-# 2. Prometheus findet diese automatisch über Labels
-# 3. Alle 30 Sekunden werden Metriken von den Targets abgerufen
-#
+# SKALIERUNG:
+# -----------
+# - worker_count in variables.tf erhöhen = mehr Nodes = mehr Metriken
+# - retention/storage über Variablen anpassbar
 # =============================================================================
 
+---
+# 1. LOCAL-PATH-PROVISIONER
+# Erstellt StorageClass für dynamische PV-Provisioning auf jedem Node
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
-  # Name des HelmCharts - erscheint in kubectl get helmcharts -n kube-system
-  name: prometheus-stack
-  # MUSS kube-system sein, damit RKE2 das HelmChart erkennt
+  name: local-path-provisioner
   namespace: kube-system
 spec:
-  # Helm Repository URL - hier liegt das offizielle Chart
+  repo: https://charts.containeroo.ch
+  chart: local-path-provisioner
+  version: "0.0.28"
+  targetNamespace: local-path-storage
+  createNamespace: true
+  valuesContent: |-
+    storageClass:
+      name: local-path
+      defaultClass: true
+      reclaimPolicy: Delete
+    nodePathMap:
+      - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
+        paths:
+          - /var/lib/local-path-provisioner
+
+---
+# 2. PROMETHEUS STACK
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: prometheus-stack
+  namespace: kube-system
+spec:
   repo: https://prometheus-community.github.io/helm-charts
   chart: kube-prometheus-stack
-  version: "55.5.0"
-  targetNamespace: monitoring
+  version: "${prometheus_version}"
+  targetNamespace: ${monitoring_namespace}
   createNamespace: true
   
   valuesContent: |-
+    # Labels für alle Ressourcen
     commonLabels:
       cluster: ${cluster_name}
       environment: ${environment}
 
+    # PROMETHEUS SERVER
     prometheus:
       prometheusSpec:
-        retention: 15d
-        scrapeInterval: 30s
+        retention: ${prometheus_retention}
+        scrapeInterval: ${prometheus_scrape_interval}
+        # Storage nur wenn aktiviert
+        %{ if prometheus_storage_enabled }
         storageSpec:
           volumeClaimTemplate:
             spec:
@@ -69,19 +71,25 @@ spec:
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
-                  storage: 10Gi
+                  storage: ${prometheus_storage_size}
+        %{ endif }
+      # NodePort für externen Zugriff
       service:
         type: NodePort
-        nodePort: 30090
+        nodePort: ${prometheus_nodeport}
 
+    # NODE-EXPORTER: Hardware-Metriken von jedem Node
     nodeExporter:
       enabled: true
 
+    # KUBE-STATE-METRICS: Kubernetes-Objekt-Status
     kubeStateMetrics:
       enabled: true
 
+    # ALERTMANAGER: Alerts (minimal)
     alertmanager:
-      enabled: true
+      enabled: ${alertmanager_enabled}
 
+    # Grafana separat deployen
     grafana:
       enabled: false
