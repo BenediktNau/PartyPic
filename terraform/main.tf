@@ -94,6 +94,7 @@ resource "aws_instance" "rke2_server" {
   vpc_security_group_ids = [aws_security_group.rke2_sg.id]
 
   user_data = <<-EOF
+  user_data = <<-EOF
     #!/bin/bash
     set -e # Exit immediately if a command exits with a non-zero status
 
@@ -155,7 +156,7 @@ resource "aws_instance" "rke2_server" {
 
     # 8. Install Helm
     curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
-    chmod 700 get_helm.sh
+    chmod +x get_helm.sh
     ./get_helm.sh
   EOF
 
@@ -164,6 +165,7 @@ resource "aws_instance" "rke2_server" {
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
+
 
 # --- 2. RKE2 WORKERS ---
 
@@ -228,6 +230,30 @@ resource "null_resource" "sync_manifests" {
       "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
       "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml",
       "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml"
+    ]
+  }
+}
+
+
+resource "null_resource" "install_argocd" {
+  depends_on = [aws_instance.rke2_server]
+
+  connection {
+    type = "ssh"
+    user = "ubuntu"
+    host = aws_instance.rke2_server.public_ip
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/manifest/argocd/argocd-install.yaml"
+    destination = "/tmp/argocd-install.yaml"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p /var/lib/rancher/rke2/server/manifests/argocd",
+      "sudo mv /tmp/argocd-install.yaml /var/lib/rancher/rke2/server/manifests/argocd/argocd-install.yaml",
+      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/argocd/argocd-install.yaml"
     ]
   }
 }
