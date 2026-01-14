@@ -65,7 +65,7 @@ variable "environment" {
 variable "prometheus_version" {
   description = "Version des kube-prometheus-stack Helm Charts"
   type        = string
-  default     = "55.5.0"
+  default     = "80.12.0"
 }
 
 variable "prometheus_nodeport" {
@@ -101,7 +101,44 @@ variable "prometheus_storage_size" {
 variable "alertmanager_enabled" {
   description = "Alertmanager aktivieren"
   type        = bool
-  default     = false
+  default     = true
+}
+
+variable "alertmanager_smtp_host" {
+  description = "SMTP Server für Alertmanager E-Mail Benachrichtigungen"
+  type        = string
+  default     = "smtp-relay.brevo.com:587"
+}
+
+variable "alertmanager_smtp_from" {
+  description = "Absender-Adresse für Alertmanager E-Mails"
+  type        = string
+  default     = "elias.nieweltwot+alertmanager@gmail.com"
+}
+
+variable "alertmanager_smtp_to" {
+  description = "Empfänger-Adresse für Alertmanager E-Mails"
+  type        = string
+  default     = "elias.nieweltwot+alertmanager@gmail.com"
+}
+
+variable "alertmanager_smtp_username" {
+  description = "SMTP Benutzername für Alertmanager"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+variable "alertmanager_smtp_password" {
+  description = "SMTP Passwort für Alertmanager"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "service_type" {
+  description = "Service-Typ für Monitoring-Komponenten (NodePort oder LoadBalancer)"
+  type        = string
+  default     = "LoadBalancer"
 }
 
 # --- GRAFANA ---

@@ -1,21 +1,6 @@
 # =============================================================================
-# PROMETHEUS STACK + LOCAL-PATH-PROVISIONER
+# LOCAL-PATH-PROVISIONER - StorageClass für PVCs
 # =============================================================================
-# Kombiniertes Manifest für:
-# - Local-Path-Provisioner (StorageClass für Persistent Volumes)
-# - Prometheus (Metrics Collection)
-# - Node-Exporter (Hardware-Metriken)
-# - Kube-State-Metrics (Kubernetes-Metriken)
-#
-# SKALIERUNG:
-# -----------
-# - worker_count in variables.tf erhöhen = mehr Nodes = mehr Metriken
-# - retention/storage über Variablen anpassbar
-# =============================================================================
-
----
-# 1. LOCAL-PATH-PROVISIONER
-# Erstellt StorageClass für dynamische PV-Provisioning auf jedem Node
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
@@ -31,14 +16,11 @@ spec:
     storageClass:
       name: local-path
       defaultClass: true
-      reclaimPolicy: Delete
-    nodePathMap:
-      - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
-        paths:
-          - /var/lib/local-path-provisioner
 
 ---
-# 2. PROMETHEUS STACK
+# =============================================================================
+# PROMETHEUS STACK - Metrics Collection & Alerting
+# =============================================================================
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
@@ -50,20 +32,12 @@ spec:
   version: "${prometheus_version}"
   targetNamespace: ${monitoring_namespace}
   createNamespace: true
-  
   valuesContent: |-
-    # Labels für alle Ressourcen
-    commonLabels:
-      cluster: ${cluster_name}
-      environment: ${environment}
-
-    # PROMETHEUS SERVER
+    # Prometheus Server
     prometheus:
       prometheusSpec:
         retention: ${prometheus_retention}
         scrapeInterval: ${prometheus_scrape_interval}
-        # Storage nur wenn aktiviert
-        %{ if prometheus_storage_enabled }
         storageSpec:
           volumeClaimTemplate:
             spec:
@@ -72,24 +46,86 @@ spec:
               resources:
                 requests:
                   storage: ${prometheus_storage_size}
-        %{ endif }
-      # NodePort für externen Zugriff
       service:
-        type: NodePort
-        nodePort: ${prometheus_nodeport}
+        type: LoadBalancer
 
-    # NODE-EXPORTER: Hardware-Metriken von jedem Node
+    # Alertmanager
+    alertmanager:
+      enabled: ${alertmanager_enabled}
+      alertmanagerSpec:
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: local-path
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 2Gi
+      config:
+        global:
+          smtp_smarthost: '${alertmanager_smtp_host}'
+          smtp_from: '${alertmanager_smtp_from}'
+          smtp_auth_username: '${alertmanager_smtp_username}'
+          smtp_auth_password: '${alertmanager_smtp_password}'
+          smtp_require_tls: true
+        route:
+          receiver: 'null'
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 4h
+          routes:
+            - receiver: 'email'
+              matchers:
+                - severity=~"critical|warning"
+        receivers:
+          - name: 'null'
+          - name: 'email'
+            email_configs:
+              - to: '${alertmanager_smtp_to}'
+                send_resolved: true
+      service:
+        type: LoadBalancer
+
+    # Node Exporter (Metrics von jedem Node)
     nodeExporter:
       enabled: true
 
-    # KUBE-STATE-METRICS: Kubernetes-Objekt-Status
+    # Kube-State-Metrics (Kubernetes Object Metrics)
     kubeStateMetrics:
       enabled: true
 
-    # ALERTMANAGER: Alerts (minimal)
-    alertmanager:
-      enabled: ${alertmanager_enabled}
-
-    # Grafana separat deployen
+    # Grafana DEAKTIVIERT - wir deployen separat
     grafana:
       enabled: false
+
+    # Default Rules DEAKTIVIERT - wir definieren eigene
+    defaultRules:
+      create: false
+
+    # Custom Alert Rules
+    additionalPrometheusRulesMap:
+      partypic-alerts:
+        groups:
+          - name: infrastructure
+            rules:
+              - alert: HighCPUUsage
+                expr: (1 - avg(irate(node_cpu_seconds_total{mode="idle"}[5m]))) * 100 > 80
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "CPU-Auslastung über 80%"
+              - alert: HighMemoryUsage
+                expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 85
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Memory-Auslastung über 85%"
+              - alert: PodCrashLooping
+                expr: rate(kube_pod_container_status_restarts_total[15m]) * 60 * 15 > 3
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "Pod {{ $labels.pod }} startet wiederholt neu"

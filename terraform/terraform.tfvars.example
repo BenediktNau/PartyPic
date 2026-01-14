@@ -1,0 +1,19 @@
+# =============================================================================
+# TERRAFORM VARIABLES EXAMPLE
+# =============================================================================
+# Kopiere diese Datei zu terraform.tfvars und passe die Werte an:
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# WICHTIG: terraform.tfvars enthält sensible Daten und ist in .gitignore!
+# =============================================================================
+
+
+# SMTP Credentials für Alertmanager
+alertmanager_smtp_username = "test.mail.partypic@gmail.com"
+alertmanager_smtp_password = "abcd abcd abcd abcd"
+
+# RKE2 Token 
+rke2_token = "das-ist-ein-Testpasswort"
+
+# Grafana Admin Passwort
+grafana_admin_password = "das-ist-ein-anderes-Testpasswort"

@@ -5,3 +5,4 @@ test.pem
 rke2/
 terraform.tfstate
 ./terraform/input.txt
+terraform.tfvars

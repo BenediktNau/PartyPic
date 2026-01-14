@@ -14,6 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SessionsDbService } from './sessions/sessions.db.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtStrategy } from './auth/jwt.strategy';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -26,6 +27,9 @@ import { JwtStrategy } from './auth/jwt.strategy';
     // 4. Importiere das StorageModule.
     //    Es stellt S3Client bereit UND exportiert StorageService.
     StorageModule,
+
+    // 5. Prometheus Metrics für Monitoring
+    MetricsModule,
   ],
   controllers: [AppController, PicturesController, SessionsController, AuthController],
   providers: [

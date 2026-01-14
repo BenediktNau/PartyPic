@@ -1,16 +1,6 @@
 # =============================================================================
 # LOKI STACK - Log Aggregation
 # =============================================================================
-# Komponenten:
-# - Loki Server: Speichert und indiziert Logs
-# - Promtail: DaemonSet, sammelt Logs von allen Nodes
-#
-# SKALIERUNG:
-# -----------
-# Promtail läuft automatisch auf jedem Node (DaemonSet)
-# Bei worker_count Erhöhung = automatisch mehr Log-Collector
-# =============================================================================
-
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
@@ -22,19 +12,14 @@ spec:
   version: "${loki_version}"
   targetNamespace: ${monitoring_namespace}
   createNamespace: true
-  
   valuesContent: |-
-    # LOKI SERVER
+    # Loki Server
     loki:
       enabled: true
-      
-      # Persistence
       persistence:
-        enabled: ${loki_storage_enabled}
+        enabled: true
         size: ${loki_storage_size}
         storageClassName: local-path
-      
-      # Minimal Config
       config:
         auth_enabled: false
         server:
@@ -48,38 +33,9 @@ spec:
               index:
                 prefix: index_
                 period: 24h
-      
-      # Health Checks
-      livenessProbe:
-        httpGet:
-          path: /ready
-          port: http-metrics
-        initialDelaySeconds: 45
-        periodSeconds: 10
-      
-      readinessProbe:
-        httpGet:
-          path: /ready
-          port: http-metrics
-        initialDelaySeconds: 45
-        periodSeconds: 10
 
-    # PROMTAIL - Log Collector (DaemonSet)
+    # Promtail - Log Collector (DaemonSet auf jedem Node)
     promtail:
       enabled: true
       config:
-        lokiAddress: http://loki:3100/loki/api/v1/push
-      
-      livenessProbe:
-        httpGet:
-          path: /ready
-          port: http-metrics
-        initialDelaySeconds: 10
-        periodSeconds: 10
-      
-      readinessProbe:
-        httpGet:
-          path: /ready
-          port: http-metrics
-        initialDelaySeconds: 10
-        periodSeconds: 10
+        lokiAddress: http://loki-stack.${monitoring_namespace}.svc.cluster.local:3100/loki/api/v1/push

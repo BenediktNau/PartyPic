@@ -93,6 +93,25 @@ resource "aws_key_pair" "local_key" {
 
 # --- 1. RKE2 SERVER ---
 
+# Export KUBECONFIG lokal nach terraform apply
+resource "null_resource" "export_kubeconfig" {
+  depends_on = [aws_instance.rke2_server]
+
+  provisioner "local-exec" {
+    command = <<-EOF
+      mkdir -p ~/.kube
+      ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+        ubuntu@${aws_instance.rke2_server.public_ip} \
+        "cat ~/.kube/config" | \
+        sed 's/127.0.0.1/${aws_instance.rke2_server.public_ip}/g' > ~/.kube/rke2-config
+      chmod 600 ~/.kube/rke2-config
+      echo "✓ KUBECONFIG exported to ~/.kube/rke2-config"
+      echo "  Use: export KUBECONFIG=~/.kube/rke2-config"
+    EOF
+    on_failure = continue
+  }
+}
+
 resource "aws_instance" "rke2_server" {
   ami           = "ami-0ecb62995f68bb549"
   instance_type = var.instance_type
@@ -256,34 +275,32 @@ resource "null_resource" "sync_manifests" {
     
     # Prometheus Stack (inkl. Local-Path-Provisioner, Node-Exporter, Kube-State-Metrics)
     prometheus_content = templatefile("${path.module}/manifest/prometheus-stack.yaml.tpl", {
-      cluster_name               = var.cluster_name
-      environment                = var.environment
       monitoring_namespace       = var.monitoring_namespace
       prometheus_version         = var.prometheus_version
-      prometheus_nodeport        = var.prometheus_nodeport
       prometheus_retention       = var.prometheus_retention
       prometheus_scrape_interval = var.prometheus_scrape_interval
-      prometheus_storage_enabled = var.prometheus_storage_enabled
       prometheus_storage_size    = var.prometheus_storage_size
       alertmanager_enabled       = var.alertmanager_enabled
+      alertmanager_smtp_host     = var.alertmanager_smtp_host
+      alertmanager_smtp_from     = var.alertmanager_smtp_from
+      alertmanager_smtp_to       = var.alertmanager_smtp_to
+      alertmanager_smtp_username = var.alertmanager_smtp_username
+      alertmanager_smtp_password = var.alertmanager_smtp_password
     })
     
     # Loki Stack (Loki + Promtail)
     loki_content = templatefile("${path.module}/manifest/loki-stack.yaml.tpl", {
       monitoring_namespace = var.monitoring_namespace
       loki_version         = var.loki_version
-      loki_storage_enabled = var.loki_storage_enabled
       loki_storage_size    = var.loki_storage_size
     })
     
     # Grafana (Visualization)
     grafana_content = templatefile("${path.module}/manifest/grafana.yaml.tpl", {
-      monitoring_namespace    = var.monitoring_namespace
-      grafana_version         = var.grafana_version
-      grafana_admin_password  = var.grafana_admin_password
-      grafana_nodeport        = var.grafana_nodeport
-      grafana_storage_enabled = var.grafana_storage_enabled
-      grafana_storage_size    = var.grafana_storage_size
+      monitoring_namespace   = var.monitoring_namespace
+      grafana_version        = var.grafana_version
+      grafana_admin_password = var.grafana_admin_password
+      grafana_storage_size   = var.grafana_storage_size
     })
   }
 
