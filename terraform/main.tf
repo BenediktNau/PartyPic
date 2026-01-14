@@ -93,33 +93,50 @@ resource "aws_instance" "rke2_server" {
 
   vpc_security_group_ids = [aws_security_group.rke2_sg.id]
 
-  # CRITICAL: We create the config.yaml BEFORE installing RKE2
-    user_data = <<-EOF
+  user_data = <<-EOF
     #!/bin/bash
+    set -e
+
     apt-get update -y
     apt-get install -y curl
-    
-    # Install RKE2 Server: 
+
+    # --- RKE2 Token ---
     mkdir -p /var/lib/rancher/rke2/server
     echo "${var.rke2_token}" > /var/lib/rancher/rke2/server/node-token
     chmod 600 /var/lib/rancher/rke2/server/node-token
 
+    # --- Install RKE2 Server ---
     curl -sfL https://get.rke2.io | sh -s - server --cloud-provider-name=external
 
     systemctl enable rke2-server
     systemctl start rke2-server
 
-    # Wait for Kubeconfig
-    while [ ! -f /etc/rancher/rke2/rke2.yaml ]; do sleep 2; done
+    # --- Wait for kubeconfig ---
+    while [ ! -f /etc/rancher/rke2/rke2.yaml ]; do
+      sleep 2
+    done
+
+    # --- Install kubectl + helm ---
+    export PATH=$PATH:/var/lib/rancher/rke2/bin
 
     curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
-    chmod 700 get_helm.sh
+    chmod +x get_helm.sh
     ./get_helm.sh
 
-    # Setup environment
-    echo 'export PATH=$PATH:/var/lib/rancher/rke2/bin' >> /home/ubuntu/.bashrc
-    echo 'export KUBECONFIG=/etc/rancher/rke2/rke2.yaml' >> /home/ubuntu/.bashrc
-    chmod 644 /etc/rancher/rke2/rke2.yaml
+    # --- Make kubeconfig usable for ubuntu ---
+    mkdir -p /home/ubuntu/.kube
+    cp /etc/rancher/rke2/rke2.yaml /home/ubuntu/.kube/config
+    chown -R ubuntu:ubuntu /home/ubuntu/.kube
+    chmod 600 /home/ubuntu/.kube/config
+
+    # --- Make kubeconfig usable for root (sudo kubectl) ---
+    mkdir -p /root/.kube
+    cp /etc/rancher/rke2/rke2.yaml /root/.kube/config
+    chown root:root /root/.kube/config
+    chmod 600 /root/.kube/config
+
+    # --- Persist PATH ---
+    echo 'export PATH=$PATH:/var/lib/rancher/rke2/bin' >> /etc/profile
   EOF
 
   tags = {
@@ -127,6 +144,7 @@ resource "aws_instance" "rke2_server" {
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
+
 
 # --- 2. RKE2 WORKERS ---
 
@@ -190,6 +208,30 @@ resource "null_resource" "sync_manifests" {
       "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
       "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml",
       "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml"
+    ]
+  }
+}
+
+
+resource "null_resource" "install_argocd" {
+  depends_on = [aws_instance.rke2_server]
+
+  connection {
+    type = "ssh"
+    user = "ubuntu"
+    host = aws_instance.rke2_server.public_ip
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/manifest/argocd/argocd-install.yaml"
+    destination = "/tmp/argocd-install.yaml"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p /var/lib/rancher/rke2/server/manifests/argocd",
+      "sudo mv /tmp/argocd-install.yaml /var/lib/rancher/rke2/server/manifests/argocd/argocd-install.yaml",
+      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/argocd/argocd-install.yaml"
     ]
   }
 }
