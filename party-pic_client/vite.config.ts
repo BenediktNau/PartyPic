@@ -12,7 +12,7 @@ export default defineConfig({
   }),
   react(), tailwindcss(), mkcert()],
   server: {
-    host: true
+    host: true,
   }
 
 })

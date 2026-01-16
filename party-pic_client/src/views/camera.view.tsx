@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import WebcamCapture from "../components/camera/Webcam.comp";
-import { useMutation } from "@tanstack/react-query";
-import { postPicture } from "../api/pictures/pictures.api";
+import { initUpload, uploadToPresignedUrl, finalizeUpload, type InitUploadDto } from "../api/pictures/pictures.api";
 import { handlePhotoShoot } from "../components/camera/functions/handlePhoto.func";
 
 interface CameraViewProps {
@@ -13,20 +12,32 @@ function cameraView({ sessionId, cameraOn }: CameraViewProps) {
   const webcamRef = React.useRef<any>(null);
   const [portraitMode, setPortraitMode] = React.useState<boolean>(true);
 
-  const pictureUpload = useMutation({
-    mutationFn: (formData: FormData) => postPicture(formData),
-    onError: (error) => {
-      console.log(error);
-    },
-  });
-
   const capturePic = useCallback(() => {
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (imageSrc) {
-      const data = handlePhotoShoot(imageSrc, sessionId);
-      console.log(data.get("file"));
-      pictureUpload.mutate(data);
-    }
+    (async () => {
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (!imageSrc) return;
+
+      const { blob, fileName } = handlePhotoShoot(imageSrc, sessionId);
+      try {
+        // 1) Ask server for presigned URL
+        const presigned = await initUpload({ session_id: sessionId, mimetype: blob.type });
+
+        // 2) Upload directly to S3 using the presigned URL
+        await uploadToPresignedUrl(presigned.uploadUrl, blob, blob.type);
+
+        // 3) Notify backend that upload is complete
+        await finalizeUpload({
+          u_name: "test_user",
+          session_id: sessionId,
+          s3_key: presigned.key,
+          original_filename: fileName,
+          filesize_bytes: blob.size,
+          mimetype: blob.type,
+        });
+      } catch (err) {
+        console.error("Picture upload failed", err);
+      }
+    })();
   }, [webcamRef]);
 
   return (
@@ -38,13 +49,15 @@ function cameraView({ sessionId, cameraOn }: CameraViewProps) {
       }
     >
       <div className="p-4">
-        {cameraOn? 
+        {cameraOn ? (
           <WebcamCapture
             Portraitmode={(e) => setPortraitMode(e)}
             ref={webcamRef}
             className=" min-h-0  max-h-5/6"
-          /> : <div>Kamera ist aus</div>
-        }
+          />
+        ) : (
+          <div>Kamera ist aus</div>
+        )}
       </div>
 
       <button onClick={capturePic} className="p-4">

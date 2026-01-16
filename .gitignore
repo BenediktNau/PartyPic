@@ -6,3 +6,4 @@ rke2/
 terraform.tfstate
 ./terraform/input.txt
 terraform.tfvars
+install-argocd.sh

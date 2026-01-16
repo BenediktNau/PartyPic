@@ -1,13 +1,40 @@
 import axios from "../api-client.ts"
 
+export interface InitUploadDto {
+    session_id: string;
+    mimetype: string; // e.g., 'image/jpeg'
+}
 
-export const postPicture = async (formData: FormData) => {
-    try {
-        const response = await axios.post("/pictures/upload", formData
-        )
+export interface PresignedResponse {
+    uploadUrl: string;
+    key: string;
+    bucket: string;
+}
 
-        return response.data
-    } catch (error) {
-        console.error('Fehler beim Upload:', error);
-    }
-} 
+export const initUpload = async (dto: InitUploadDto): Promise<PresignedResponse> => {
+    const response = await axios.post("/pictures/init-upload", dto);
+    return response.data as PresignedResponse;
+};
+
+export const uploadToPresignedUrl = async (uploadUrl: string, file: Blob, contentType: string) => {
+    const res = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+            "Content-Type": contentType,
+        },
+        body: file,
+    });
+    if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+};
+
+export const finalizeUpload = async (payload: {
+    u_name: string;
+    session_id: string;
+    s3_key: string;
+    original_filename: string;
+    filesize_bytes: number;
+    mimetype: string;
+}) => {
+    const response = await axios.post("/pictures/finalize-upload", payload);
+    return response.data;
+};
