@@ -17,32 +17,15 @@ output "worker_public_ips" {
   value       = aws_instance.rke2_worker[*].public_ip
 }
 
+# Grafana hat LoadBalancer
 output "grafana_url_command" {
   description = "Befehl um Grafana LoadBalancer URL abzurufen"
-  value       = "ssh ubuntu@${aws_instance.rke2_server.public_ip} 'kubectl get svc grafana -n ${var.monitoring_namespace} -o jsonpath=\"http://{.status.loadBalancer.ingress[0].hostname}\"'"
+  value       = "ssh ubuntu@${aws_instance.rke2_server.public_ip} \"kubectl get svc grafana -n ${var.monitoring_namespace} -o jsonpath='http://{.status.loadBalancer.ingress[0].hostname}'\""
 }
 
-output "prometheus_url_command" {
-  description = "Befehl um Prometheus LoadBalancer URL abzurufen"
-  value       = "ssh ubuntu@${aws_instance.rke2_server.public_ip} 'kubectl get svc prometheus-stack-kube-prom-prometheus -n ${var.monitoring_namespace} -o jsonpath=\"http://{.status.loadBalancer.ingress[0].hostname}:9090\"'"
+# Prometheus hat NodePort (direkte URL)
+output "prometheus_url" {
+  description = "Prometheus URL (NodePort 30090)"
+  value       = "http://${aws_instance.rke2_server.public_ip}:30090"
 }
 
-output "alertmanager_url_command" {
-  description = "Befehl um Alertmanager LoadBalancer URL abzurufen"
-  value       = "ssh ubuntu@${aws_instance.rke2_server.public_ip} 'kubectl get svc prometheus-stack-kube-prom-alertmanager -n ${var.monitoring_namespace} -o jsonpath=\"http://{.status.loadBalancer.ingress[0].hostname}:9093\"'"
-}
-
-output "all_services_command" {
-  description = "Befehl um alle Monitoring Services anzuzeigen"
-  value       = "ssh ubuntu@${aws_instance.rke2_server.public_ip} 'kubectl get svc -n ${var.monitoring_namespace}'"
-}
-
-output "grafana_nodeport_fallback" {
-  description = "Grafana NodePort URL (Fallback falls LB nicht verfügbar)"
-  value       = "http://${aws_instance.rke2_server.public_ip}:${var.grafana_nodeport}"
-}
-
-output "prometheus_nodeport_fallback" {
-  description = "Prometheus NodePort URL (Fallback falls LB nicht verfügbar)"
-  value       = "http://${aws_instance.rke2_server.public_ip}:${var.prometheus_nodeport}"
-}

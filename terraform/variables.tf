@@ -143,9 +143,9 @@ variable "service_type" {
 
 # --- GRAFANA ---
 variable "grafana_version" {
-  description = "Version des Grafana Helm Charts"
+  description = "Version des Grafana Helm Charts (NICHT die App-Version!)"
   type        = string
-  default     = "7.0.0"
+  default     = "10.5.8"
 }
 
 variable "grafana_admin_password" {
@@ -177,7 +177,7 @@ variable "grafana_storage_size" {
 variable "loki_version" {
   description = "Version des Loki-Stack Helm Charts"
   type        = string
-  default     = "2.10.0"
+  default     = "2.10.3"
 }
 
 variable "loki_storage_enabled" {

@@ -16,6 +16,25 @@ spec:
     adminUser: admin
     adminPassword: "${grafana_admin_password}"
 
+    # === PERFORMANCE OPTIMIERUNGEN ===
+    # Schnellere Startup-Erkennung
+    readinessProbe:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+    
+    livenessProbe:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 3
+
+
     persistence:
       enabled: true
       storageClassName: local-path
@@ -24,7 +43,7 @@ spec:
     service:
       type: LoadBalancer
       port: 80
-
+      
     # Datasources
     datasources:
       datasources.yaml:
@@ -162,7 +181,7 @@ spec:
                   },
                   "targets": [
                     {
-                      "expr": "sum(rate(http_requests_total[5m])) or sum(rate(nginx_ingress_controller_requests[5m])) or vector(0)",
+                      "expr": "sum(rate(partypic_http_requests_total[5m])) or sum(rate(nginx_ingress_controller_requests[5m])) or vector(0)",
                       "legendFormat": "Total Requests",
                       "refId": "A"
                     }
@@ -246,7 +265,7 @@ spec:
                   },
                   "targets": [
                     {
-                      "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) or histogram_quantile(0.95, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket[5m])) by (le)) or vector(0)",
+                      "expr": "histogram_quantile(0.95, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le)) or histogram_quantile(0.95, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket[5m])) by (le)) or vector(0)",
                       "legendFormat": "p95 Latency",
                       "refId": "A"
                     }
@@ -303,7 +322,7 @@ spec:
                   "pluginVersion": "10.1.5",
                   "targets": [
                     {
-                      "expr": "(sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100) or (sum(rate(nginx_ingress_controller_requests{status=~\"5..\"}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) * 100) or vector(0)",
+                      "expr": "(sum(rate(partypic_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(partypic_http_requests_total[5m])) * 100) or (sum(rate(nginx_ingress_controller_requests{status=~\"5..\"}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) * 100) or vector(0)",
                       "refId": "A"
                     }
                   ],
@@ -355,7 +374,7 @@ spec:
                   },
                   "targets": [
                     {
-                      "expr": "sum by (status) (increase(nginx_ingress_controller_requests[1h])) or sum by (status) (increase(http_requests_total[1h]))",
+                      "expr": "sum by (status) (increase(nginx_ingress_controller_requests[1h])) or sum by (status) (increase(partypic_http_requests_total[1h]))",
                       "legendFormat": "{{status}}",
                       "refId": "A"
                     }
@@ -2825,7 +2844,7 @@ spec:
                   "pluginVersion": "10.1.5",
                   "targets": [
                     {
-                      "expr": "count(kube_pod_status_phase{phase=\"Running\"})",
+                      "expr": "sum(kube_pod_status_phase{phase=\"Running\"})",
                       "refId": "A"
                     }
                   ],

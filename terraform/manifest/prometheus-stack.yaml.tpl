@@ -47,7 +47,8 @@ spec:
                 requests:
                   storage: ${prometheus_storage_size}
       service:
-        type: LoadBalancer
+        type: NodePort
+        nodePort: 30090
 
     # Alertmanager
     alertmanager:
@@ -84,7 +85,7 @@ spec:
               - to: '${alertmanager_smtp_to}'
                 send_resolved: true
       service:
-        type: LoadBalancer
+        type: ClusterIP
 
     # Node Exporter (Metrics von jedem Node)
     nodeExporter:
