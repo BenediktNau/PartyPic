@@ -2,6 +2,19 @@ data "external" "env" {
   program = ["${path.module}/env.sh"]
 }
 
+# Look up instances that belong to the ASG by filtering for the cluster tag
+data "aws_instances" "worker_nodes" {
+  instance_tags = {
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    Name = "${var.cluster_name}-worker" # Must match the tag in your Launch Template
+  }
+
+  instance_state_names = ["running"]
+
+  # Ensure we don't try to look them up before the ASG exists
+  depends_on = [aws_autoscaling_group.rke2_workers]
+}
+
 locals {
   aws_access_key    = data.external.env.result["aws_access_key"]
   aws_secret_key    = data.external.env.result["aws_secret_key"]
@@ -21,7 +34,17 @@ provider "aws" {
   region = var.aws_region
 }
 
-# --- REMOVED IAM ROLES & POLICIES HERE ---
+# --- Get Default VPC and Subnets ---
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
 
 resource "aws_security_group" "rke2_sg" {
   name        = "${var.cluster_name}-sg"
@@ -84,12 +107,25 @@ resource "aws_key_pair" "local_key" {
   public_key = var.public_key
 }
 
+# 1. Erstelle die feste IP
+resource "aws_eip" "ingress_ip" {
+  domain = "vpc"
+  tags = {
+    Name = "${var.cluster_name}-ingress-ip"
+  }
+}
+
 # --- 1. RKE2 SERVER ---
 
 resource "aws_instance" "rke2_server" {
   ami           = "ami-0ecb62995f68bb549"
   instance_type = var.instance_type
   key_name      = aws_key_pair.local_key.key_name
+  root_block_device {
+    volume_size           = 20
+    volume_type           = "gp3"
+    delete_on_termination = true
+  }
 
   vpc_security_group_ids = [aws_security_group.rke2_sg.id]
 
@@ -114,6 +150,8 @@ resource "aws_instance" "rke2_server" {
     cat <<EOC > /etc/rancher/rke2/config.yaml
     token: "${var.rke2_token}"
     disable-cloud-controller: true
+    disable: 
+      - rke2-ingress-nginx
     
     # 1. Kubelet needs it + the ID
     kubelet-arg:
@@ -160,55 +198,159 @@ resource "aws_instance" "rke2_server" {
   EOF
 
   tags = {
-    Name = "${var.cluster_name}-server"
+    Name                                        = "${var.cluster_name}-server"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
 
 
 # --- 2. RKE2 WORKERS ---
-
-resource "aws_instance" "rke2_worker" {
-  count         = var.worker_count
-  ami           = "ami-0ecb62995f68bb549"
+# --- 2. RKE2 WORKER LAUNCH TEMPLATE ---
+resource "aws_launch_template" "rke2_worker_lt" {
+  name_prefix   = "${var.cluster_name}-worker-"
+  image_id      = "ami-0ecb62995f68bb549" 
   instance_type = var.instance_type
   key_name      = aws_key_pair.local_key.key_name
 
   vpc_security_group_ids = [aws_security_group.rke2_sg.id]
 
-  user_data = <<-EOF
+  # We use base64encode for Launch Templates
+  user_data = base64encode(<<-EOF
     #!/bin/bash
     apt-get update -y
     apt-get install -y curl
     
+    # 1. Fetch Metadata for ProviderID (Keep your manual logic!)
+    TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+    AZ=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | tr -d '\n')
+    IID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/instance-id | tr -d '\n')
+
+    # 2. Install RKE2 Agent
+    # We manually pass the provider-id so Kubelet doesn't need IAM to look it up
     curl -sfL https://get.rke2.io | \
       INSTALL_RKE2_TYPE="agent" \
       RKE2_URL="https://${aws_instance.rke2_server.private_ip}:9345" \
       RKE2_TOKEN="${var.rke2_token}" \
-      sh -s - agent --cloud-provider-name=external
+      sh -s - agent \
+      --cloud-provider-name=external \
+      --kubelet-arg="cloud-provider=external" \
+      --kubelet-arg="provider-id=aws:///$${AZ}/$${IID}"
 
     systemctl enable rke2-agent
     systemctl start rke2-agent
   EOF
+  )
 
-  tags = {
-    Name                                        = "${var.cluster_name}-worker-${count.index + 1}"
-    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name                                        = "${var.cluster_name}-worker"
+      "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    }
+  }
+}
+
+# --- 3. AUTO SCALING GROUP ---
+resource "aws_autoscaling_group" "rke2_workers" {
+  name             = "${var.cluster_name}-worker-asg"
+  desired_capacity = var.worker_count
+  max_size         = 10
+  min_size         = 1
+  
+  # --- FIX HERE: Use the subnets found above ---
+  vpc_zone_identifier = data.aws_subnets.default.ids 
+
+  launch_template {
+    id      = aws_launch_template.rke2_worker_lt.id
+    version = "$Latest"
   }
 
-  depends_on = [aws_instance.rke2_server]
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/enabled"
+    value               = "true"
+    propagate_at_launch = true
+  }
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/${var.cluster_name}"
+    value               = "owned"
+    propagate_at_launch = true
+  }
 }
 
 # --- 3. MANIFEST SYNC ---
-
 resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
+  
   triggers = {
-    # If the template file changes, re-run this
-    ccm_content = templatefile("${path.module}/manifest/aws-cloud-controller-manager.yaml.tpl", {
-      cluster_name   = var.cluster_name
-      aws_access_key = local.aws_access_key
-      aws_secret_key = local.aws_secret_key
+    //Cloud Controller Manager
+    ccm_content = templatefile("${path.module}/aws-cloud-controller-manager.yaml.tpl", {
+      cluster_name      = var.cluster_name
+      aws_access_key    = local.aws_access_key
+      aws_secret_key    = local.aws_secret_key
+      aws_session_token = local.aws_session_token
+    })
+    //Ingress Config
+    ingress_config = templatefile("${path.module}/ingress-config.yaml.tpl", {
+      eip_allocation_id = aws_eip.ingress_ip.allocation_id
+      subnet_id = aws_instance.rke2_server.subnet_id
+    })
+  }
+
+  connection {
+    type = "ssh"
+    user = "ubuntu"
+    host = aws_instance.rke2_server.public_ip
+  }
+
+  //Upload Files
+  provisioner "file" {
+    content     = self.triggers.ingress_config
+    destination = "/tmp/ingress-config.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.ccm_content
+    destination = "/tmp/aws-cloud-controller-manager.yaml"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      # 1. RKE2 STOPPEN (Wichtig!)
+      "sudo systemctl stop rke2-server",
+      
+      "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
+      
+      # 2. Alte "falsche" Dateien löschen (wirklich aufräumen)
+      # Wir löschen die automatische Datei von RKE2, damit es beim Neustart
+      # gezwungen ist, sie neu zu erstellen und dabei deine Config direkt einzubinden.
+      "sudo rm -f /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx.yaml",
+      "sudo rm -f /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx-config.yaml",
+      
+      # 3. CCM verschieben
+      "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml",
+      
+      # 4. Ingress Config verschieben
+      # WICHTIG: Der Name muss auf -config.yaml enden!
+      "sudo mv /tmp/ingress-config.yaml /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx-config.yaml",
+      
+      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
+      
+      # 5. RKE2 STARTEN
+      "sudo systemctl start rke2-server",
+      
+      # Warten bis API da ist (verhindert Fehler bei nachfolgenden Steps)
+      "sleep 30"
+    ]
+  }
+}
+
+resource "null_resource" "sync_autoscaler" {
+  depends_on = [aws_autoscaling_group.rke2_workers]
+  triggers = {
+    content = templatefile("${path.module}/cluster-autoscaler.yaml.tpl", {
+      cluster_name      = var.cluster_name
+      aws_access_key    = local.aws_access_key
+      aws_secret_key    = local.aws_secret_key
       aws_session_token = local.aws_session_token
     })
   }
@@ -220,39 +362,45 @@ resource "null_resource" "sync_manifests" {
   }
 
   provisioner "file" {
-    content     = self.triggers.ccm_content
-    destination = "/tmp/aws-cloud-controller-manager.yaml"
+    content     = self.triggers.content
+    destination = "/tmp/cluster-autoscaler.yaml"
   }
 
   provisioner "remote-exec" {
     inline = [
-      "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
-      "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml",
-      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml"
+      "sudo mv /tmp/cluster-autoscaler.yaml /var/lib/rancher/rke2/server/manifests/cluster-autoscaler.yaml"
     ]
   }
 }
 
 
-resource "null_resource" "install_argocd" {
+resource "null_resource" "deploy_manifests" {
+  # This creates one resource instance per file found in the folder
+  for_each = fileset("${path.module}/manifest", "*.yaml")
+
   depends_on = [aws_instance.rke2_server]
 
+  triggers = {
+    # If the file content changes, Terraform will re-run this
+    manifest_content = file("${path.module}/manifest/${each.value}")
+  }
+
   connection {
-    type = "ssh"
-    user = "ubuntu"
-    host = aws_instance.rke2_server.public_ip
+    type        = "ssh"
+    user        = "ubuntu"
+    host        = aws_instance.rke2_server.public_ip
   }
 
   provisioner "file" {
-    source      = "${path.module}/manifest/argocd/argocd-install.yaml"
-    destination = "/tmp/argocd-install.yaml"
+    source      = "${path.module}/manifest/${each.value}"
+    destination = "/tmp/${each.value}"
   }
 
   provisioner "remote-exec" {
     inline = [
-      "sudo mkdir -p /var/lib/rancher/rke2/server/manifests/argocd",
-      "sudo mv /tmp/argocd-install.yaml /var/lib/rancher/rke2/server/manifests/argocd/argocd-install.yaml",
-      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/argocd/argocd-install.yaml"
+      "sudo mv /tmp/${each.value} /var/lib/rancher/rke2/server/manifests/${each.value}",
+      # Optional: wait a moment to ensure RKE2 picks it up (not strictly necessary but helpful in logs)
+      "sleep 2" 
     ]
   }
 }

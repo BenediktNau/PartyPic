@@ -8,6 +8,6 @@ output "server_public_ip" {
 }
 
 output "worker_public_ips" {
-  description = "Public IPs of the worker nodes"
-  value       = aws_instance.rke2_worker[*].public_ip
+  description = "Public IPs of the currently running worker nodes"
+  value       = data.aws_instances.worker_nodes.public_ips
 }
