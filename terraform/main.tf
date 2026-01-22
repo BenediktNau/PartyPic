@@ -294,6 +294,9 @@ resource "null_resource" "sync_manifests" {
       eip_allocation_id = aws_eip.ingress_ip.allocation_id
       subnet_id = aws_instance.rke2_server.subnet_id
     })
+    agrocd_ingress = templatefile("${path.module}/manifest/argocd-ingress.yaml.tpl", {
+      ip = aws_eip.ingress_ip.public_ip
+    })
   }
 
   connection {
@@ -313,32 +316,24 @@ resource "null_resource" "sync_manifests" {
     destination = "/tmp/aws-cloud-controller-manager.yaml"
   }
 
+  provisioner "file" {
+    content     = file("${path.module}/manifest/argocd.yaml")
+    destination = "/tmp/argocd.yaml"
+  }
+  provisioner "file" {
+    content     = self.triggers.agrocd_ingress
+    destination = "/tmp/argocd-ingress.yaml"
+  }
+
   provisioner "remote-exec" {
     inline = [
-      # 1. RKE2 STOPPEN (Wichtig!)
-      "sudo systemctl stop rke2-server",
-      
       "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
-      
-      # 2. Alte "falsche" Dateien löschen (wirklich aufräumen)
-      # Wir löschen die automatische Datei von RKE2, damit es beim Neustart
-      # gezwungen ist, sie neu zu erstellen und dabei deine Config direkt einzubinden.
-      "sudo rm -f /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx.yaml",
-      "sudo rm -f /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx-config.yaml",
-      
-      # 3. CCM verschieben
-      "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml",
-      
-      # 4. Ingress Config verschieben
-      # WICHTIG: Der Name muss auf -config.yaml enden!
-      "sudo mv /tmp/ingress-config.yaml /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx-config.yaml",
+
+      "sudo mv /tmp/*.yaml /var/lib/rancher/rke2/server/manifests/",
       
       "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
       
-      # 5. RKE2 STARTEN
-      "sudo systemctl start rke2-server",
-      
-      # Warten bis API da ist (verhindert Fehler bei nachfolgenden Steps)
+
       "sleep 30"
     ]
   }
@@ -374,33 +369,3 @@ resource "null_resource" "sync_autoscaler" {
 }
 
 
-resource "null_resource" "deploy_manifests" {
-  # This creates one resource instance per file found in the folder
-  for_each = fileset("${path.module}/manifest", "*.yaml")
-
-  depends_on = [aws_instance.rke2_server]
-
-  triggers = {
-    # If the file content changes, Terraform will re-run this
-    manifest_content = file("${path.module}/manifest/${each.value}")
-  }
-
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    host        = aws_instance.rke2_server.public_ip
-  }
-
-  provisioner "file" {
-    source      = "${path.module}/manifest/${each.value}"
-    destination = "/tmp/${each.value}"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo mv /tmp/${each.value} /var/lib/rancher/rke2/server/manifests/${each.value}",
-      # Optional: wait a moment to ensure RKE2 picks it up (not strictly necessary but helpful in logs)
-      "sleep 2" 
-    ]
-  }
-}
