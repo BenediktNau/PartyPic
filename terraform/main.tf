@@ -399,7 +399,6 @@ resource "null_resource" "sync_argocd_apps" {
       "export KUBECONFIG=/home/ubuntu/.kube/config",
       "export PATH=/var/lib/rancher/rke2/bin:$PATH",
       "echo 'Waiting for ArgoCD CRDs...'",
-      # POSIX-kompatible while-Schleife
       "i=0; while [ $i -lt 60 ]; do kubectl get crd applications.argoproj.io >/dev/null 2>&1 && break; sleep 10; i=$((i+1)); done",
       "echo 'ArgoCD CRDs ready, deploying applications...'",
       "sudo mv /tmp/client-application.yaml /var/lib/rancher/rke2/server/manifests/",
