@@ -297,6 +297,7 @@ resource "null_resource" "sync_manifests" {
     agrocd_ingress = templatefile("${path.module}/manifest/argocd-ingress.yaml.tpl", {
       ip = aws_eip.ingress_ip.public_ip
     })
+    argocd_repo_secret = file("${path.module}/manifest/argocd-repo-secret.yaml")
   }
 
   connection {
@@ -320,9 +321,15 @@ resource "null_resource" "sync_manifests" {
     content     = file("${path.module}/manifest/argocd.yaml")
     destination = "/tmp/argocd.yaml"
   }
+
   provisioner "file" {
     content     = self.triggers.agrocd_ingress
     destination = "/tmp/argocd-ingress.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.argocd_repo_secret
+    destination = "/tmp/argocd-repo-secret.yaml"
   }
 
   provisioner "remote-exec" {
@@ -368,4 +375,34 @@ resource "null_resource" "sync_autoscaler" {
   }
 }
 
+resource "null_resource" "sync_argocd_apps" {
+  depends_on = [null_resource.sync_manifests]
 
+  connection {
+    type = "ssh"
+    user = "ubuntu"
+    host = aws_instance.rke2_server.public_ip
+  }
+
+  provisioner "file" {
+    content     = file("${path.module}/manifest/client-application.yaml")
+    destination = "/tmp/client-application.yaml"
+  }
+
+  provisioner "file" {
+    content     = file("${path.module}/manifest/server-application.yaml")
+    destination = "/tmp/server-application.yaml"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "export KUBECONFIG=/home/ubuntu/.kube/config",
+      "export PATH=/var/lib/rancher/rke2/bin:$PATH",
+      "echo 'Waiting for ArgoCD CRDs...'",
+      "i=0; while [ $i -lt 60 ]; do kubectl get crd applications.argoproj.io >/dev/null 2>&1 && break; sleep 10; i=$((i+1)); done",
+      "echo 'ArgoCD CRDs ready, deploying applications...'",
+      "sudo mv /tmp/client-application.yaml /var/lib/rancher/rke2/server/manifests/",
+      "sudo mv /tmp/server-application.yaml /var/lib/rancher/rke2/server/manifests/",
+    ]
+  }
+}
