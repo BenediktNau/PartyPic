@@ -8,7 +8,7 @@ spec:
 
   source:
     repoURL: https://github.com/BenediktNau/PartyPic.git
-    targetRevision: master
+    targetRevision: simon
     path: party-pic_server/k8s
 
   destination:
