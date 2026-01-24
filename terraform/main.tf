@@ -376,7 +376,7 @@ resource "null_resource" "sync_autoscaler" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo mv /tmp/cluster-autoscaler.yaml /var/lib/rancher/rke2/server/manifests/cluster-autoscaler.yaml"
+      "sudo mv /tmp/cluster-autoscaler.yaml /var/lib/rancher/rke2/server/manifests/cluster-autoscaler.yaml || true"
     ]
   }
 }
@@ -402,13 +402,9 @@ resource "null_resource" "sync_argocd_apps" {
 
   provisioner "remote-exec" {
     inline = [
-      "echo 'Waiting for kubeconfig...'",
-      "while [ ! -f /home/ubuntu/.kube/config ]; do sleep 5; done",
-      "export KUBECONFIG=/home/ubuntu/.kube/config",
-      "export PATH=/var/lib/rancher/rke2/bin:$PATH",
-      "echo 'Waiting for ArgoCD CRDs (max 10 min)...'",
-      "timeout 600 sh -c 'until kubectl get crd applications.argoproj.io >/dev/null 2>&1; do echo \"Waiting...\"; sleep 15; done' || echo 'Timeout waiting for CRDs, continuing anyway...'",
-      "echo 'Deploying applications...'",
+      "echo 'Waiting 60 seconds for cluster to stabilize...'",
+      "sleep 60",
+      "echo 'Deploying ArgoCD applications...'",
       "sudo mv /tmp/client-application.yaml /var/lib/rancher/rke2/server/manifests/ || true",
       "sudo mv /tmp/server-application.yaml /var/lib/rancher/rke2/server/manifests/ || true",
       "echo 'Done.'"
