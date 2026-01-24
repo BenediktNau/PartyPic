@@ -81,6 +81,13 @@ resource "aws_security_group" "rke2_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  # NodePort Range für LoadBalancer Services
+  ingress {
+    from_port   = 30000
+    to_port     = 32767
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   # Internal Cluster Traffic
   ingress {
     from_port = 0
