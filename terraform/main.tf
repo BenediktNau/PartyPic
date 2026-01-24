@@ -217,25 +217,31 @@ resource "aws_launch_template" "rke2_worker_lt" {
   # We use base64encode for Launch Templates
   user_data = base64encode(<<-EOF
     #!/bin/bash
+    set -e
     apt-get update -y
     apt-get install -y curl
     
-    # 1. Fetch Metadata for ProviderID (Keep your manual logic!)
+    # 1. Fetch Metadata for ProviderID
     TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
     AZ=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | tr -d '\n')
     IID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/instance-id | tr -d '\n')
 
-    # 2. Install RKE2 Agent
-    # We manually pass the provider-id so Kubelet doesn't need IAM to look it up
-    curl -sfL https://get.rke2.io | \
-      INSTALL_RKE2_TYPE="agent" \
-      RKE2_URL="https://${aws_instance.rke2_server.private_ip}:9345" \
-      RKE2_TOKEN="${var.rke2_token}" \
-      sh -s - agent \
-      --cloud-provider-name=external \
-      --kubelet-arg="cloud-provider=external" \
-      --kubelet-arg="provider-id=aws:///$${AZ}/$${IID}"
+    # 2. Create RKE2 Config Directory
+    mkdir -p /etc/rancher/rke2
 
+    # 3. Create config.yaml for the agent
+    cat <<EOC > /etc/rancher/rke2/config.yaml
+    server: https://${aws_instance.rke2_server.private_ip}:9345
+    token: "${var.rke2_token}"
+    kubelet-arg:
+      - "cloud-provider=external"
+      - "provider-id=aws:///$${AZ}/$${IID}"
+    EOC
+
+    # 4. Install RKE2 Agent
+    curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE="agent" sh -
+
+    # 5. Start Service
     systemctl enable rke2-agent
     systemctl start rke2-agent
   EOF
@@ -396,13 +402,16 @@ resource "null_resource" "sync_argocd_apps" {
 
   provisioner "remote-exec" {
     inline = [
+      "echo 'Waiting for kubeconfig...'",
+      "while [ ! -f /home/ubuntu/.kube/config ]; do sleep 5; done",
       "export KUBECONFIG=/home/ubuntu/.kube/config",
       "export PATH=/var/lib/rancher/rke2/bin:$PATH",
-      "echo 'Waiting for ArgoCD CRDs...'",
-      "i=0; while [ $i -lt 60 ]; do kubectl get crd applications.argoproj.io >/dev/null 2>&1 && break; sleep 10; i=$((i+1)); done",
-      "echo 'ArgoCD CRDs ready, deploying applications...'",
-      "sudo mv /tmp/client-application.yaml /var/lib/rancher/rke2/server/manifests/",
-      "sudo mv /tmp/server-application.yaml /var/lib/rancher/rke2/server/manifests/",
+      "echo 'Waiting for ArgoCD CRDs (max 10 min)...'",
+      "timeout 600 sh -c 'until kubectl get crd applications.argoproj.io >/dev/null 2>&1; do echo \"Waiting...\"; sleep 15; done' || echo 'Timeout waiting for CRDs, continuing anyway...'",
+      "echo 'Deploying applications...'",
+      "sudo mv /tmp/client-application.yaml /var/lib/rancher/rke2/server/manifests/ || true",
+      "sudo mv /tmp/server-application.yaml /var/lib/rancher/rke2/server/manifests/ || true",
+      "echo 'Done.'"
     ]
   }
 }
