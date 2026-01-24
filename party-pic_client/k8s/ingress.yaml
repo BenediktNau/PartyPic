@@ -10,7 +10,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: app.192.168.178.32.nip.io  # TODO: Ersetze mit deiner Domain
+    - host: app.52.1.41.199.nip.io  # TODO: Ersetze mit deiner Domain
       http:
         paths:
           - path: /
