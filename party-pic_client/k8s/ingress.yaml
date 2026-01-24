@@ -9,7 +9,7 @@ metadata:
     # cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   rules:
-    - host: app.your-domain.com  # TODO: Ersetze mit deiner Domain
+    - host: app.192.168.178.32.nip.io  # TODO: Ersetze mit deiner Domain
       http:
         paths:
           - path: /
@@ -22,5 +22,5 @@ spec:
   # Optional: TLS-Konfiguration
   # tls:
   #   - hosts:
-  #       - app.your-domain.com
+  #       - app.192.168.178.32.nip.io
   #     secretName: party-pic-client-tls
