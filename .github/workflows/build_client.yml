@@ -5,9 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'partypic_client/**'        # Only trigger if files in this folder change
-    paths-ignore:
-      - 'partypic_client/k8s/**'    # Ignore k8s changes to prevent infinite loops
+      - 'partypic_server/**'       # Watch everything in the server folder...
+      - '!partypic_server/k8s/**'  # ...BUT ignore the k8s subfolder
 
 env:
   REGISTRY: ghcr.io
