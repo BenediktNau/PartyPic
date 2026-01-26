@@ -16,7 +16,7 @@ spec:
     # Controller Arguments
     args:
       - --cluster-name=${cluster_name}
-      - --v=2
+      - --v=5
       - --cloud-provider=aws
       - --configure-cloud-routes=false
       - --use-service-account-credentials=false

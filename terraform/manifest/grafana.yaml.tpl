@@ -2631,7 +2631,7 @@ spec:
                   "pluginVersion": "10.1.5",
                   "targets": [
                     {
-                      "expr": "(sum(kube_pod_status_phase{phase=\"Running\"}) / sum(kube_pod_status_phase)) * 100",
+                      "expr": "(sum(kube_pod_status_phase{phase=~\"Running|Succeeded\"}) / sum(kube_pod_status_phase)) * 100",
                       "refId": "A"
                     }
                   ],
@@ -2793,7 +2793,7 @@ spec:
                   "pluginVersion": "10.1.5",
                   "targets": [
                     {
-                      "expr": "count(kube_node_info) * 0.0416",
+                      "expr": "(count(kube_node_info) * 0.0416) + (count(kube_service_spec_type{type=\"LoadBalancer\"}) * 0.025) + (sum(kube_persistentvolume_capacity_bytes) / 1024 / 1024 / 1024 * 0.08 / 730)",
                       "refId": "A"
                     }
                   ],
@@ -2863,6 +2863,66 @@ spec:
                         "mode": "absolute",
                         "steps": [
                           {
+                        },
+                        {
+                          "fieldConfig": {
+                            "defaults": {
+                              "color": {
+                                "mode": "thresholds"
+                              },
+                              "decimals": 2,
+                              "mappings": [],
+                              "thresholds": {
+                                "mode": "absolute",
+                                "steps": [
+                                  {
+                                    "color": "green",
+                                    "value": null
+                                  },
+                                  {
+                                    "color": "yellow",
+                                    "value": 50
+                                  },
+                                  {
+                                    "color": "orange",
+                                    "value": 100
+                                  }
+                                ]
+                              },
+                              "unit": "currencyUSD"
+                            },
+                            "overrides": []
+                          },
+                          "gridPos": {
+                            "h": 4,
+                            "w": 6,
+                            "x": 18,
+                            "y": 4
+                          },
+                          "id": 14,
+                          "options": {
+                            "colorMode": "value",
+                            "graphMode": "area",
+                            "justifyMode": "auto",
+                            "orientation": "auto",
+                            "reduceOptions": {
+                              "calcs": [
+                                "lastNotNull"
+                              ],
+                              "fields": "",
+                              "values": false
+                            },
+                            "textMode": "auto"
+                          },
+                          "pluginVersion": "10.1.5",
+                          "targets": [
+                            {
+                              "expr": "((count(kube_node_info) * 0.0416) + (count(kube_service_spec_type{type=\"LoadBalancer\"}) * 0.025) + (sum(kube_persistentvolume_capacity_bytes) / 1024 / 1024 / 1024 * 0.08 / 730)) * 730",
+                              "refId": "A"
+                            }
+                          ],
+                          "title": "Geschätzte Kosten/Monat",
+                          "type": "stat"
                             "color": "blue",
                             "value": null
                           }

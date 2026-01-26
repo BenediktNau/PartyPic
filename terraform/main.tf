@@ -2,6 +2,19 @@ data "external" "env" {
   program = ["${path.module}/env.sh"]
 }
 
+# Look up instances that belong to the ASG by filtering for the cluster tag
+data "aws_instances" "worker_nodes" {
+  instance_tags = {
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    Name = "${var.cluster_name}-worker" # Must match the tag in your Launch Template
+  }
+
+  instance_state_names = ["running"]
+
+  # Ensure we don't try to look them up before the ASG exists
+  depends_on = [aws_autoscaling_group.rke2_workers]
+}
+
 locals {
   aws_access_key    = data.external.env.result["aws_access_key"]
   aws_secret_key    = data.external.env.result["aws_secret_key"]
@@ -21,7 +34,17 @@ provider "aws" {
   region = var.aws_region
 }
 
-# --- REMOVED IAM ROLES & POLICIES HERE ---
+# --- Get Default VPC and Subnets ---
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
 
 resource "aws_security_group" "rke2_sg" {
   name        = "${var.cluster_name}-sg"
@@ -91,37 +114,27 @@ resource "aws_key_pair" "local_key" {
   public_key = var.public_key
 }
 
-# --- 1. RKE2 SERVER ---
-
-# Export KUBECONFIG lokal nach terraform apply
-resource "null_resource" "export_kubeconfig" {
-  depends_on = [aws_instance.rke2_server]
-
-  provisioner "local-exec" {
-    command = <<-EOF
-      mkdir -p ~/.kube
-      ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
-        ubuntu@${aws_instance.rke2_server.public_ip} \
-        "cat ~/.kube/config" | \
-        sed 's/127.0.0.1/${aws_instance.rke2_server.public_ip}/g' > ~/.kube/rke2-config
-      chmod 600 ~/.kube/rke2-config
-      echo "✓ KUBECONFIG exported to ~/.kube/rke2-config"
-      echo "  Use: export KUBECONFIG=~/.kube/rke2-config"
-    EOF
-    on_failure = continue
+# 1. Erstelle die feste IP
+resource "aws_eip" "ingress_ip" {
+  domain = "vpc"
+  tags = {
+    Name = "${var.cluster_name}-ingress-ip"
   }
 }
+
+# --- 1. RKE2 SERVER ---
 
 resource "aws_instance" "rke2_server" {
   ami           = "ami-0ecb62995f68bb549"
   instance_type = var.instance_type
   key_name      = aws_key_pair.local_key.key_name
+  root_block_device {
+    volume_size           = 20
+    volume_type           = "gp3"
+    delete_on_termination = true
+  }
 
   vpc_security_group_ids = [aws_security_group.rke2_sg.id]
-
-  root_block_device {
-    volume_size = 30
-  }
 
   user_data = <<-EOF
     #!/bin/bash
@@ -144,6 +157,8 @@ resource "aws_instance" "rke2_server" {
     cat <<EOC > /etc/rancher/rke2/config.yaml
     token: "${var.rke2_token}"
     disable-cloud-controller: true
+    disable: 
+      - rke2-ingress-nginx
     
     # 1. Kubelet needs it + the ID
     kubelet-arg:
@@ -187,82 +202,92 @@ resource "aws_instance" "rke2_server" {
     curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
     chmod 700 get_helm.sh
     ./get_helm.sh
-
-    # 9. Auto-Remove Cloud Provider Taint (Background Job)
-    # Der AWS CCM funktioniert ohne IAM Role nicht - daher entfernen wir den Taint manuell
-    # Das Script läuft im Hintergrund und wartet bis kubectl funktioniert
-    cat <<'TAINT_SCRIPT' > /usr/local/bin/remove-cloud-taint.sh
-    #!/bin/bash
-    export PATH=/var/lib/rancher/rke2/bin:$PATH
-    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-    
-    # Warte bis kubectl funktioniert (max 5 Minuten)
-    for i in {1..60}; do
-      if kubectl get nodes &>/dev/null; then
-        break
-      fi
-      sleep 5
-    done
-    
-    # Warte noch 30 Sekunden damit der Node registriert ist
-    sleep 30
-    
-    # Entferne den Cloud-Provider Taint von allen Nodes
-    kubectl taint nodes --all node.cloudprovider.kubernetes.io/uninitialized- 2>/dev/null || true
-    
-    echo "$(date): Cloud provider taint removed" >> /var/log/taint-removal.log
-    TAINT_SCRIPT
-    
-    chmod +x /usr/local/bin/remove-cloud-taint.sh
-    nohup /usr/local/bin/remove-cloud-taint.sh &>/var/log/taint-removal.log &
   EOF
 
   tags = {
-    Name = "${var.cluster_name}-server"
+    Name                                        = "${var.cluster_name}-server"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
 
-# RKE2 Workers
-resource "aws_instance" "rke2_worker" {
-  count         = var.worker_count
-  ami           = "ami-0ecb62995f68bb549"
+
+# --- 2. RKE2 WORKERS ---
+# --- 2. RKE2 WORKER LAUNCH TEMPLATE ---
+resource "aws_launch_template" "rke2_worker_lt" {
+  name_prefix   = "${var.cluster_name}-worker-"
+  image_id      = "ami-0ecb62995f68bb549" 
   instance_type = var.instance_type
   key_name      = aws_key_pair.local_key.key_name
 
   vpc_security_group_ids = [aws_security_group.rke2_sg.id]
 
-  root_block_device {
-    volume_size = 30
-    volume_type = "gp3"
-  }
-
-  user_data = <<-EOF
+  # We use base64encode for Launch Templates
+  user_data = base64encode(<<-EOF
     #!/bin/bash
     apt-get update -y
     apt-get install -y curl
     
+    # 1. Fetch Metadata for ProviderID (Keep your manual logic!)
+    TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+    AZ=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | tr -d '\n')
+    IID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/instance-id | tr -d '\n')
+
+    # 2. Install RKE2 Agent
+    # We manually pass the provider-id so Kubelet doesn't need IAM to look it up
     curl -sfL https://get.rke2.io | \
       INSTALL_RKE2_TYPE="agent" \
       RKE2_URL="https://${aws_instance.rke2_server.private_ip}:9345" \
       RKE2_TOKEN="${var.rke2_token}" \
-      sh -s - agent --cloud-provider-name=external
+      sh -s - agent \
+      --cloud-provider-name=external \
+      --kubelet-arg="cloud-provider=external" \
+      --kubelet-arg="provider-id=aws:///$${AZ}/$${IID}"
 
     systemctl enable rke2-agent
     systemctl start rke2-agent
   EOF
+  )
 
-  tags = {
-    Name                                        = "${var.cluster_name}-worker-${count.index + 1}"
-    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name                                        = "${var.cluster_name}-worker"
+      "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    }
   }
-
-  depends_on = [aws_instance.rke2_server]
 }
 
-# Sync manifests to RKE2 server
+# --- 3. AUTO SCALING GROUP ---
+resource "aws_autoscaling_group" "rke2_workers" {
+  name             = "${var.cluster_name}-worker-asg"
+  desired_capacity = var.worker_count
+  max_size         = 10
+  min_size         = 1
+  
+  # --- FIX HERE: Use the subnets found above ---
+  vpc_zone_identifier = data.aws_subnets.default.ids 
+
+  launch_template {
+    id      = aws_launch_template.rke2_worker_lt.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/enabled"
+    value               = "true"
+    propagate_at_launch = true
+  }
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/${var.cluster_name}"
+    value               = "owned"
+    propagate_at_launch = true
+  }
+}
+
+# --- 3. MANIFEST SYNC ---
 resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
+  
   
   triggers = {
     # AWS Cloud Controller Manager
@@ -271,6 +296,11 @@ resource "null_resource" "sync_manifests" {
       aws_access_key    = local.aws_access_key
       aws_secret_key    = local.aws_secret_key
       aws_session_token = local.aws_session_token
+    })
+    //Ingress Config
+    ingress_config = templatefile("${path.module}/manifest/ingress-config.yaml.tpl", {
+      eip_allocation_id = aws_eip.ingress_ip.allocation_id
+      subnet_id = aws_instance.rke2_server.subnet_id
     })
     
     # Prometheus Stack (inkl. Local-Path-Provisioner, Node-Exporter, Kube-State-Metrics)
@@ -312,21 +342,24 @@ resource "null_resource" "sync_manifests" {
     agent       = var.private_key_path == ""
   }
 
+  //Upload Files
+  provisioner "file" {
+    content     = self.triggers.ingress_config
+    destination = "/tmp/ingress-config.yaml"
+  }
+
   provisioner "file" {
     content     = self.triggers.ccm_content
     destination = "/tmp/aws-cloud-controller-manager.yaml"
   }
-
   provisioner "file" {
     content     = self.triggers.prometheus_content
     destination = "/tmp/prometheus-stack.yaml"
   }
-
   provisioner "file" {
     content     = self.triggers.loki_content
     destination = "/tmp/loki-stack.yaml"
   }
-
   provisioner "file" {
     content     = self.triggers.grafana_content
     destination = "/tmp/grafana.yaml"
@@ -334,12 +367,65 @@ resource "null_resource" "sync_manifests" {
 
   provisioner "remote-exec" {
     inline = [
+      # 1. RKE2 STOPPEN (Wichtig!)
+      "sudo systemctl stop rke2-server",
+      
       "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
-      "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/",
-      "sudo mv /tmp/prometheus-stack.yaml /var/lib/rancher/rke2/server/manifests/",
-      "sudo mv /tmp/loki-stack.yaml /var/lib/rancher/rke2/server/manifests/",
-      "sudo mv /tmp/grafana.yaml /var/lib/rancher/rke2/server/manifests/",
-      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml"
+      
+      # 2. Alte "falsche" Dateien löschen (wirklich aufräumen)
+      # Wir löschen die automatische Datei von RKE2, damit es beim Neustart
+      # gezwungen ist, sie neu zu erstellen und dabei deine Config direkt einzubinden.
+      "sudo rm -f /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx.yaml",
+      "sudo rm -f /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx-config.yaml",
+      
+      # 3. CCM verschieben
+      "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml",
+      
+      # 4. Ingress Config verschieben
+      # WICHTIG: Der Name muss auf -config.yaml enden!
+      "sudo mv /tmp/ingress-config.yaml /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx-config.yaml",
+
+      # 5. Prometheus Stack verschieben
+      "sudo mv /tmp/prometheus-stack.yaml /var/lib/rancher/rke2/server/manifests/prometheus-stack.yaml",
+
+      # 6. Loki Stack verschieben
+      "sudo mv /tmp/loki-stack.yaml /var/lib/rancher/rke2/server/manifests/loki-stack.yaml",
+
+      # 7. Grafana verschieben
+      "sudo mv /tmp/grafana.yaml /var/lib/rancher/rke2/server/manifests/grafana.yaml",
+
+      # 8. Set correct permissions
+      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
+      
+      # 9. RKE2 STARTEN
+      "sudo systemctl start rke2-server",
+      
+      # 10. Warten bis API da ist (verhindert Fehler bei nachfolgenden Steps)
+      "sleep 30"
     ]
   }
+}
+
+resource "null_resource" "sync_autoscaler" {
+  depends_on = [aws_autoscaling_group.rke2_workers]
+  triggers = {
+    content = templatefile("${path.module}/manifest/cluster-autoscaler.yaml.tpl", {
+      cluster_name      = var.cluster_name
+      aws_access_key    = local.aws_access_key
+      aws_secret_key    = local.aws_secret_key
+      aws_session_token = local.aws_session_token
+    })
+  }
+
+  connection {
+    type = "ssh"
+    user = "ubuntu"
+    host = aws_instance.rke2_server.public_ip
+  }
+
+  provisioner "file" {
+    content     = self.triggers.content
+    destination = "/tmp/cluster-autoscaler.yaml"
+  }
+
 }

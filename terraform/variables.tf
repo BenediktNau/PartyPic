@@ -152,7 +152,7 @@ variable "grafana_admin_password" {
   description = "Grafana Admin-Passwort"
   type        = string
   sensitive   = true
-  default     = "my-super-secret-grafana-password"
+  default     = ""
 }
 
 variable "grafana_nodeport" {
