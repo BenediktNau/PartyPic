@@ -3,7 +3,7 @@ name: Build Server
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'party-pic_server/**'       # Watch everything in the server folder...
       - '!party-pic_server/k8s/**'  # ...BUT ignore the k8s subfolder
