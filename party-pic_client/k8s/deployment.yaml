@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: party-pic-client
-          image: schwablobbs/party-pic-client:latest  # TODO: Ersetze mit deinem Image-Registry-Pfad
+          image: ghcr.io/benediktnau/partypic-client:sha-4573016ae2b462b67c9de88094a3ae1e93153f51 # TODO: Ersetze mit deinem Image-Registry-Pfad
           imagePullPolicy: Always
           ports:
             - containerPort: 80
