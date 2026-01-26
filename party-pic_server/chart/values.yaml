@@ -1,8 +1,8 @@
 # Replicas configuration
 replicaCount: 1
 # Image configuration
-image:
-  repository: schwablobbs/party-pic-server
+image: 
+  repository: ghcr.io/benediktnau/partypic-client
   pullPolicy: Always
   tag: "sha-6226d3dc3d477770c2f66aa6fc8555eeb5868d9c"
 # App configuration (Non-Sensitive)
