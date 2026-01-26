@@ -42,7 +42,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           # Point context to the server subfolder
-          context: ./partypic_client
+          context: ./party-pic_client
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -56,7 +56,7 @@ jobs:
           chmod +x /usr/local/bin/yq
           
           # Go to the specific server k8s folder
-          cd partypic_client/k8s
+          cd party-pic_client/k8s
           
           # Update the deployment.yaml inside the server folder
           yq -i ".spec.template.spec.containers[0].image = \"$NEW_IMAGE\"" deployment.yaml
@@ -66,6 +66,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           # Only add the specific file we changed
-          git add partypic_client/k8s/deployment.yaml
+          git add party-pic_client/k8s/deployment.yaml
           git commit -m "Update client image to ${{ steps.meta.outputs.tags }}"
           git push
