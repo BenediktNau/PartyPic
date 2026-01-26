@@ -75,7 +75,7 @@ function RouteComponent() {
     };
   }, []); 
 
-  const [session, setSession] = useState<Session>({
+  const [session,] = useState<Session>({
     sessionId: sessionId,
     sessionSettings: {},
     sessionMissions: [],
