@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { SessionsDbService } from './sessions.db.service';
 import { AuthService } from '../auth/auth.service';
+import { MetricsService } from '../metrics/metrics.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import * as sessionsModel from '../models/sessions/sessions.model';
 import { session_User } from '../models/sessions/session_User.model';
@@ -25,6 +26,7 @@ export class SessionsController {
   constructor(
     private readonly sessionsDBService: SessionsDbService,
     private readonly authService: AuthService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -41,6 +43,12 @@ export class SessionsController {
     const createdSession = await this.sessionsDBService.createSession(
       req.user.sub,
     );
+    // Prometheus Counter inkrementieren
+    this.metricsService.totalSessionsCounter.inc();
+    // Optional: Active Clients Gauge aktualisieren (z.B. alle aktiven Sessions zählen)
+    // Hier als Beispiel: Gauge auf Anzahl aller Sessions setzen
+    const allSessions = await this.sessionsDBService.getSessionsByUserId(req.user.sub);
+    this.metricsService.activeClientsGauge.set(allSessions.length);
     return { sessionId: createdSession.id };
   }
 

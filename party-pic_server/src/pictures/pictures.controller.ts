@@ -1,4 +1,5 @@
 import { Controller, Post, Body } from '@nestjs/common';
+import { MetricsService } from '../metrics/metrics.service';
 import { StorageService } from '../s3/s3.service';
 import { PicturesDbService } from './pictures.db.service';
 import { SessionsDbService } from '../sessions/sessions.db.service';
@@ -24,8 +25,9 @@ export class PicturesController {
         private readonly storageService: StorageService,
         private readonly picturesDbService: PicturesDbService,
         private readonly sessionDbService: SessionsDbService,
-        private readonly configService: ConfigService
-    ) { }
+            private readonly configService: ConfigService,
+            private readonly metricsService: MetricsService
+        ) { }
 
     // Step 1: Frontend asks for permission to upload
     @Post('init-upload')
@@ -50,12 +52,14 @@ export class PicturesController {
             u_name: body.u_name,
             session_id: body.session_id,
             s3_key: body.s3_key,
-            s3_bucket: this.configService.getOrThrow<string>('S3_BUCKET_NAME'), // Better to fetch from config
+            s3_bucket: this.configService.getOrThrow<string>('S3_BUCKET_NAME'),
             original_filename: body.original_filename,
             mimetype: body.mimetype,
             filesize_bytes: body.filesize_bytes,
             mission_id: body.session_id, 
         });
+        // Prometheus Counter inkrementieren
+        this.metricsService.uploadedPhotosCounter.inc();
         return dbEntry;
     }
 }

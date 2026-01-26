@@ -129,7 +129,7 @@ resource "aws_instance" "rke2_server" {
   instance_type = var.instance_type
   key_name      = aws_key_pair.local_key.key_name
   root_block_device {
-    volume_size           = 20
+    volume_size           = 30
     volume_type           = "gp3"
     delete_on_termination = true
   }
@@ -295,14 +295,12 @@ resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
   
   triggers = {
-    //Cloud Controller Manager
     ccm_content = templatefile("${path.module}/aws-cloud-controller-manager.yaml.tpl", {
       cluster_name      = var.cluster_name
       aws_access_key    = local.aws_access_key
       aws_secret_key    = local.aws_secret_key
       aws_session_token = local.aws_session_token
     })
-    //Ingress Config
     ingress_config = templatefile("${path.module}/ingress-config.yaml.tpl", {
       eip_allocation_id = aws_eip.ingress_ip.allocation_id
       subnet_id = aws_instance.rke2_server.subnet_id
@@ -311,7 +309,9 @@ resource "null_resource" "sync_manifests" {
       ip = aws_eip.ingress_ip.public_ip
     })
     argocd_repo_secret = file("${path.module}/manifest/argocd-repo-secret.yaml")
-    # Prometheus Stack (inkl. Local-Path-Provisioner, Node-Exporter, Kube-State-Metrics)
+
+
+    // Prometheus Stack (inkl. Local-Path-Provisioner, Node-Exporter, Kube-State-Metrics)
     prometheus_content = templatefile("${path.module}/manifest/prometheus-stack.yaml.tpl", {
       monitoring_namespace       = var.monitoring_namespace
       prometheus_version         = var.prometheus_version
@@ -326,14 +326,14 @@ resource "null_resource" "sync_manifests" {
       alertmanager_smtp_password = var.alertmanager_smtp_password
     })
     
-    # Loki Stack (Loki + Promtail)
+    // Loki Stack (Loki + Promtail)
     loki_content = templatefile("${path.module}/manifest/loki-stack.yaml.tpl", {
       monitoring_namespace = var.monitoring_namespace
       loki_version         = var.loki_version
       loki_storage_size    = var.loki_storage_size
     })
     
-    # Grafana (Visualization)
+    // Grafana (Visualization)
     grafana_content = templatefile("${path.module}/manifest/grafana.yaml.tpl", {
       monitoring_namespace   = var.monitoring_namespace
       grafana_version        = var.grafana_version
@@ -346,14 +346,16 @@ resource "null_resource" "sync_manifests" {
     type = "ssh"
     user = "ubuntu"
     host = aws_instance.rke2_server.public_ip
-    private_key = var.private_key_path != "" ? file(pathexpand(var.private_key_path)) : null
-    agent       = var.private_key_path == ""
   }
 
-  //Upload Files
   provisioner "file" {
     content     = self.triggers.ingress_config
     destination = "/tmp/ingress-config.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.ccm_content
+    destination = "/tmp/aws-cloud-controller-manager.yaml"
   }
 
   provisioner "file" {
@@ -375,23 +377,25 @@ resource "null_resource" "sync_manifests" {
     content     = self.triggers.prometheus_content
     destination = "/tmp/prometheus-stack.yaml"
   }
+
   provisioner "file" {
     content     = self.triggers.loki_content
     destination = "/tmp/loki-stack.yaml"
   }
+
   provisioner "file" {
     content     = self.triggers.grafana_content
     destination = "/tmp/grafana.yaml"
   }
 
+  // --- VERSCHIEBEN & ANWENDEN ---
   provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
-
+      
       "sudo mv /tmp/*.yaml /var/lib/rancher/rke2/server/manifests/",
       
       "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
-      
 
       "sleep 30"
     ]
@@ -417,8 +421,11 @@ resource "null_resource" "sync_autoscaler" {
     content     = self.triggers.content
     destination = "/tmp/cluster-autoscaler.yaml"
   }
+
   provisioner "remote-exec" {
     inline = [
+      "echo 'Waiting 20 seconds before deploying Cluster Autoscaler...'",
+      "sleep 20",
       "sudo mv /tmp/cluster-autoscaler.yaml /var/lib/rancher/rke2/server/manifests/",
     ]
   }

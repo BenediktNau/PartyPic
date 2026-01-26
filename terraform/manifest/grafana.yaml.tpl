@@ -41,8 +41,8 @@ spec:
       size: ${grafana_storage_size}
 
     service:
-      type: LoadBalancer
-      port: 80
+      type: NodePort
+      port: 30080
       
     # Datasources
     datasources:

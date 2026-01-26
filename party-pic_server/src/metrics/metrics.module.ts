@@ -1,4 +1,13 @@
 import { Module } from '@nestjs/common';
+import { MetricsService } from './metrics.service';
+import { MetricsController } from './metrics.controller';
+
+@Module({
+  providers: [MetricsService],
+  controllers: [MetricsController],
+  exports: [MetricsService],
+})
+export class MetricsModule {}import { Module } from '@nestjs/common';
 import { PrometheusModule, makeCounterProvider, makeGaugeProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
 
 @Module({
