@@ -5,12 +5,12 @@ on:
     branches:
       - master
     paths:
-      - 'party-pic_server/**'       # Watch everything in the server folder...
-      - '!party-pic_server/k8s/**'  # ...BUT ignore the k8s subfolder
+      - 'party-pic_server/**'         # Watch everything in the server folder...
+      - '!party-pic_server/chart/**'  # ...BUT ignore the helm chart to prevent infinite loops
 
 env:
   REGISTRY: ghcr.io
-  # Naming the image specifically for the server
+  # This must match the 'repository' in your values.yaml (without the tag)
   IMAGE_NAME: ${{ github.repository }}-server 
 
 jobs:
@@ -41,31 +41,38 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          # Point context to the server subfolder
           context: ./party-pic_server
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Update Kubernetes Manifest
+      - name: Update Helm Values
         env:
-          NEW_IMAGE: ${{ steps.meta.outputs.tags }}
+          FULL_IMAGE_NAME: ${{ steps.meta.outputs.tags }}
         run: |
           # Install yq
           wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
           chmod +x /usr/local/bin/yq
           
-          # Go to the specific server k8s folder
-          cd party-pic_server/k8s
+          # 1. Extract just the tag (everything after the colon)
+          # Input: ghcr.io/user/repo:sha-12345 -> Output: sha-12345
+          NEW_TAG=$(echo $FULL_IMAGE_NAME | cut -d':' -f2)
           
-          # Update the deployment.yaml inside the server folder
-          yq -i ".spec.template.spec.containers[0].image = \"$NEW_IMAGE\"" deployment.yaml
+          echo "Updating Helm values to use tag: $NEW_TAG"
           
-      - name: Commit and Push Manifest Change
+          # 2. Go to the chart folder
+          cd party-pic_server/chart
+          
+          # 3. Update the 'tag' field in values.yaml
+          yq -i ".image.tag = \"$NEW_TAG\"" values.yaml
+          
+      - name: Commit and Push Chart Change
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Only add the specific file we changed
-          git add party-pic_server/k8s/deployment.yaml
-          git commit -m "Update server image to ${{ steps.meta.outputs.tags }}"
+          
+          # Add only the values.yaml file
+          git add party-pic_server/chart/values.yaml
+          
+          git commit -m "Update server image tag to ${{ steps.meta.outputs.tags }}"
           git push

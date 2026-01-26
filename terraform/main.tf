@@ -309,7 +309,6 @@ resource "null_resource" "sync_manifests" {
     agrocd_ingress = templatefile("${path.module}/manifest/argocd-ingress.yaml.tpl", {
       ip = aws_eip.ingress_ip.public_ip
     })
-    argocd_repo_secret = file("${path.module}/manifest/argocd-repo-secret.yaml")
   }
 
   connection {
@@ -339,10 +338,6 @@ resource "null_resource" "sync_manifests" {
     destination = "/tmp/argocd-ingress.yaml"
   }
 
-  provisioner "file" {
-    content     = self.triggers.argocd_repo_secret
-    destination = "/tmp/argocd-repo-secret.yaml"
-  }
 
   provisioner "remote-exec" {
     inline = [
