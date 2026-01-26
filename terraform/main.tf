@@ -81,7 +81,7 @@ resource "aws_security_group" "rke2_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  # Kubernetes NodePort Range (für Grafana:30080, Prometheus:30090)
+  # NodePort Range für LoadBalancer Services
   ingress {
     from_port   = 30000
     to_port     = 32767
@@ -224,25 +224,31 @@ resource "aws_launch_template" "rke2_worker_lt" {
   # We use base64encode for Launch Templates
   user_data = base64encode(<<-EOF
     #!/bin/bash
+    set -e
     apt-get update -y
     apt-get install -y curl
     
-    # 1. Fetch Metadata for ProviderID (Keep your manual logic!)
+    # 1. Fetch Metadata for ProviderID
     TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
     AZ=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | tr -d '\n')
     IID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/instance-id | tr -d '\n')
 
-    # 2. Install RKE2 Agent
-    # We manually pass the provider-id so Kubelet doesn't need IAM to look it up
-    curl -sfL https://get.rke2.io | \
-      INSTALL_RKE2_TYPE="agent" \
-      RKE2_URL="https://${aws_instance.rke2_server.private_ip}:9345" \
-      RKE2_TOKEN="${var.rke2_token}" \
-      sh -s - agent \
-      --cloud-provider-name=external \
-      --kubelet-arg="cloud-provider=external" \
-      --kubelet-arg="provider-id=aws:///$${AZ}/$${IID}"
+    # 2. Create RKE2 Config Directory
+    mkdir -p /etc/rancher/rke2
 
+    # 3. Create config.yaml for the agent
+    cat <<EOC > /etc/rancher/rke2/config.yaml
+    server: https://${aws_instance.rke2_server.private_ip}:9345
+    token: "${var.rke2_token}"
+    kubelet-arg:
+      - "cloud-provider=external"
+      - "provider-id=aws:///$${AZ}/$${IID}"
+    EOC
+
+    # 4. Install RKE2 Agent
+    curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE="agent" sh -
+
+    # 5. Start Service
     systemctl enable rke2-agent
     systemctl start rke2-agent
   EOF
@@ -288,10 +294,75 @@ resource "aws_autoscaling_group" "rke2_workers" {
 resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
   
-  
   triggers = {
-    # AWS Cloud Controller Manager
-    ccm_content = templatefile("${path.module}/manifest/aws-cloud-controller-manager.yaml.tpl", {
+    //Cloud Controller Manager
+    ccm_content = templatefile("${path.module}/aws-cloud-controller-manager.yaml.tpl", {
+      cluster_name      = var.cluster_name
+      aws_access_key    = local.aws_access_key
+      aws_secret_key    = local.aws_secret_key
+      aws_session_token = local.aws_session_token
+    })
+    //Ingress Config
+    ingress_config = templatefile("${path.module}/ingress-config.yaml.tpl", {
+      eip_allocation_id = aws_eip.ingress_ip.allocation_id
+      subnet_id = aws_instance.rke2_server.subnet_id
+    })
+    agrocd_ingress = templatefile("${path.module}/manifest/argocd-ingress.yaml.tpl", {
+      ip = aws_eip.ingress_ip.public_ip
+    })
+    argocd_repo_secret = file("${path.module}/manifest/argocd-repo-secret.yaml")
+  }
+
+  connection {
+    type = "ssh"
+    user = "ubuntu"
+    host = aws_instance.rke2_server.public_ip
+  }
+
+  //Upload Files
+  provisioner "file" {
+    content     = self.triggers.ingress_config
+    destination = "/tmp/ingress-config.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.content
+    destination = "/tmp/cluster-autoscaler.yaml"
+  }
+
+  provisioner "file" {
+    content     = file("${path.module}/manifest/argocd.yaml")
+    destination = "/tmp/argocd.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.agrocd_ingress
+    destination = "/tmp/argocd-ingress.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.argocd_repo_secret
+    destination = "/tmp/argocd-repo-secret.yaml"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
+
+      "sudo mv /tmp/*.yaml /var/lib/rancher/rke2/server/manifests/",
+      
+      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
+      
+
+      "sleep 30"
+    ]
+  }
+}
+
+resource "null_resource" "sync_autoscaler" {
+  depends_on = [aws_autoscaling_group.rke2_workers]
+  triggers = {
+    content = templatefile("${path.module}/cluster-autoscaler.yaml.tpl", {
       cluster_name      = var.cluster_name
       aws_access_key    = local.aws_access_key
       aws_secret_key    = local.aws_secret_key
@@ -349,8 +420,20 @@ resource "null_resource" "sync_manifests" {
   }
 
   provisioner "file" {
-    content     = self.triggers.ccm_content
-    destination = "/tmp/aws-cloud-controller-manager.yaml"
+    content     = self.triggers.content
+    destination = "/tmp/cluster-autoscaler.yaml"
+  }
+  provisioner "file" {
+    content     = self.triggers.prometheus_content
+    destination = "/tmp/prometheus-stack.yaml"
+  }
+  provisioner "file" {
+    content     = self.triggers.loki_content
+    destination = "/tmp/loki-stack.yaml"
+  }
+  provisioner "file" {
+    content     = self.triggers.grafana_content
+    destination = "/tmp/grafana.yaml"
   }
   provisioner "file" {
     content     = self.triggers.prometheus_content
@@ -394,18 +477,29 @@ resource "null_resource" "sync_manifests" {
       # 7. Grafana verschieben
       "sudo mv /tmp/grafana.yaml /var/lib/rancher/rke2/server/manifests/grafana.yaml",
 
-      # 8. Set correct permissions
+      # 8. Cluster Autoscaler verschieben
+            "sudo mv /tmp/cluster-autoscaler.yaml /var/lib/rancher/rke2/server/manifests/cluster-autoscaler.yaml || true",
+
+      # 9. Set correct permissions
       "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
       
-      # 9. RKE2 STARTEN
+      # 10. RKE2 STARTEN
       "sudo systemctl start rke2-server",
       
-      # 10. Warten bis API da ist (verhindert Fehler bei nachfolgenden Steps)
+      # 11. Warten bis API da ist (verhindert Fehler bei nachfolgenden Steps)
       "sleep 30"
     ]
   }
 }
+  resource "null_resource" "sync_argocd_apps" {
+  depends_on = [null_resource.sync_manifests]
 
+  connection {
+    type = "ssh"
+    user = "ubuntu"
+    host = aws_instance.rke2_server.public_ip
+  }
+}
 resource "null_resource" "sync_autoscaler" {
   depends_on = [aws_autoscaling_group.rke2_workers]
   triggers = {
@@ -416,7 +510,6 @@ resource "null_resource" "sync_autoscaler" {
       aws_session_token = local.aws_session_token
     })
   }
-
   connection {
     type = "ssh"
     user = "ubuntu"
@@ -424,8 +517,28 @@ resource "null_resource" "sync_autoscaler" {
   }
 
   provisioner "file" {
+    content     = file("${path.module}/manifest/client-application.yaml")
+    destination = "/tmp/client-application.yaml"
+  }
+
+  provisioner "file" {
+    content     = file("${path.module}/manifest/server-application.yaml")
+    destination = "/tmp/server-application.yaml"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Waiting 60 seconds for cluster to stabilize...'",
+      "sleep 60",
+      "echo 'Deploying ArgoCD applications...'",
+      "sudo mv /tmp/client-application.yaml /var/lib/rancher/rke2/server/manifests/ || true",
+      "sudo mv /tmp/server-application.yaml /var/lib/rancher/rke2/server/manifests/ || true",
+      "echo 'Done.'"
+    ]
+  }
+
+  provisioner "file" {
     content     = self.triggers.content
     destination = "/tmp/cluster-autoscaler.yaml"
   }
-
 }

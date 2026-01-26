@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: party-pic-server-ingress
+  annotations:
+    # Für NGINX Ingress Controller
+    kubernetes.io/ingress.class: nginx
+    # Optional: Für automatische TLS-Zertifikate mit cert-manager
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api.52.1.41.199.nip.io  # TODO: Ersetze mit deiner eigenen Domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: party-pic-server
+                port:
+                  number: 80
+  # Optional: TLS-Konfiguration
+  # tls:
+  #   - hosts:
+  #       - api.192.168.178.32.nip.io
+  #     secretName: party-pic-tls

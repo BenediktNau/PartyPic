@@ -9,19 +9,3 @@ spec:
   targetNamespace: argocd
   createNamespace: true
   valuesContent: |-
-    server:
-      # WICHTIG: Sag ArgoCD, dass es unter einem Pfad läuft
-      extraArgs:
-        - --rootpath=/argocd
-      
-      # (Optional) Ingress direkt im Chart aktivieren spart dir das extra File
-      ingress:
-        enabled: true
-        ingressClassName: nginx
-        annotations:
-          nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-          nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-        hosts:
-          - "deine-ip.nip.io"  # Hier deine AWS-IP eintragen
-        paths:
-          - /argocd
