@@ -311,69 +311,6 @@ resource "null_resource" "sync_manifests" {
       ip = aws_eip.ingress_ip.public_ip
     })
     argocd_repo_secret = file("${path.module}/manifest/argocd-repo-secret.yaml")
-  }
-
-  connection {
-    type = "ssh"
-    user = "ubuntu"
-    host = aws_instance.rke2_server.public_ip
-  }
-
-  //Upload Files
-  provisioner "file" {
-    content     = self.triggers.ingress_config
-    destination = "/tmp/ingress-config.yaml"
-  }
-
-  provisioner "file" {
-    content     = self.triggers.content
-    destination = "/tmp/cluster-autoscaler.yaml"
-  }
-
-  provisioner "file" {
-    content     = file("${path.module}/manifest/argocd.yaml")
-    destination = "/tmp/argocd.yaml"
-  }
-
-  provisioner "file" {
-    content     = self.triggers.agrocd_ingress
-    destination = "/tmp/argocd-ingress.yaml"
-  }
-
-  provisioner "file" {
-    content     = self.triggers.argocd_repo_secret
-    destination = "/tmp/argocd-repo-secret.yaml"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
-
-      "sudo mv /tmp/*.yaml /var/lib/rancher/rke2/server/manifests/",
-      
-      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
-      
-
-      "sleep 30"
-    ]
-  }
-}
-
-resource "null_resource" "sync_autoscaler" {
-  depends_on = [aws_autoscaling_group.rke2_workers]
-  triggers = {
-    content = templatefile("${path.module}/cluster-autoscaler.yaml.tpl", {
-      cluster_name      = var.cluster_name
-      aws_access_key    = local.aws_access_key
-      aws_secret_key    = local.aws_secret_key
-      aws_session_token = local.aws_session_token
-    })
-    //Ingress Config
-    ingress_config = templatefile("${path.module}/manifest/ingress-config.yaml.tpl", {
-      eip_allocation_id = aws_eip.ingress_ip.allocation_id
-      subnet_id = aws_instance.rke2_server.subnet_id
-    })
-    
     # Prometheus Stack (inkl. Local-Path-Provisioner, Node-Exporter, Kube-State-Metrics)
     prometheus_content = templatefile("${path.module}/manifest/prometheus-stack.yaml.tpl", {
       monitoring_namespace       = var.monitoring_namespace
@@ -406,9 +343,9 @@ resource "null_resource" "sync_autoscaler" {
   }
 
   connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    host        = aws_instance.rke2_server.public_ip
+    type = "ssh"
+    user = "ubuntu"
+    host = aws_instance.rke2_server.public_ip
     private_key = var.private_key_path != "" ? file(pathexpand(var.private_key_path)) : null
     agent       = var.private_key_path == ""
   }
@@ -420,21 +357,20 @@ resource "null_resource" "sync_autoscaler" {
   }
 
   provisioner "file" {
-    content     = self.triggers.content
-    destination = "/tmp/cluster-autoscaler.yaml"
+    content     = file("${path.module}/manifest/argocd.yaml")
+    destination = "/tmp/argocd.yaml"
   }
+
   provisioner "file" {
-    content     = self.triggers.prometheus_content
-    destination = "/tmp/prometheus-stack.yaml"
+    content     = self.triggers.agrocd_ingress
+    destination = "/tmp/argocd-ingress.yaml"
   }
+
   provisioner "file" {
-    content     = self.triggers.loki_content
-    destination = "/tmp/loki-stack.yaml"
+    content     = self.triggers.argocd_repo_secret
+    destination = "/tmp/argocd-repo-secret.yaml"
   }
-  provisioner "file" {
-    content     = self.triggers.grafana_content
-    destination = "/tmp/grafana.yaml"
-  }
+
   provisioner "file" {
     content     = self.triggers.prometheus_content
     destination = "/tmp/prometheus-stack.yaml"
@@ -450,56 +386,18 @@ resource "null_resource" "sync_autoscaler" {
 
   provisioner "remote-exec" {
     inline = [
-      # 1. RKE2 STOPPEN (Wichtig!)
-      "sudo systemctl stop rke2-server",
-      
       "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
+
+      "sudo mv /tmp/*.yaml /var/lib/rancher/rke2/server/manifests/",
       
-      # 2. Alte "falsche" Dateien löschen (wirklich aufräumen)
-      # Wir löschen die automatische Datei von RKE2, damit es beim Neustart
-      # gezwungen ist, sie neu zu erstellen und dabei deine Config direkt einzubinden.
-      "sudo rm -f /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx.yaml",
-      "sudo rm -f /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx-config.yaml",
-      
-      # 3. CCM verschieben
-      "sudo mv /tmp/aws-cloud-controller-manager.yaml /var/lib/rancher/rke2/server/manifests/aws-cloud-controller-manager.yaml",
-      
-      # 4. Ingress Config verschieben
-      # WICHTIG: Der Name muss auf -config.yaml enden!
-      "sudo mv /tmp/ingress-config.yaml /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx-config.yaml",
-
-      # 5. Prometheus Stack verschieben
-      "sudo mv /tmp/prometheus-stack.yaml /var/lib/rancher/rke2/server/manifests/prometheus-stack.yaml",
-
-      # 6. Loki Stack verschieben
-      "sudo mv /tmp/loki-stack.yaml /var/lib/rancher/rke2/server/manifests/loki-stack.yaml",
-
-      # 7. Grafana verschieben
-      "sudo mv /tmp/grafana.yaml /var/lib/rancher/rke2/server/manifests/grafana.yaml",
-
-      # 8. Cluster Autoscaler verschieben
-            "sudo mv /tmp/cluster-autoscaler.yaml /var/lib/rancher/rke2/server/manifests/cluster-autoscaler.yaml || true",
-
-      # 9. Set correct permissions
       "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
       
-      # 10. RKE2 STARTEN
-      "sudo systemctl start rke2-server",
-      
-      # 11. Warten bis API da ist (verhindert Fehler bei nachfolgenden Steps)
+
       "sleep 30"
     ]
   }
 }
-  resource "null_resource" "sync_argocd_apps" {
-  depends_on = [null_resource.sync_manifests]
 
-  connection {
-    type = "ssh"
-    user = "ubuntu"
-    host = aws_instance.rke2_server.public_ip
-  }
-}
 resource "null_resource" "sync_autoscaler" {
   depends_on = [aws_autoscaling_group.rke2_workers]
   triggers = {
@@ -507,9 +405,28 @@ resource "null_resource" "sync_autoscaler" {
       cluster_name      = var.cluster_name
       aws_access_key    = local.aws_access_key
       aws_secret_key    = local.aws_secret_key
-      aws_session_token = local.aws_session_token
-    })
+      aws_session_token = local.aws_session_token      
+    })    
   }
+  connection {
+    type = "ssh"
+    user = "ubuntu"
+    host = aws_instance.rke2_server.public_ip
+  }
+  provisioner "file" {
+    content     = self.triggers.content
+    destination = "/tmp/cluster-autoscaler.yaml"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv /tmp/cluster-autoscaler.yaml /var/lib/rancher/rke2/server/manifests/",
+    ]
+  }
+}
+
+  resource "null_resource" "sync_argocd_apps" {
+  depends_on = [null_resource.sync_manifests]
+
   connection {
     type = "ssh"
     user = "ubuntu"
@@ -531,14 +448,9 @@ resource "null_resource" "sync_autoscaler" {
       "echo 'Waiting 60 seconds for cluster to stabilize...'",
       "sleep 60",
       "echo 'Deploying ArgoCD applications...'",
-      "sudo mv /tmp/client-application.yaml /var/lib/rancher/rke2/server/manifests/ || true",
-      "sudo mv /tmp/server-application.yaml /var/lib/rancher/rke2/server/manifests/ || true",
+      "sudo mv /tmp/client-application.yaml /var/lib/rancher/rke2/server/manifests/",
+      "sudo mv /tmp/server-application.yaml /var/lib/rancher/rke2/server/manifests/",
       "echo 'Done.'"
     ]
-  }
-
-  provisioner "file" {
-    content     = self.triggers.content
-    destination = "/tmp/cluster-autoscaler.yaml"
   }
 }
