@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'partypic_server/**'       # Watch everything in the server folder...
-      - '!partypic_server/k8s/**'  # ...BUT ignore the k8s subfolder
+      - 'party-pic_server/**'       # Watch everything in the server folder...
+      - '!party-pic_server/k8s/**'  # ...BUT ignore the k8s subfolder
 
 env:
   REGISTRY: ghcr.io
