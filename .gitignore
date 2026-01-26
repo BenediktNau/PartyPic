@@ -4,5 +4,6 @@ test.pem
 .terraform*
 rke2/
 terraform.tfstate
-/input.txt
+terraform.tfstate.backup
+*input.txt
 terraform.tfvars
