@@ -1,0 +1,72 @@
+name: Build Server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'partypic_server/**'        # Only trigger if files in this folder change
+    paths-ignore:
+      - 'partypic_server/k8s/**'    # Ignore k8s changes to prevent infinite loops
+
+env:
+  REGISTRY: ghcr.io
+  # Naming the image specifically for the server
+  IMAGE_NAME: ${{ github.repository }}-server 
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=sha,format=long
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          # Point context to the server subfolder
+          context: ./partypic_server
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Update Kubernetes Manifest
+        env:
+          NEW_IMAGE: ${{ steps.meta.outputs.tags }}
+        run: |
+          # Install yq
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+          
+          # Go to the specific server k8s folder
+          cd partypic_server/k8s
+          
+          # Update the deployment.yaml inside the server folder
+          yq -i ".spec.template.spec.containers[0].image = \"$NEW_IMAGE\"" deployment.yaml
+          
+      - name: Commit and Push Manifest Change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Only add the specific file we changed
+          git add partypic_server/k8s/deployment.yaml
+          git commit -m "Update server image to ${{ steps.meta.outputs.tags }}"
+          git push
