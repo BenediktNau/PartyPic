@@ -14,3 +14,9 @@ s3ForcePathStyle: "false"
 
 # Secret Name (So you can swap the secret source if needed)
 secretName: "party-pic-secrets"
+
+ingress:
+  enabled: true
+  host: "api.ip.nip.io"
+  certManager: false
+  tls: false
