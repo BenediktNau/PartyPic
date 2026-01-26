@@ -11,3 +11,8 @@ output "worker_public_ips" {
   description = "Public IPs of the currently running worker nodes"
   value       = data.aws_instances.worker_nodes.public_ips
 }
+
+output "rke2_server_private_ip" {
+  description = "Loadbalancer IP"
+  value       = aws_eip.ingress_ip.public_ip
+}

@@ -381,7 +381,7 @@ resource "null_resource" "sync_autoscaler" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo mv /tmp/cluster-autoscaler.yaml /var/lib/rancher/rke2/server/manifests/cluster-autoscaler.yaml || true"
+      "sudo mv /tmp/cluster-autoscaler.yaml /var/lib/rancher/rke2/server/manifests/cluster-autoscaler.yaml"
     ]
   }
 }
@@ -410,8 +410,8 @@ resource "null_resource" "sync_argocd_apps" {
       "echo 'Waiting 60 seconds for cluster to stabilize...'",
       "sleep 60",
       "echo 'Deploying ArgoCD applications...'",
-      "sudo mv /tmp/client-application.yaml /var/lib/rancher/rke2/server/manifests/ || true",
-      "sudo mv /tmp/server-application.yaml /var/lib/rancher/rke2/server/manifests/ || true",
+      "sudo mv /tmp/client-application.yaml /var/lib/rancher/rke2/server/manifests/",
+      "sudo mv /tmp/server-application.yaml /var/lib/rancher/rke2/server/manifests/",
       "echo 'Done.'"
     ]
   }
