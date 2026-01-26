@@ -11,7 +11,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: argo.192.168.178.32.nip.io   # <-- Hier deine ECHTE IP eintragen!
+  - host: argo.${ip}.nip.io   # <-- Hier deine ECHTE IP eintragen!
     http:
       paths:
       - path: /

@@ -270,7 +270,6 @@ resource "aws_autoscaling_group" "rke2_workers" {
   max_size         = 10
   min_size         = 1
   
-  # --- FIX HERE: Use the subnets found above ---
   vpc_zone_identifier = data.aws_subnets.default.ids 
 
   launch_template {
@@ -352,7 +351,6 @@ resource "null_resource" "sync_manifests" {
       "sudo mv /tmp/*.yaml /var/lib/rancher/rke2/server/manifests/",
       
       "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
-      
 
       "sleep 30"
     ]
