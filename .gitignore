@@ -5,4 +5,4 @@ test.pem
 rke2/
 terraform.tfstate
 install-argocd.sh
-./terraform/input.txt
+*input
