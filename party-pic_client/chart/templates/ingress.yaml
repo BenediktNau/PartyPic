@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: party-pic-server-ingress
+  name: party-pic-client-ingress
   annotations:
     # We can still hardcode nginx, or make it configurable later
     kubernetes.io/ingress.class: nginx
