@@ -19,7 +19,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: party-pic-server
+                name: party-pic-client
                 port:
                   number: 80 
   {{- if .Values.ingress.tls }}
