@@ -340,6 +340,10 @@ resource "null_resource" "sync_manifests" {
       grafana_admin_password = var.grafana_admin_password
       grafana_storage_size   = var.grafana_storage_size
     })
+    grafana_ingress_content = templatefile("${path.module}/manifest/grafana-ingress.yaml.tpl", {
+      monitoring_namespace = var.monitoring_namespace
+      ip                   = aws_eip.ingress_ip.public_ip
+    })
   }
 
   connection {
@@ -386,6 +390,11 @@ resource "null_resource" "sync_manifests" {
   provisioner "file" {
     content     = self.triggers.grafana_content
     destination = "/tmp/grafana.yaml"
+  }
+
+  provisioner "file" {
+    content = self.triggers.grafana_ingress_content
+    destination = "/tmp/grafana-ingress.yaml"
   }
 
   // --- VERSCHIEBEN & ANWENDEN ---
