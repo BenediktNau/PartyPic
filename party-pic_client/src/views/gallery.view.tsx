@@ -1,7 +1,7 @@
 
 function GalleryPage() {
     return (
-        <div>GalleryPage</div>
+        <div>GalleryPage test</div>
     )
 }
 

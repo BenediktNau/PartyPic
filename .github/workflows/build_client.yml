@@ -6,7 +6,7 @@ on:
       - master
     paths:
       - 'party-pic_client/**'       # Watch everything in the server folder...
-      - '!party-pic_client/k8s/**'  # ...BUT ignore the k8s subfolder
+      - '!party-pic_client/chart/**'  # ...BUT ignore the k8s subfolder
 
 env:
   REGISTRY: ghcr.io
