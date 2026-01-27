@@ -1,0 +1,31 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: party-pic-server-ingress
+  annotations:
+    # We can still hardcode nginx, or make it configurable later
+    kubernetes.io/ingress.class: nginx
+    {{- if .Values.ingress.certManager }}
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    {{- end }}
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: {{ .Values.ingress.host | quote }} # <--- THIS is what you want to edit in UI
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: party-pic-server
+                port:
+                  number: 80 
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host | quote }}
+      secretName: party-pic-tls
+  {{- end }}
+{{- end }}

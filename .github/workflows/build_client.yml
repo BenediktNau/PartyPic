@@ -46,8 +46,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            VITE_API_URL="localhost:3000"
 
       - name: Update Kubernetes Manifest
         env:
@@ -57,17 +55,17 @@ jobs:
           wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
           chmod +x /usr/local/bin/yq
           
-          # Go to the specific server k8s folder
-          cd party-pic_client/k8s
-          
-          # Update the deployment.yaml inside the server folder
-          yq -i ".spec.template.spec.containers[0].image = \"$NEW_IMAGE\"" deployment.yaml
+          # 2. Go to the chart folder
+          cd party-pic_client/chart
+
+          # 3. Update the 'tag' field in values.yaml
+          yq -i ".image.tag = \"$NEW_TAG\"" values.yaml
           
       - name: Commit and Push Manifest Change
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           # Only add the specific file we changed
-          git add party-pic_client/k8s/deployment.yaml
+          git add party-pic_client/chart/values.yaml
           git commit -m "Update client image to ${{ steps.meta.outputs.tags }}"
           git push
