@@ -21,8 +21,3 @@ output "grafana_ingress_command" {
   description = "Grafana Ingress Hostname ausgeben (auf dem Server ausführen)"
   value       = "kubectl get ingress -n monitoring grafana-ingress -o jsonpath='{.spec.rules[0].host}'"  
 }
-
-output "grafana_ingress_command" {
-  description = "Grafana Ingress Hostname ausgeben (auf dem Server ausführen)"
-  value       = "kubectl get ingress -n monitoring grafana-ingress -o jsonpath='{.spec.rules[0].host}'"  
-}
