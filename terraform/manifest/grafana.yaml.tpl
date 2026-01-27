@@ -37,7 +37,6 @@ spec:
 
     persistence:
       enabled: true
-      storageClassName: gp3
       size: ${grafana_storage_size}
 
     service:

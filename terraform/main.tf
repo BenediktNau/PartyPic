@@ -223,7 +223,7 @@ resource "aws_launch_template" "rke2_worker_lt" {
     device_name = "/dev/sda1"
 
     ebs {
-      volume_size           = 12.5
+      volume_size           = 13
       volume_type           = "gp3"
       delete_on_termination = true
     }
@@ -304,13 +304,13 @@ resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
   
   triggers = {
-    ccm_content = templatefile("${path.module}/aws-cloud-controller-manager.yaml.tpl", {
+    ccm_content = templatefile("${path.module}/manifest/aws-cloud-controller-manager.yaml.tpl", {
       cluster_name      = var.cluster_name
       aws_access_key    = local.aws_access_key
       aws_secret_key    = local.aws_secret_key
       aws_session_token = local.aws_session_token
     })
-    ingress_config = templatefile("${path.module}/ingress-config.yaml.tpl", {
+    ingress_config = templatefile("${path.module}/manifest/ingress-config.yaml.tpl", {
       eip_allocation_id = aws_eip.ingress_ip.allocation_id
       subnet_id = aws_instance.rke2_server.subnet_id
     })

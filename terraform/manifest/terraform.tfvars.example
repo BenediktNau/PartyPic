@@ -1,0 +1,9 @@
+# SMTP Credentials für Alertmanager
+alertmanager_smtp_username = "abcde12345ABCDEF@smtp-brevo.com"
+alertmanager_smtp_password = "abcde12345ABCDEF"
+
+# RKE2 Token 
+rke2_token = "ein-beliebiges-passwort-rke2"
+
+# Grafana Admin Passwort
+grafana_admin_password = "ein-beliebiges-passwort-grafana"
