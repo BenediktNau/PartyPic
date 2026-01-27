@@ -49,11 +49,16 @@ jobs:
 
       - name: Update Kubernetes Manifest
         env:
-          NEW_IMAGE: ${{ steps.meta.outputs.tags }}
+          FULL_IMAGE_NAME: ${{ steps.meta.outputs.tags }}
         run: |
           # Install yq
           wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
           chmod +x /usr/local/bin/yq
+
+          # 1. Extract just the tag (everything after the colon)
+          # Input: ghcr.io/user/repo:sha-12345 -> Output: sha-12345
+          NEW_TAG=$(echo $FULL_IMAGE_NAME | cut -d':' -f2)
+          
           
           # 2. Go to the chart folder
           cd party-pic_client/chart
