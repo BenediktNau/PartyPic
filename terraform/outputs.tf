@@ -12,9 +12,14 @@ output "server_public_ip" {
   value       = aws_instance.rke2_server.public_ip
 }
 
-output "worker_public_ips" {
-  description = "Public IPs of the currently running worker nodes"
-  value       = data.aws_instances.worker_nodes.public_ips
+output "loadbalancer_IP" {
+  description = "Loadbalancer IP"
+  value       = aws_eip.ingress_ip.public_ip
+}
+
+output "grafana_ingress_command" {
+  description = "Grafana Ingress Hostname ausgeben (auf dem Server ausführen)"
+  value       = "kubectl get ingress -n monitoring grafana-ingress -o jsonpath='{.spec.rules[0].host}'"  
 }
 
 output "grafana_ingress_command" {

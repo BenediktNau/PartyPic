@@ -1,0 +1,78 @@
+name: Build Server
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'party-pic_server/**'         # Watch everything in the server folder...
+      - '!party-pic_server/chart/**'  # ...BUT ignore the helm chart to prevent infinite loops
+
+env:
+  REGISTRY: ghcr.io
+  # This must match the 'repository' in your values.yaml (without the tag)
+  IMAGE_NAME: ${{ github.repository }}-server 
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=sha,format=long
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./party-pic_server
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Update Helm Values
+        env:
+          FULL_IMAGE_NAME: ${{ steps.meta.outputs.tags }}
+        run: |
+          # Install yq
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+          
+          # 1. Extract just the tag (everything after the colon)
+          # Input: ghcr.io/user/repo:sha-12345 -> Output: sha-12345
+          NEW_TAG=$(echo $FULL_IMAGE_NAME | cut -d':' -f2)
+          
+          echo "Updating Helm values to use tag: $NEW_TAG"
+          
+          # 2. Go to the chart folder
+          cd party-pic_server/chart
+          
+          # 3. Update the 'tag' field in values.yaml
+          yq -i ".image.tag = \"$NEW_TAG\"" values.yaml
+          
+      - name: Commit and Push Chart Change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Add only the values.yaml file
+          git add party-pic_server/chart/values.yaml
+          
+          git commit -m "Update server image tag to ${{ steps.meta.outputs.tags }}"
+          git push

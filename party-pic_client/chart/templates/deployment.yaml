@@ -16,11 +16,14 @@ spec:
     spec:
       containers:
         - name: party-pic-client
-          image: ghcr.io/benediktnau/partypic-client:sha-4573016ae2b462b67c9de88094a3ae1e93153f51 # TODO: Ersetze mit deinem Image-Registry-Pfad
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}" # <--- Templatized
           imagePullPolicy: Always
           ports:
             - containerPort: 80
               protocol: TCP
+          env:
+            - name: VITE_API_URL
+              value: "{{ .Values.apiadresse }}" # TODO: Ersetze mit der Adresse deines API-Servers
           resources:
             requests:
               memory: "64Mi"

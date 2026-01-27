@@ -1,5 +1,6 @@
 export const handlePhotoShoot = (base64Image: string, sessionId: string) => {
     const blob = dataURLtoBlob(base64Image);
+    console.log(sessionId);
     const fileName = (new Date().toISOString()).split(".")[0] + ".jpg";
     return { blob, fileName };
 }

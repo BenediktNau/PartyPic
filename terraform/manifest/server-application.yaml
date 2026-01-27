@@ -8,8 +8,8 @@ spec:
 
   source:
     repoURL: https://github.com/BenediktNau/PartyPic.git
-    targetRevision: elias
-    path: party-pic_server/k8s
+    targetRevision: master
+    path: party-pic_server/chart
 
   destination:
     server: https://kubernetes.default.svc

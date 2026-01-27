@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import WebcamCapture from "../components/camera/Webcam.comp";
-import { initUpload, uploadToPresignedUrl, finalizeUpload, type InitUploadDto } from "../api/pictures/pictures.api";
+import { initUpload, uploadToPresignedUrl, finalizeUpload } from "../api/pictures/pictures.api";
 import { handlePhotoShoot } from "../components/camera/functions/handlePhoto.func";
 
 interface CameraViewProps {
