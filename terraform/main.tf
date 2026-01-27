@@ -129,7 +129,7 @@ resource "aws_instance" "rke2_server" {
   instance_type = var.instance_type
   key_name      = aws_key_pair.local_key.key_name
   root_block_device {
-    volume_size           = 30
+    volume_size           = 20
     volume_type           = "gp3"
     delete_on_termination = true
   }
@@ -218,6 +218,16 @@ resource "aws_launch_template" "rke2_worker_lt" {
   image_id      = "ami-0ecb62995f68bb549" 
   instance_type = var.instance_type
   key_name      = aws_key_pair.local_key.key_name
+
+  block_device_mappings {
+    device_name = "/dev/sda1"
+
+    ebs {
+      volume_size           = 12.5
+      volume_type           = "gp3"
+      delete_on_termination = true
+    }
+  }
 
   vpc_security_group_ids = [aws_security_group.rke2_sg.id]
 
@@ -308,8 +318,6 @@ resource "null_resource" "sync_manifests" {
     agrocd_ingress = templatefile("${path.module}/manifest/argocd-ingress.yaml.tpl", {
       ip = aws_eip.ingress_ip.public_ip
     })
-    argocd_repo_secret = file("${path.module}/manifest/argocd-repo-secret.yaml")
-
 
     // Prometheus Stack (inkl. Local-Path-Provisioner, Node-Exporter, Kube-State-Metrics)
     prometheus_content = templatefile("${path.module}/manifest/prometheus-stack.yaml.tpl", {
@@ -373,11 +381,6 @@ resource "null_resource" "sync_manifests" {
   }
 
   provisioner "file" {
-    content     = self.triggers.argocd_repo_secret
-    destination = "/tmp/argocd-repo-secret.yaml"
-  }
-
-  provisioner "file" {
     content     = self.triggers.prometheus_content
     destination = "/tmp/prometheus-stack.yaml"
   }
@@ -412,7 +415,7 @@ resource "null_resource" "sync_manifests" {
 }
 
 resource "null_resource" "sync_autoscaler" {
-  depends_on = [aws_autoscaling_group.rke2_workers]
+  depends_on = [aws_autoscaling_group.rke2_workers , null_resource.sync_manifests]
   triggers = {
     content = templatefile("${path.module}/manifest/cluster-autoscaler.yaml.tpl", {
       cluster_name      = var.cluster_name
@@ -433,8 +436,6 @@ resource "null_resource" "sync_autoscaler" {
 
   provisioner "remote-exec" {
     inline = [
-      "echo 'Waiting 20 seconds before deploying Cluster Autoscaler...'",
-      "sleep 20",
       "sudo mv /tmp/cluster-autoscaler.yaml /var/lib/rancher/rke2/server/manifests/",
     ]
   }

@@ -17,15 +17,7 @@ output "worker_public_ips" {
   value       = data.aws_instances.worker_nodes.public_ips
 }
 
-# Grafana hat LoadBalancer
-output "grafana_url_command" {
-  description = "Befehl um Grafana LoadBalancer URL abzurufen"
-  value       = "ssh ubuntu@${aws_instance.rke2_server.public_ip} \"kubectl get svc grafana -n ${var.monitoring_namespace} -o jsonpath='http://{.status.loadBalancer.ingress[0].hostname}'\""
+output "grafana_ingress_command" {
+  description = "Grafana Ingress Hostname ausgeben (auf dem Server ausführen)"
+  value       = "kubectl get ingress -n monitoring grafana-ingress -o jsonpath='{.spec.rules[0].host}'"  
 }
-
-# Prometheus hat NodePort (direkte URL)
-output "prometheus_url" {
-  description = "Prometheus URL (NodePort 30090)"
-  value       = "http://${aws_instance.rke2_server.public_ip}:30090"
-}
-
