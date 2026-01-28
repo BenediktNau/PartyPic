@@ -1,26 +1,3 @@
-# =============================================================================
-# LOCAL-PATH-PROVISIONER - StorageClass für PVCs
-# =============================================================================
-apiVersion: helm.cattle.io/v1
-kind: HelmChart
-metadata:
-  name: local-path-provisioner
-  namespace: kube-system
-spec:
-  repo: https://charts.containeroo.ch
-  chart: local-path-provisioner
-  version: "0.0.28"
-  targetNamespace: local-path-storage
-  createNamespace: true
-  valuesContent: |-
-    storageClass:
-      name: local-path
-      defaultClass: true
-
----
-# =============================================================================
-# PROMETHEUS STACK - Metrics Collection & Alerting
-# =============================================================================
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
