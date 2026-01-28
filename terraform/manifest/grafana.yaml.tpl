@@ -34,14 +34,9 @@ spec:
       periodSeconds: 10
       timeoutSeconds: 3
 
-
-    persistence:
-      enabled: true
-      size: ${grafana_storage_size}
-
     service:
       type: NodePort
-      port: 30080
+      port: 80
       
     # Datasources
     datasources:
