@@ -16,10 +16,6 @@ spec:
     # Loki Server
     loki:
       enabled: true
-      persistence:
-        enabled: true
-        size: ${loki_storage_size}
-        storageClassName: local-path
       config:
         auth_enabled: false
         server:

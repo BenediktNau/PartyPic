@@ -29,7 +29,9 @@ import { MetricsModule } from './metrics/metrics.module';
     StorageModule,
 
     // 5. Prometheus Metrics für Monitoring
-    MetricsModule,
+    MetricsModule
+
+
   ],
   controllers: [AppController, PicturesController, SessionsController, AuthController],
   providers: [

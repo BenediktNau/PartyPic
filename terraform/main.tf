@@ -223,7 +223,7 @@ resource "aws_launch_template" "rke2_worker_lt" {
     device_name = "/dev/sda1"
 
     ebs {
-      volume_size           = 13
+      volume_size           = 15
       volume_type           = "gp3"
       delete_on_termination = true
     }
