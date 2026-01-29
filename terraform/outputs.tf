@@ -8,7 +8,7 @@ output "ssh_command_server" {
 }
 
 output "server_public_ip" {
-  description = "Oeffentliche IP des RKE2 Servers"
+  description = "Public IP des RKE2 Servers"
   value       = aws_instance.rke2_server.public_ip
 }
 

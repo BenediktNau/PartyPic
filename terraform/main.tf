@@ -299,7 +299,7 @@ resource "aws_autoscaling_group" "rke2_workers" {
   }
 }
 
-# --- 3. MANIFEST SYNC ---
+# --- 4. MANIFEST SYNC ---
 resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
   

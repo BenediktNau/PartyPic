@@ -19,7 +19,6 @@ spec:
     # Alertmanager
     alertmanager:
       enabled: ${alertmanager_enabled}
-      alertmanagerSpec:
       config:
         global:
           smtp_smarthost: '${alertmanager_smtp_host}'
