@@ -1,56 +1,31 @@
-import { Module } from '@nestjs/common';
-import { MetricsService } from './metrics.service';
-import { MetricsController } from './metrics.controller';
+// metrics.module.ts
+import { Module, Global } from '@nestjs/common';
+import { PrometheusModule, makeCounterProvider } from '@willsoto/nestjs-prometheus';
 
-@Module({
-  providers: [MetricsService],
-  controllers: [MetricsController],
-  exports: [MetricsService],
-})
-export class MetricsModule {}import { Module } from '@nestjs/common';
-import { PrometheusModule, makeCounterProvider, makeGaugeProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
+// Define the metric name as a constant to avoid typos later
+export const METRIC_APP_REQUEST_COUNT = 'app_request_count';
 
+@Global() // Makes this module available everywhere without importing it specifically in every module
 @Module({
   imports: [
     PrometheusModule.register({
       path: '/metrics',
       defaultMetrics: {
-        enabled: true,
+        enabled: true, // Enables standard CPU/Memory metrics
       },
     }),
   ],
   providers: [
-    // Custom Metrics für PartyPic
-    makeGaugeProvider({
-      name: 'partypic_active_sessions',
-      help: 'Number of active photo sessions',
-    }),
-    makeGaugeProvider({
-      name: 'partypic_users_online',
-      help: 'Number of users currently online',
-    }),
+    // Define your custom metrics here
     makeCounterProvider({
-      name: 'partypic_photos_uploaded_total',
-      help: 'Total number of photos uploaded',
-    }),
-    makeCounterProvider({
-      name: 'partypic_http_requests_total',
-      help: 'Total HTTP requests',
-      labelNames: ['method', 'path', 'status'],
-    }),
-    // Response Time / Latenz Metriken
-    makeHistogramProvider({
-      name: 'partypic_http_request_duration_seconds',
-      help: 'HTTP request duration in seconds',
-      labelNames: ['method', 'path', 'status'],
-      buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
-    }),
-    makeHistogramProvider({
-      name: 'partypic_photo_upload_duration_seconds',
-      help: 'Photo upload processing duration in seconds',
-      buckets: [0.1, 0.5, 1, 2, 5, 10, 30],
+      name: METRIC_APP_REQUEST_COUNT,
+      help: 'Total number of application requests',
+      labelNames: ['method', 'status'],
     }),
   ],
-  exports: [PrometheusModule],
+  exports: [
+    // Export the custom metric provider so other services can inject it
+    METRIC_APP_REQUEST_COUNT, 
+  ],
 })
 export class MetricsModule {}

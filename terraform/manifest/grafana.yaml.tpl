@@ -1820,7 +1820,7 @@ spec:
               "version": 1,
               "weekStart": ""
             }
-        # ======================================================================
+               # ======================================================================
         # 4. SYSTEM OVERVIEW (Custom)
         # ======================================================================
         system-overview:
@@ -2063,7 +2063,7 @@ spec:
                       "refId": "A"
                     }
                   ],
-                  "title": "Geschätzte Kosten/Stunde",
+                  "title": "GeschÃ¤tzte Kosten/Stunde",
                   "type": "stat"
                 },
                 {
@@ -2174,7 +2174,7 @@ spec:
                       "refId": "A"
                     }
                   ],
-                  "title": "Geschätzte Kosten/Monat",
+                  "title": "GeschÃ¤tzte Kosten/Monat",
                   "type": "stat"
                 },
                 {

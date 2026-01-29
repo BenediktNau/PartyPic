@@ -16,12 +16,6 @@ spec:
     # Loki Server
     loki:
       enabled: true
-      resources:
-        requests:
-          memory: 128Mi
-        limits:
-          cpu: 1000m
-          memory: 1Gi
       config:
         auth_enabled: false
         server:
