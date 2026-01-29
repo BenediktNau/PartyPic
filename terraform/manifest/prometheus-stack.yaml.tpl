@@ -15,30 +15,11 @@ spec:
       prometheusSpec:
         retention: ${prometheus_retention}
         scrapeInterval: ${prometheus_scrape_interval}
-        storageSpec:
-          volumeClaimTemplate:
-            spec:
-              storageClassName: local-path
-              accessModes: ["ReadWriteOnce"]
-              resources:
-                requests:
-                  storage: ${prometheus_storage_size}
-      service:
-        type: NodePort
-        nodePort: 30090
 
     # Alertmanager
     alertmanager:
       enabled: ${alertmanager_enabled}
       alertmanagerSpec:
-        storage:
-          volumeClaimTemplate:
-            spec:
-              storageClassName: local-path
-              accessModes: ["ReadWriteOnce"]
-              resources:
-                requests:
-                  storage: 2Gi
       config:
         global:
           smtp_smarthost: '${alertmanager_smtp_host}'

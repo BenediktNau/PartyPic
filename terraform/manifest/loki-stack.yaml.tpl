@@ -16,10 +16,12 @@ spec:
     # Loki Server
     loki:
       enabled: true
-      persistence:
-        enabled: true
-        size: ${loki_storage_size}
-        storageClassName: local-path
+      resources:
+        requests:
+          memory: 128Mi
+        limits:
+          cpu: 1000m
+          memory: 1Gi
       config:
         auth_enabled: false
         server:

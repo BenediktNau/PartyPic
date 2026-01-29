@@ -324,7 +324,6 @@ resource "null_resource" "sync_manifests" {
       prometheus_version         = var.prometheus_version
       prometheus_retention       = var.prometheus_retention
       prometheus_scrape_interval = var.prometheus_scrape_interval
-      prometheus_storage_size    = var.prometheus_storage_size
       alertmanager_enabled       = var.alertmanager_enabled
       alertmanager_smtp_host     = var.alertmanager_smtp_host
       alertmanager_smtp_from     = var.alertmanager_smtp_from
@@ -337,7 +336,6 @@ resource "null_resource" "sync_manifests" {
     loki_content = templatefile("${path.module}/manifest/loki-stack.yaml.tpl", {
       monitoring_namespace = var.monitoring_namespace
       loki_version         = var.loki_version
-      loki_storage_size    = var.loki_storage_size
     })
     
     // Grafana (Visualization)
@@ -345,7 +343,6 @@ resource "null_resource" "sync_manifests" {
       monitoring_namespace   = var.monitoring_namespace
       grafana_version        = var.grafana_version
       grafana_admin_password = var.grafana_admin_password
-      grafana_storage_size   = var.grafana_storage_size
     })
     grafana_ingress_content = templatefile("${path.module}/manifest/grafana-ingress.yaml.tpl", {
       monitoring_namespace = var.monitoring_namespace

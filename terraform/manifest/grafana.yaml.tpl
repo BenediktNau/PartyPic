@@ -25,7 +25,7 @@ spec:
       initialDelaySeconds: 10
       periodSeconds: 5
       timeoutSeconds: 3
-    
+      
     livenessProbe:
       httpGet:
         path: /api/health
@@ -33,10 +33,6 @@ spec:
       initialDelaySeconds: 30
       periodSeconds: 10
       timeoutSeconds: 3
-
-    service:
-      type: NodePort
-      port: 80
       
     # Datasources
     datasources:
@@ -989,9 +985,6 @@ spec:
                 {
                   "fieldConfig": {
                     "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
                       "mappings": [],
                       "thresholds": {
                         "mode": "absolute",
@@ -1758,143 +1751,6 @@ spec:
                     "overrides": []
                   },
                   "gridPos": {
-                    "h": 8,
-                    "w": 12,
-                    "x": 0,
-                    "y": 8
-                  },
-                  "id": 10,
-                  "options": {
-                    "displayMode": "gradient",
-                    "minVizHeight": 10,
-                    "minVizWidth": 0,
-                    "orientation": "horizontal",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "showUnfilled": true,
-                    "valueMode": "color"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "sum by (namespace) (kube_pod_status_phase{phase=\"Running\"})",
-                      "legendFormat": "{{namespace}}",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Pods per Namespace",
-                  "type": "bargauge"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "custom": {
-                        "align": "auto",
-                        "cellOptions": {
-                          "type": "auto"
-                        },
-                        "inspect": false
-                      },
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          },
-                          {
-                            "color": "red",
-                            "value": 80
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 8,
-                    "w": 12,
-                    "x": 12,
-                    "y": 8
-                  },
-                  "id": 11,
-                  "options": {
-                    "cellHeight": "sm",
-                    "footer": {
-                      "countRows": false,
-                      "fields": "",
-                      "reducer": [
-                        "sum"
-                      ],
-                      "show": false
-                    },
-                    "showHeader": true
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "kube_deployment_status_replicas_available",
-                      "format": "table",
-                      "instant": true,
-                      "legendFormat": "{{namespace}}/{{deployment}}",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Deployment Status",
-                  "transformations": [
-                    {
-                      "id": "organize",
-                      "options": {
-                        "excludeByName": {
-                          "Time": true,
-                          "__name__": true,
-                          "instance": true,
-                          "job": true
-                        },
-                        "renameByName": {
-                          "Value": "Available Replicas",
-                          "deployment": "Deployment",
-                          "namespace": "Namespace"
-                        }
-                      }
-                    }
-                  ],
-                  "type": "table"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "custom": {
-                        "align": "auto",
-                        "cellOptions": {
-                          "type": "auto"
-                        },
-                        "inspect": false
-                      },
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          },
-                          {
-                            "color": "red",
-                            "value": 80
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
                     "h": 6,
                     "w": 24,
                     "x": 0,
@@ -1965,591 +1821,7 @@ spec:
               "weekStart": ""
             }
         # ======================================================================
-        # 4. LOADBALANCER STATS (Custom)
-        # ======================================================================
-        loadbalancer-stats:
-          json: |
-            {
-              "annotations": {
-                "list": [
-                  {
-                    "builtIn": 1,
-                    "datasource": {
-                      "type": "grafana",
-                      "uid": "-- Grafana --"
-                    },
-                    "enable": true,
-                    "hide": true,
-                    "iconColor": "rgba(0, 211, 255, 1)",
-                    "name": "Annotations & Alerts",
-                    "type": "dashboard"
-                  }
-                ]
-              },
-              "editable": true,
-              "fiscalYearStartMonth": 0,
-              "graphTooltip": 0,
-              "links": [],
-              "liveNow": false,
-              "panels": [
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "Active LBs",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "blue",
-                            "value": null
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 0,
-                    "y": 0
-                  },
-                  "id": 1,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "count(kube_service_spec_type{type=\"LoadBalancer\"})",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "LoadBalancer Services",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "TCP Established",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 6,
-                    "y": 0
-                  },
-                  "id": 2,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "sum(node_netstat_Tcp_CurrEstab)",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Total TCP Connections",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          }
-                        ]
-                      },
-                      "unit": "Bps"
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 12,
-                    "y": 0
-                  },
-                  "id": 3,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "sum(rate(node_network_receive_bytes_total{device!~\"lo|veth.*|docker.*|flannel.*|cni.*\"}[5m]))",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Network In",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "blue",
-                            "value": null
-                          }
-                        ]
-                      },
-                      "unit": "Bps"
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 18,
-                    "y": 0
-                  },
-                  "id": 4,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "sum(rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|docker.*|flannel.*|cni.*\"}[5m]))",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Network Out",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "palette-classic"
-                      },
-                      "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 0,
-                        "gradientMode": "none",
-                        "hideFrom": {
-                          "legend": false,
-                          "tooltip": false,
-                          "viz": false
-                        },
-                        "insertNulls": false,
-                        "lineInterpolation": "linear",
-                        "lineWidth": 1,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                          "type": "linear"
-                        },
-                        "showPoints": "auto",
-                        "spanNulls": false,
-                        "stacking": {
-                          "group": "A",
-                          "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                          "mode": "off"
-                        }
-                      },
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          },
-                          {
-                            "color": "red",
-                            "value": 80
-                          }
-                        ]
-                      },
-                      "unit": "Bps"
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 8,
-                    "w": 12,
-                    "x": 0,
-                    "y": 4
-                  },
-                  "id": 5,
-                  "options": {
-                    "legend": {
-                      "calcs": [],
-                      "displayMode": "list",
-                      "placement": "bottom",
-                      "showLegend": true
-                    },
-                    "tooltip": {
-                      "mode": "single",
-                      "sort": "none"
-                    }
-                  },
-                  "targets": [
-                    {
-                      "expr": "sum(rate(node_network_receive_bytes_total{device!~\"lo|veth.*\"}[5m]))",
-                      "legendFormat": "Inbound",
-                      "refId": "A"
-                    },
-                    {
-                      "expr": "sum(rate(node_network_transmit_bytes_total{device!~\"lo|veth.*\"}[5m]))",
-                      "legendFormat": "Outbound",
-                      "refId": "B"
-                    }
-                  ],
-                  "title": "Network Traffic (In/Out)",
-                  "type": "timeseries"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "palette-classic"
-                      },
-                      "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 0,
-                        "gradientMode": "none",
-                        "hideFrom": {
-                          "legend": false,
-                          "tooltip": false,
-                          "viz": false
-                        },
-                        "insertNulls": false,
-                        "lineInterpolation": "linear",
-                        "lineWidth": 1,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                          "type": "linear"
-                        },
-                        "showPoints": "auto",
-                        "spanNulls": false,
-                        "stacking": {
-                          "group": "A",
-                          "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                          "mode": "off"
-                        }
-                      },
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          },
-                          {
-                            "color": "red",
-                            "value": 80
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 8,
-                    "w": 12,
-                    "x": 12,
-                    "y": 4
-                  },
-                  "id": 6,
-                  "options": {
-                    "legend": {
-                      "calcs": [],
-                      "displayMode": "list",
-                      "placement": "bottom",
-                      "showLegend": true
-                    },
-                    "tooltip": {
-                      "mode": "single",
-                      "sort": "none"
-                    }
-                  },
-                  "targets": [
-                    {
-                      "expr": "node_netstat_Tcp_CurrEstab",
-                      "legendFormat": "{{instance}}",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "TCP Connections Over Time",
-                  "type": "timeseries"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "Errors/sec",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          },
-                          {
-                            "color": "red",
-                            "value": 1
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 8,
-                    "x": 0,
-                    "y": 12
-                  },
-                  "id": 7,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "sum(rate(node_network_receive_errs_total[5m])) + sum(rate(node_network_transmit_errs_total[5m]))",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Network Errors",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "Drops/sec",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          },
-                          {
-                            "color": "red",
-                            "value": 1
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 8,
-                    "x": 8,
-                    "y": 12
-                  },
-                  "id": 8,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "sum(rate(node_network_receive_drop_total[5m])) + sum(rate(node_network_transmit_drop_total[5m]))",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Dropped Packets",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "Active Endpoints",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "blue",
-                            "value": null
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 8,
-                    "x": 16,
-                    "y": 12
-                  },
-                  "id": 9,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "count(kube_endpoint_address_available)",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Service Endpoints",
-                  "type": "stat"
-                }
-              ],
-              "refresh": "30s",
-              "schemaVersion": 38,
-              "style": "dark",
-              "tags": [],
-              "templating": {
-                "list": []
-              },
-              "time": {
-                "from": "now-1h",
-                "to": "now"
-              },
-              "timepicker": {},
-              "timezone": "",
-              "title": "LoadBalancer Stats",
-              "uid": "loadbalancer-stats",
-              "version": 1,
-              "weekStart": ""
-            }
-        # ======================================================================
-        # 5. SYSTEM OVERVIEW (Custom)
+        # 4. SYSTEM OVERVIEW (Custom)
         # ======================================================================
         system-overview:
           json: |
@@ -2851,73 +2123,73 @@ spec:
                       "color": {
                         "mode": "thresholds"
                       },
+                      "decimals": 2,
+                      "mappings": [],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "green",
+                            "value": null
+                          },
+                          {
+                            "color": "yellow",
+                            "value": 50
+                          },
+                          {
+                            "color": "orange",
+                            "value": 100
+                          }
+                        ]
+                      },
+                      "unit": "currencyUSD"
+                    },
+                    "overrides": []
+                  },
+                  "gridPos": {
+                    "h": 4,
+                    "w": 6,
+                    "x": 18,
+                    "y": 4
+                  },
+                  "id": 14,
+                  "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "reduceOptions": {
+                      "calcs": [
+                        "lastNotNull"
+                      ],
+                      "fields": "",
+                      "values": false
+                    },
+                    "textMode": "auto"
+                  },
+                  "pluginVersion": "10.1.5",
+                  "targets": [
+                    {
+                      "expr": "((count(kube_node_info) * 0.0416) + (count(kube_service_spec_type{type=\"LoadBalancer\"}) * 0.025) + (sum(kube_persistentvolume_capacity_bytes) / 1024 / 1024 / 1024 * 0.08 / 730)) * 730",
+                      "refId": "A"
+                    }
+                  ],
+                  "title": "Geschätzte Kosten/Monat",
+                  "type": "stat"
+                },
+                {
+                  "fieldConfig": {
+                    "defaults": {
+                      "color": {
+                        "mode": "thresholds"
+                      },
                       "displayName": "Healthy Nodes",
                       "mappings": [],
                       "thresholds": {
                         "mode": "absolute",
                         "steps": [
                           {
-                        },
-                        {
-                          "fieldConfig": {
-                            "defaults": {
-                              "color": {
-                                "mode": "thresholds"
-                              },
-                              "decimals": 2,
-                              "mappings": [],
-                              "thresholds": {
-                                "mode": "absolute",
-                                "steps": [
-                                  {
-                                    "color": "green",
-                                    "value": null
-                                  },
-                                  {
-                                    "color": "yellow",
-                                    "value": 50
-                                  },
-                                  {
-                                    "color": "orange",
-                                    "value": 100
-                                  }
-                                ]
-                              },
-                              "unit": "currencyUSD"
-                            },
-                            "overrides": []
-                          },
-                          "gridPos": {
-                            "h": 4,
-                            "w": 6,
-                            "x": 18,
-                            "y": 4
-                          },
-                          "id": 14,
-                          "options": {
-                            "colorMode": "value",
-                            "graphMode": "area",
-                            "justifyMode": "auto",
-                            "orientation": "auto",
-                            "reduceOptions": {
-                              "calcs": [
-                                "lastNotNull"
-                              ],
-                              "fields": "",
-                              "values": false
-                            },
-                            "textMode": "auto"
-                          },
-                          "pluginVersion": "10.1.5",
-                          "targets": [
-                            {
-                              "expr": "((count(kube_node_info) * 0.0416) + (count(kube_service_spec_type{type=\"LoadBalancer\"}) * 0.025) + (sum(kube_persistentvolume_capacity_bytes) / 1024 / 1024 / 1024 * 0.08 / 730)) * 730",
-                              "refId": "A"
-                            }
-                          ],
-                          "title": "Geschätzte Kosten/Monat",
-                          "type": "stat"
-                            "color": "blue",
+                            "color": "green",
                             "value": null
                           }
                         ]

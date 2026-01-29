@@ -8,7 +8,7 @@ output "ssh_command_server" {
 }
 
 output "server_public_ip" {
-  description = "Öffentliche IP des RKE2 Servers"
+  description = "Oeffentliche IP des RKE2 Servers"
   value       = aws_instance.rke2_server.public_ip
 }
 
@@ -18,6 +18,6 @@ output "loadbalancer_IP" {
 }
 
 output "grafana_ingress_command" {
-  description = "Grafana Ingress Hostname ausgeben (auf dem Server ausführen)"
+  description = "Grafana Ingress Hostname ausgeben (auf dem Server ausfuehren)"
   value       = "kubectl get ingress -n monitoring grafana-ingress -o jsonpath='{.spec.rules[0].host}'"  
 }

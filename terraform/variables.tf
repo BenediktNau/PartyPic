@@ -3,7 +3,7 @@
 # =============================================================================
 
 variable "aws_region" {
-  description = "AWS Region für Deployment"
+  description = "AWS Region fuer Deployment"
   type        = string
   default     = "us-east-1"
 }
@@ -15,7 +15,7 @@ variable "instance_type" {
 }
 
 variable "public_key" {
-  description = "Public SSH Key für Cluster-Zugang"
+  description = "Public SSH Key fuer Cluster-Zugang"
   type        = string
   default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIzG4JHCPuBQASJfAmyof6noYDSMVmkawzWzeQASwX7F simon@Simomsius"
 }
@@ -39,10 +39,10 @@ variable "worker_count" {
 }
 
 variable "rke2_token" {
-  description = "Shared Secret für Cluster-Join"
+  description = "Shared Secret fuer Cluster-Join"
   type        = string
   sensitive   = true
-  default     = "my-super-secret-rpc-password"
+  default     = ""
 }
 
 # =============================================================================
@@ -50,15 +50,9 @@ variable "rke2_token" {
 # =============================================================================
 
 variable "monitoring_namespace" {
-  description = "Kubernetes Namespace für Monitoring-Stack"
+  description = "Kubernetes Namespace fuer Monitoring-Stack"
   type        = string
   default     = "monitoring"
-}
-
-variable "environment" {
-  description = "Environment Label (dev/staging/production)"
-  type        = string
-  default     = "production"
 }
 
 # --- PROMETHEUS ---
@@ -68,12 +62,6 @@ variable "prometheus_version" {
   default     = "80.12.0"
 }
 
-variable "prometheus_nodeport" {
-  description = "NodePort für Prometheus UI"
-  type        = number
-  default     = 30090
-}
-
 variable "prometheus_retention" {
   description = "Wie lange Metriken gespeichert werden"
   type        = string
@@ -81,21 +69,9 @@ variable "prometheus_retention" {
 }
 
 variable "prometheus_scrape_interval" {
-  description = "Interval für Metrics-Scraping"
+  description = "Interval fuer Metrics-Scraping"
   type        = string
   default     = "30s"
-}
-
-variable "prometheus_storage_enabled" {
-  description = "Persistent Storage für Prometheus aktivieren"
-  type        = bool
-  default     = true
-}
-
-variable "prometheus_storage_size" {
-  description = "Storage-Größe für Prometheus"
-  type        = string
-  default     = "10Gi"
 }
 
 variable "alertmanager_enabled" {
@@ -105,40 +81,34 @@ variable "alertmanager_enabled" {
 }
 
 variable "alertmanager_smtp_host" {
-  description = "SMTP Server für Alertmanager E-Mail Benachrichtigungen"
+  description = "SMTP Server fuer Alertmanager E-Mail Benachrichtigungen"
   type        = string
   default     = "smtp-relay.brevo.com:587"
 }
 
 variable "alertmanager_smtp_from" {
-  description = "Absender-Adresse für Alertmanager E-Mails"
+  description = "Absender-Adresse fuer Alertmanager E-Mails"
   type        = string
   default     = "elias.nieweltwot+alertmanager@gmail.com"
 }
 
 variable "alertmanager_smtp_to" {
-  description = "Empfänger-Adresse für Alertmanager E-Mails"
+  description = "Empfänger-Adresse fuer Alertmanager E-Mails"
   type        = string
   default     = "elias.nieweltwot+alertmanager@gmail.com"
 }
 
 variable "alertmanager_smtp_username" {
-  description = "SMTP Benutzername für Alertmanager"
+  description = "SMTP Benutzername fuer Alertmanager"
   type        = string
   sensitive   = true
   default     = ""
 }
 variable "alertmanager_smtp_password" {
-  description = "SMTP Passwort für Alertmanager"
+  description = "SMTP Passwort fuer Alertmanager"
   type        = string
   sensitive   = true
   default     = ""
-}
-
-variable "service_type" {
-  description = "Service-Typ für Monitoring-Komponenten (NodePort oder LoadBalancer)"
-  type        = string
-  default     = "LoadBalancer"
 }
 
 # --- GRAFANA ---
@@ -155,24 +125,6 @@ variable "grafana_admin_password" {
   default     = ""
 }
 
-variable "grafana_nodeport" {
-  description = "NodePort für Grafana UI"
-  type        = number
-  default     = 30080
-}
-
-variable "grafana_storage_enabled" {
-  description = "Persistent Storage für Grafana aktivieren"
-  type        = bool
-  default     = true
-}
-
-variable "grafana_storage_size" {
-  description = "Storage-Größe für Grafana"
-  type        = string
-  default     = "2Gi"
-}
-
 # --- LOKI ---
 variable "loki_version" {
   description = "Version des Loki-Stack Helm Charts"
@@ -180,14 +132,3 @@ variable "loki_version" {
   default     = "2.10.3"
 }
 
-variable "loki_storage_enabled" {
-  description = "Persistent Storage für Loki aktivieren"
-  type        = bool
-  default     = true
-}
-
-variable "loki_storage_size" {
-  description = "Storage-Größe für Loki"
-  type        = string
-  default     = "10Gi"
-}
