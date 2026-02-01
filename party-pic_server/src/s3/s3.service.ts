@@ -1,37 +1,47 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'; // NEW
-import { v4 as uuidv4 } from 'uuid'; // Ensure you have uuid installed or use @smithy/uuid
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class StorageService {
-    private readonly bucket: string;
+  private readonly s3Client: S3Client;
+  private readonly bucketName: string;
 
-    constructor(
-        private readonly s3Client: S3Client,
-        private readonly configService: ConfigService,
-    ) {
-        this.bucket = this.configService.getOrThrow<string>('S3_BUCKET_NAME');
-    }
+  constructor(private readonly configService: ConfigService) {
+    this.bucketName = this.configService.getOrThrow<string>('S3_BUCKET_NAME');
 
-    async getPresignedUrl(session_id: string, contentType: string) {
-        const fileExtension = contentType.split('/')[1] || 'jpg';
-        const s3_key = `user/${session_id}/${uuidv4()}.${fileExtension}`;
+    this.s3Client = new S3Client({
+      region: this.configService.getOrThrow<string>('S3_REGION'),
+      endpoint: this.configService.get<string>('S3_ENDPOINT'),
+      forcePathStyle: this.configService.get<string>('S3_FORCE_PATH_STYLE') === 'true',
+      credentials: {
+        accessKeyId: this.configService.getOrThrow<string>('S3_ACCESS_KEY'),
+        secretAccessKey: this.configService.getOrThrow<string>('S3_SECRET_KEY'),
+        // NEU: Session Token für Lab-User hinzufügen!
+        sessionToken: this.configService.get<string>('S3_SESSION_TOKEN'), 
+      },
+    });
+  }
 
-        const command = new PutObjectCommand({
-            Bucket: this.bucket,
-            Key: s3_key,
-            ContentType: contentType, // Critical: Must match what the frontend sends
-        });
+  async getPresignedUrl(sessionId: string, mimetype: string) {
+    const fileExtension = mimetype.split('/')[1];
+    const key = `${sessionId}/${uuidv4()}.${fileExtension}`;
 
-        // Generate a URL valid for 15 minutes (900 seconds)
-        const url = await getSignedUrl(this.s3Client, command, { expiresIn: 900 });
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+      ContentType: mimetype,
+    });
 
-        return {
-            uploadUrl: url,
-            key: s3_key,
-            bucket: this.bucket
-        };
-    }
+    // URL ist 15 Minuten gültig
+    const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 900 });
+
+    return {
+      uploadUrl,
+      key,
+      bucket: this.bucketName,
+    };
+  }
 }

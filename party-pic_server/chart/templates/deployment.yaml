@@ -68,6 +68,12 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secretName }}
                   key: s3-secret-key
+            - name: S3_SESSION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: s3-session-token
+                  optional: true
             - name: S3_BUCKET_NAME
               valueFrom:
                 secretKeyRef:

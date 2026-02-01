@@ -7,3 +7,12 @@ rke2_token = "ein-beliebiges-passwort-rke2"
 
 # Grafana Admin Passwort
 grafana_admin_password = "ein-beliebiges-passwort-grafana"
+
+# Party-Pic Server Datenbank Zugangsdaten
+partypic_db_password    = "mein-db-passwort"
+partypic_db_name        = "partypic"
+partypic_db_user        = "postgres"
+partypic_s3_endpoint    = "https://s3.us-east-1.amazonaws.com"
+partypic_s3_bucket_name = "mein-bucket-name"
+partypic_s3_region      = "us-east-1"
+partypic_jwt_secret     = "super-geheimes-jwt-secret"

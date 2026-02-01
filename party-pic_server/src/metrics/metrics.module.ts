@@ -1,6 +1,9 @@
 // metrics.module.ts
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, forwardRef } from '@nestjs/common';
 import { PrometheusModule, makeCounterProvider } from '@willsoto/nestjs-prometheus';
+import { MetricsService } from './metrics.service';
+import { MetricsController } from './metrics.controller';
+import { SessionsModule } from '../sessions/sessions.module';
 
 // Define the metric name as a constant to avoid typos later
 export const METRIC_APP_REQUEST_COUNT = 'app_request_count';
@@ -8,6 +11,7 @@ export const METRIC_APP_REQUEST_COUNT = 'app_request_count';
 @Global() // Makes this module available everywhere without importing it specifically in every module
 @Module({
   imports: [
+    forwardRef(() => SessionsModule),
     PrometheusModule.register({
       path: '/metrics',
       defaultMetrics: {
@@ -15,8 +19,9 @@ export const METRIC_APP_REQUEST_COUNT = 'app_request_count';
       },
     }),
   ],
+  controllers: [MetricsController],
   providers: [
-    // Define your custom metrics here
+    MetricsService,
     makeCounterProvider({
       name: METRIC_APP_REQUEST_COUNT,
       help: 'Total number of application requests',
@@ -24,7 +29,7 @@ export const METRIC_APP_REQUEST_COUNT = 'app_request_count';
     }),
   ],
   exports: [
-    // Export the custom metric provider so other services can inject it
+    MetricsService,
     METRIC_APP_REQUEST_COUNT, 
   ],
 })
