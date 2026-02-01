@@ -12,6 +12,6 @@ s3ForcePathStyle: "false"
 apiadresse: "http://api.ip.nip.io"
 ingress:
   enabled: true
-  host: "app.ip.nip.io"
+  host: app.184.73.241.20.nip.io
   certManager: false
   tls: false
