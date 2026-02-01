@@ -17,4 +17,15 @@ export class MetricsService {
     @InjectMetric(METRIC_HTTP_DURATION) public readonly httpRequestDuration: Histogram<string>,
   ) {}
 
+  setActiveSessions(count: number) {
+    this.activeClientsGauge.set(count);
+  }
+
+  incrementTotalSessions() {
+    this.totalSessionsCounter.inc();
+  }
+
+  incrementUploadedPhotos() {
+    this.uploadedPhotosCounter.inc();
+  }
 }

@@ -8,16 +8,16 @@ export class SessionsDbService {
 
   constructor(
     @Inject('PG_POOL') private readonly pool: Pool,
-    // Wir injizieren den MetricsService hier (das ist erlaubt, da MetricsModule global ist)
-    private readonly metricsService: MetricsService 
+    private readonly metricsService: MetricsService
   ) { }
 
-  // Der CronJob läuft jetzt hier im Kontext der DB
+  // --- CRONJOB ---
+  // Zählt alle 10 Sekunden die Sessions und schickt es an Prometheus
   @Cron(CronExpression.EVERY_10_SECONDS)
   async updateMetrics() {
     try {
       const count = await this.countAllSessions();
-      this.metricsService.activeClientsGauge.set(count);
+      this.metricsService.setActiveSessions(count);
     } catch (error) {
       console.error('Error updating session metrics:', error);
     }
@@ -25,7 +25,8 @@ export class SessionsDbService {
 
   async countAllSessions(): Promise<number> {
     const result = await this.pool.query('SELECT COUNT(*) FROM sessions');
-    return parseInt(result.rows[0].count, 10);
+    // Sicherstellen, dass wir eine Zahl zurückgeben
+    return parseInt(result.rows[0]?.count || '0', 10);
   }
 
   async createSession(userId: string) {
@@ -42,9 +43,8 @@ export class SessionsDbService {
 
     const result = await this.pool.query(queryText, values);
     
-    // Optional: Direkt beim Erstellen Counter hochzählen
-    this.metricsService.totalSessionsCounter.inc();
-    
+    this.metricsService.incrementTotalSessions();
+
     return result.rows[0];
   }
 

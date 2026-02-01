@@ -2,10 +2,14 @@ import { Module } from '@nestjs/common';
 import { SessionsController } from './sessions.controller';
 import { SessionsDbService } from './sessions.db.service';
 import { AuthModule } from '../auth/auth.module';
+import { StorageModule } from '../s3/s3.module';
+import { UsersModule } from '../users/user.module';
 
 @Module({
   imports: [
     AuthModule,
+    StorageModule,
+    UsersModule,
   ],
   controllers: [SessionsController],
   providers: [SessionsDbService],
