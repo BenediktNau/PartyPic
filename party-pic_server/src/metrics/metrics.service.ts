@@ -1,53 +1,29 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Registry, collectDefaultMetrics, Gauge, Counter, Histogram } from 'prom-client';
+import { Gauge, Counter, Histogram } from 'prom-client';
+import { InjectMetric } from '@willsoto/nestjs-prometheus'; // WICHTIG
 import { SessionsDbService } from '../sessions/sessions.db.service';
+import { 
+  METRIC_ACTIVE_SESSIONS, 
+  METRIC_SESSIONS_TOTAL, 
+  METRIC_PHOTOS_UPLOADED, 
+  METRIC_HTTP_DURATION 
+} from './metrics.module';
 
 @Injectable()
 export class MetricsService {
-  public readonly registry: Registry;
-  public readonly activeClientsGauge: Gauge;
-  public readonly totalSessionsCounter: Counter;
-  public readonly uploadedPhotosCounter: Counter;
-  public readonly httpRequestDuration: Histogram;
-
+  
   constructor(
-    // Wir injizieren den Service, um die DB abfragen zu können
     @Inject(forwardRef(() => SessionsDbService))
-    private readonly sessionsDbService: SessionsDbService
-  ) {
-    this.registry = new Registry();
-    // Default Node.js Metriken (CPU, RAM, GC)
-    collectDefaultMetrics({ register: this.registry });
+    private readonly sessionsDbService: SessionsDbService,
 
-    this.activeClientsGauge = new Gauge({
-      name: 'partypic_active_sessions_current',
-      help: 'Aktuelle Anzahl aktiver Sessions in der DB (via CronJob)',
-      registers: [this.registry],
-    });
+    // Hier injizieren wir die Metriken, statt sie mit 'new' zu erstellen
+    @InjectMetric(METRIC_ACTIVE_SESSIONS) public readonly activeClientsGauge: Gauge<string>,
+    @InjectMetric(METRIC_SESSIONS_TOTAL) public readonly totalSessionsCounter: Counter<string>,
+    @InjectMetric(METRIC_PHOTOS_UPLOADED) public readonly uploadedPhotosCounter: Counter<string>,
+    @InjectMetric(METRIC_HTTP_DURATION) public readonly httpRequestDuration: Histogram<string>,
+  ) {}
 
-    this.totalSessionsCounter = new Counter({
-      name: 'partypic_sessions_created_total',
-      help: 'Anzahl aller jemals erstellten Sessions',
-      registers: [this.registry],
-    });
-
-    this.uploadedPhotosCounter = new Counter({
-      name: 'partypic_photos_uploaded_total',
-      help: 'Anzahl aller hochgeladenen Fotos',
-      registers: [this.registry],
-    });
-
-    this.httpRequestDuration = new Histogram({
-      name: 'partypic_http_request_duration_seconds',
-      help: 'Dauer der HTTP Requests',
-      labelNames: ['method', 'route', 'status_code'],
-      buckets: [0.1, 0.3, 0.5, 1, 1.5, 2, 5],
-      registers: [this.registry],
-    });
-  }
-
-  // Dieser Job läuft alle 10 Sekunden automatisch
   @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCron() {
     try {
