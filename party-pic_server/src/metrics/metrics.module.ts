@@ -14,14 +14,14 @@ export * from './metrics.constants';
         enabled: true,
       },
     }),
-    MetricsProvidersModule,  
+    MetricsProvidersModule,
   ],
   providers: [
-    MetricsService,  
+    MetricsService,
   ],
   exports: [
     MetricsService,
-    MetricsProvidersModule,  
+    MetricsProvidersModule,
   ],
 })
 export class MetricsModule {}

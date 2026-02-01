@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { makeCounterProvider, makeGaugeProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
-import { 
-  METRIC_APP_REQUEST_COUNT, 
-  METRIC_ACTIVE_SESSIONS, 
-  METRIC_SESSIONS_TOTAL, 
-  METRIC_PHOTOS_UPLOADED, 
-  METRIC_HTTP_DURATION 
+import {
+  METRIC_APP_REQUEST_COUNT,
+  METRIC_ACTIVE_SESSIONS,
+  METRIC_SESSIONS_TOTAL,
+  METRIC_PHOTOS_UPLOADED,
+  METRIC_HTTP_DURATION
 } from './metrics.constants';
 
 @Module({
@@ -35,7 +35,7 @@ import {
     }),
   ],
   exports: [
-    // Exportiere die Metriken, damit sie in anderen Modulen injiziert werden können
+    // Exportiere die Metriken für andere Module
     METRIC_APP_REQUEST_COUNT,
     METRIC_ACTIVE_SESSIONS,
     METRIC_SESSIONS_TOTAL,
