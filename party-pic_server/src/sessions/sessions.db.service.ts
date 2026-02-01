@@ -12,7 +12,6 @@ export class SessionsDbService {
   ) { }
 
   // --- CRONJOB ---
-  // Zählt alle 10 Sekunden die Sessions und schickt es an Prometheus
   @Cron(CronExpression.EVERY_10_SECONDS)
   async updateMetrics() {
     try {
@@ -25,7 +24,6 @@ export class SessionsDbService {
 
   async countAllSessions(): Promise<number> {
     const result = await this.pool.query('SELECT COUNT(*) FROM sessions');
-    // Sicherstellen, dass wir eine Zahl zurückgeben
     return parseInt(result.rows[0]?.count || '0', 10);
   }
 
@@ -37,10 +35,7 @@ export class SessionsDbService {
       VALUES ($1, $2, $3)
       RETURNING *; 
     `;
-    const values = [
-      userId, {}, [],
-    ];
-
+    const values = [userId, {}, []];
     const result = await this.pool.query(queryText, values);
     
     this.metricsService.incrementTotalSessions();
@@ -63,25 +58,14 @@ export class SessionsDbService {
   }
 
   async updateMissions(sessionId: string, missions: any[]) {
-    const queryText = `
-      UPDATE sessions
-      SET missions = $2
-      WHERE id = $1
-      RETURNING *;
-    `;
+    const queryText = `UPDATE sessions SET missions = $2 WHERE id = $1 RETURNING *;`;
     const values = [sessionId, JSON.stringify(missions)]; 
     const result = await this.pool.query(queryText, values);
     return result.rows[0];
   }
 
   async addSessionUser(userName: string, sessionId: string) {
-    const queryText = `
-      INSERT INTO session_users (
-        user_name, session_id, created_at
-      )
-      VALUES ($1, $2, $3)
-      RETURNING *; 
-    `;
+    const queryText = `INSERT INTO session_users (user_name, session_id, created_at) VALUES ($1, $2, $3) RETURNING *;`;
     const values = [userName, sessionId, new Date()];
     const result = await this.pool.query(queryText, values);
     return result.rows[0];

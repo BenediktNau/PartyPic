@@ -24,8 +24,4 @@ export class MetricsService {
   incrementTotalSessions() {
     this.totalSessionsCounter.inc();
   }
-
-  incrementUploadedPhotos() {
-    this.uploadedPhotosCounter.inc();
-  }
 }
