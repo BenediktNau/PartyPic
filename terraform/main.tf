@@ -44,6 +44,11 @@ data "aws_subnets" "default" {
     name   = "vpc-id"
     values = [data.aws_vpc.default.id]
   }
+
+  filter {
+    name   = "availability-zone"
+    values = ["us-east-1a", "us-east-1b", "us-east-1c", "us-east-1d", "us-east-1f"]
+  }
 }
 
 resource "aws_security_group" "rke2_sg" {
@@ -468,5 +473,49 @@ resource "null_resource" "sync_autoscaler" {
       "sudo mv /tmp/server-application.yaml /var/lib/rancher/rke2/server/manifests/",
       "echo 'Done.'"
     ]
+  }
+}
+
+# =============================================================================
+# S3 BUCKET FOR PARTYPIC STORAGE
+# =============================================================================
+
+resource "aws_s3_bucket" "partypic_storage" {
+  bucket = "${var.cluster_name}-partypic-storage"
+
+  tags = {
+    Name        = "${var.cluster_name}-partypic-storage"
+    Environment = var.environment
+    Project     = "PartyPic"
+  }
+}
+
+# Block public access (sicher für Produktion)
+resource "aws_s3_bucket_public_access_block" "partypic_storage" {
+  bucket = aws_s3_bucket.partypic_storage.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Versionierung für Backup/Recovery
+resource "aws_s3_bucket_versioning" "partypic_storage" {
+  bucket = aws_s3_bucket.partypic_storage.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# Server-side Encryption
+resource "aws_s3_bucket_server_side_encryption_configuration" "partypic_storage" {
+  bucket = aws_s3_bucket.partypic_storage.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
   }
 }
