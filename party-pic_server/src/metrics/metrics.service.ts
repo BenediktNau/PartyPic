@@ -6,7 +6,7 @@ import {
   METRIC_SESSIONS_TOTAL, 
   METRIC_PHOTOS_UPLOADED, 
   METRIC_HTTP_DURATION 
-} from './metrics.module';
+} from './metrics.constants'; 
 
 @Injectable()
 export class MetricsService {
