@@ -12,6 +12,37 @@ s3ForcePathStyle: "false"
 apiadresse: "http://api.ip.nip.io"
 ingress:
   enabled: true
-  host: app.184.73.241.20.nip.io
-  certManager: false
-  tls: false
+  className: "nginx"
+  annotations: {}
+
+  hosts:
+    - host: app.ip.nip.io  
+      paths:
+        - path: /
+          pathType: Prefix
+
+        # 2. Die Umleitungen zum Backend (API)
+        - path: /auth
+          pathType: Prefix
+          serviceName: party-pic-server
+          servicePort: 3000
+
+        - path: /sessions
+          pathType: Prefix
+          serviceName: party-pic-server
+          servicePort: 3000
+
+        - path: /users
+          pathType: Prefix
+          serviceName: party-pic-server
+          servicePort: 3000
+          
+        - path: /pictures
+          pathType: Prefix
+          serviceName: party-pic-server
+          servicePort: 3000
+
+        - path: /metrics
+          pathType: Prefix
+          serviceName: party-pic-server
+          servicePort: 3000
