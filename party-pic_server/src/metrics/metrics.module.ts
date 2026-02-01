@@ -1,8 +1,8 @@
-import { Module, Global } from '@nestjs/common'; 
+import { Module, Global } from '@nestjs/common';
 import { PrometheusModule, makeCounterProvider, makeGaugeProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
 import { MetricsService } from './metrics.service';
-import { SessionsModule } from '../sessions/sessions.module';
 
+// Konstanten
 export const METRIC_APP_REQUEST_COUNT = 'app_request_count';
 export const METRIC_ACTIVE_SESSIONS = 'partypic_active_sessions_current';
 export const METRIC_SESSIONS_TOTAL = 'partypic_sessions_created_total';
@@ -12,7 +12,6 @@ export const METRIC_HTTP_DURATION = 'partypic_http_request_duration_seconds';
 @Global()
 @Module({
   imports: [
-    SessionsModule,
     PrometheusModule.register({
       path: '/metrics',
       defaultMetrics: {

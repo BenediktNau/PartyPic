@@ -1,12 +1,27 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
 export class SessionsDbService {
 
   constructor(
-    @Inject('PG_POOL') private readonly pool: Pool
+    @Inject('PG_POOL') private readonly pool: Pool,
+    // Wir injizieren den MetricsService hier (das ist erlaubt, da MetricsModule global ist)
+    private readonly metricsService: MetricsService 
   ) { }
+
+  // Der CronJob läuft jetzt hier im Kontext der DB
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async updateMetrics() {
+    try {
+      const count = await this.countAllSessions();
+      this.metricsService.activeClientsGauge.set(count);
+    } catch (error) {
+      console.error('Error updating session metrics:', error);
+    }
+  }
 
   async countAllSessions(): Promise<number> {
     const result = await this.pool.query('SELECT COUNT(*) FROM sessions');
@@ -26,6 +41,10 @@ export class SessionsDbService {
     ];
 
     const result = await this.pool.query(queryText, values);
+    
+    // Optional: Direkt beim Erstellen Counter hochzählen
+    this.metricsService.totalSessionsCounter.inc();
+    
     return result.rows[0];
   }
 
