@@ -5,7 +5,7 @@ metadata:
   labels:
     app: party-pic-server
 spec:
-  replicas: {{ .Values.replicaCount }} # <--- Templatized
+  replicas: { { .Values.replicaCount } } # <--- Templatized
   selector:
     matchLabels:
       app: party-pic-server
@@ -16,83 +16,83 @@ spec:
     spec:
       containers:
         - name: party-pic-server
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}" # <--- Templatized
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: '{{ .Values.image.repository }}:{{ .Values.image.tag }}' # <--- Templatized
+          imagePullPolicy: { { .Values.image.pullPolicy } }
           ports:
             - containerPort: 3000
               protocol: TCP
           env:
             - name: NODE_ENV
-              value: {{ .Values.nodeEnv | quote }} # <--- Editable in UI
+              value: { { .Values.nodeEnv | quote } } # <--- Editable in UI
             - name: PORT
-              value: {{ .Values.port | quote }}
+              value: { { .Values.port | quote } }
             - name: S3_FORCE_PATH_STYLE
-              value: {{ .Values.s3ForcePathStyle | quote }}
-              
+              value: { { .Values.s3ForcePathStyle | quote } }
+
             # --- DATABASE SECRETS ---
             # We reference the Secret Name variable
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secretName }}
+                  name: { { .Values.secretName | quote } }
                   key: db-host
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secretName }}
+                  name: { { .Values.secretName | quote } }
                   key: db-password
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secretName }}
+                  name: { { .Values.secretName | quote } }
                   key: db-name
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secretName }}
+                  name: { { .Values.secretName | quote } }
                   key: db-user
-                  
+
             # --- S3 SECRETS ---
             - name: S3_ENDPOINT
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secretName }}
+                  name: { { .Values.secretName | quote } }
                   key: s3-endpoint
             - name: S3_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secretName }}
+                  name: { { .Values.secretName | quote } }
                   key: s3-access-key
             - name: S3_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secretName }}
+                  name: { { .Values.secretName | quote } }
                   key: s3-secret-key
             - name: S3_BUCKET_NAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secretName }}
+                  name: { { .Values.secretName | quote } }
                   key: s3-bucket-name
             - name: S3_REGION
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secretName }}
+                  name: { { .Values.secretName | quote } }
                   key: s3-region
 
             # --- JWT ---
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secretName }}
+                  name: { { .Values.secretName | quote } }
                   key: jwt-secret
 
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "100m"
+              memory: '256Mi'
+              cpu: '100m'
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: '512Mi'
+              cpu: '500m'
           livenessProbe:
             httpGet:
               path: /
