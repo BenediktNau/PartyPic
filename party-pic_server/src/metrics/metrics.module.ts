@@ -1,4 +1,4 @@
-import { Module, Global, forwardRef } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common'; 
 import { PrometheusModule, makeCounterProvider, makeGaugeProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
 import { MetricsService } from './metrics.service';
 import { SessionsModule } from '../sessions/sessions.module';
@@ -12,7 +12,7 @@ export const METRIC_HTTP_DURATION = 'partypic_http_request_duration_seconds';
 @Global()
 @Module({
   imports: [
-    forwardRef(() => SessionsModule),
+    SessionsModule,
     PrometheusModule.register({
       path: '/metrics',
       defaultMetrics: {

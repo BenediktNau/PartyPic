@@ -35,7 +35,6 @@ export class MetricsService implements OnModuleInit {
   @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCron() {
     if (!this.sessionsDbService) return;
-    
     try {
       const count = await this.sessionsDbService.countAllSessions();
       this.activeClientsGauge.set(count);
