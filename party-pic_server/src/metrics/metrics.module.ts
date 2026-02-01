@@ -1,7 +1,7 @@
 import { Module, Global, forwardRef } from '@nestjs/common';
 import { PrometheusModule, makeCounterProvider, makeGaugeProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
 import { MetricsService } from './metrics.service';
-import { MetricsController } from './metrics.controller';
+// WICHTIG: Import von MetricsController entfernt
 import { SessionsModule } from '../sessions/sessions.module';
 
 // Token-Konstanten für Dependency Injection
@@ -22,7 +22,7 @@ export const METRIC_HTTP_DURATION = 'partypic_http_request_duration_seconds';
       },
     }),
   ],
-  controllers: [MetricsController],
+  controllers: [], 
   providers: [
     MetricsService,
     // 1. App Request Counter
@@ -31,22 +31,22 @@ export const METRIC_HTTP_DURATION = 'partypic_http_request_duration_seconds';
       help: 'Total number of application requests',
       labelNames: ['method', 'status'],
     }),
-    // 2. Active Sessions Gauge (NEU als Provider)
+    // 2. Active Sessions Gauge
     makeGaugeProvider({
       name: METRIC_ACTIVE_SESSIONS,
       help: 'Aktuelle Anzahl aktiver Sessions in der DB (via CronJob)',
     }),
-    // 3. Sessions Total Counter (NEU als Provider)
+    // 3. Sessions Total Counter
     makeCounterProvider({
       name: METRIC_SESSIONS_TOTAL,
       help: 'Anzahl aller jemals erstellten Sessions',
     }),
-    // 4. Photos Uploaded Counter (NEU als Provider)
+    // 4. Photos Uploaded Counter
     makeCounterProvider({
       name: METRIC_PHOTOS_UPLOADED,
       help: 'Anzahl aller hochgeladenen Fotos',
     }),
-    // 5. HTTP Duration Histogram (NEU als Provider)
+    // 5. HTTP Duration Histogram
     makeHistogramProvider({
       name: METRIC_HTTP_DURATION,
       help: 'Dauer der HTTP Requests',
@@ -56,8 +56,6 @@ export const METRIC_HTTP_DURATION = 'partypic_http_request_duration_seconds';
   ],
   exports: [
     MetricsService,
-    // WICHTIG: Wir entfernen den direkten Export der Token.
-    // Der Zugriff erfolgt sauber über den MetricsService.
   ],
 })
 export class MetricsModule {}
