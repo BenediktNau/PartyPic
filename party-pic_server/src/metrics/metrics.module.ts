@@ -1,10 +1,8 @@
 import { Module, Global, forwardRef } from '@nestjs/common';
 import { PrometheusModule, makeCounterProvider, makeGaugeProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
 import { MetricsService } from './metrics.service';
-// WICHTIG: Import von MetricsController entfernt
 import { SessionsModule } from '../sessions/sessions.module';
 
-// Token-Konstanten für Dependency Injection
 export const METRIC_APP_REQUEST_COUNT = 'app_request_count';
 export const METRIC_ACTIVE_SESSIONS = 'partypic_active_sessions_current';
 export const METRIC_SESSIONS_TOTAL = 'partypic_sessions_created_total';
@@ -22,31 +20,25 @@ export const METRIC_HTTP_DURATION = 'partypic_http_request_duration_seconds';
       },
     }),
   ],
-  controllers: [], 
   providers: [
     MetricsService,
-    // 1. App Request Counter
     makeCounterProvider({
       name: METRIC_APP_REQUEST_COUNT,
       help: 'Total number of application requests',
       labelNames: ['method', 'status'],
     }),
-    // 2. Active Sessions Gauge
     makeGaugeProvider({
       name: METRIC_ACTIVE_SESSIONS,
       help: 'Aktuelle Anzahl aktiver Sessions in der DB (via CronJob)',
     }),
-    // 3. Sessions Total Counter
     makeCounterProvider({
       name: METRIC_SESSIONS_TOTAL,
       help: 'Anzahl aller jemals erstellten Sessions',
     }),
-    // 4. Photos Uploaded Counter
     makeCounterProvider({
       name: METRIC_PHOTOS_UPLOADED,
       help: 'Anzahl aller hochgeladenen Fotos',
     }),
-    // 5. HTTP Duration Histogram
     makeHistogramProvider({
       name: METRIC_HTTP_DURATION,
       help: 'Dauer der HTTP Requests',

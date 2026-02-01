@@ -1,7 +1,7 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Gauge, Counter, Histogram } from 'prom-client';
-import { InjectMetric } from '@willsoto/nestjs-prometheus'; // WICHTIG
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { SessionsDbService } from '../sessions/sessions.db.service';
 import { 
   METRIC_ACTIVE_SESSIONS, 
@@ -17,7 +17,6 @@ export class MetricsService {
     @Inject(forwardRef(() => SessionsDbService))
     private readonly sessionsDbService: SessionsDbService,
 
-    // Hier injizieren wir die Metriken, statt sie mit 'new' zu erstellen
     @InjectMetric(METRIC_ACTIVE_SESSIONS) public readonly activeClientsGauge: Gauge<string>,
     @InjectMetric(METRIC_SESSIONS_TOTAL) public readonly totalSessionsCounter: Counter<string>,
     @InjectMetric(METRIC_PHOTOS_UPLOADED) public readonly uploadedPhotosCounter: Counter<string>,
