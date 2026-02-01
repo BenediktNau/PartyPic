@@ -298,7 +298,41 @@ resource "aws_autoscaling_group" "rke2_workers" {
     propagate_at_launch = true
   }
 }
-# --- 4. RDS POSTGRESQL INSTANCE FOR PARTY-PIC ---
+
+# --- 4. S3 BUCKET FOR PARTYPIC ---
+resource "aws_s3_bucket" "partypic_bucket" {
+  bucket = var.partypic_s3_bucket_name
+
+  force_destroy = true 
+
+  tags = {
+    Name        = "PartyPic Storage"
+    Environment = "Dev"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "partypic_bucket_access" {
+  bucket = aws_s3_bucket.partypic_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_cors_configuration" "partypic_bucket_cors" {
+  bucket = aws_s3_bucket.partypic_bucket.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST", "GET", "HEAD"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
+# --- 5. RDS POSTGRESQL INSTANCE FOR PARTY-PIC ---
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "${var.cluster_name}-db-subnet-group"
   subnet_ids = data.aws_subnets.default.ids
@@ -343,7 +377,7 @@ resource "aws_db_instance" "partypic_db" {
 
 }
 
-# --- 5. MANIFEST SYNC ---
+# --- 6. MANIFEST SYNC ---
 resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
   
@@ -392,13 +426,13 @@ resource "null_resource" "sync_manifests" {
       monitoring_namespace = var.monitoring_namespace
       ip                   = aws_eip.ingress_ip.public_ip
     })
-    partypic_secrets = templatefile("${path.module}/manifest/partypic-secrets.yaml.tpl", {
+    party_pic_secrets = templatefile("${path.module}/manifest/party-pic-secrets.yaml.tpl", {
       db_host            = aws_db_instance.partypic_db.address
+      s3_bucket_name     = aws_s3_bucket.partypic_bucket.id
       db_password        = var.partypic_db_password
       db_name            = var.partypic_db_name
       db_user            = var.partypic_db_user
       jwt_secret         = var.partypic_jwt_secret
-      s3_bucket_name     = var.partypic_s3_bucket_name
       s3_region          = var.partypic_s3_region
       s3_endpoint        = var.partypic_s3_endpoint
       s3_access_key      = local.aws_access_key
@@ -454,7 +488,7 @@ resource "null_resource" "sync_manifests" {
   }
 
   provisioner "file" {
-    content     = self.triggers.partypic_secrets
+    content     = self.triggers.party_pic_secrets
     destination = "/tmp/party-pic-secrets.yaml"
   }
 
