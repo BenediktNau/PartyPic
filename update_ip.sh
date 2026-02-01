@@ -13,7 +13,9 @@ if [ -z "$SSH_CMD" ]; then
 fi
 
 # 2. Hostname holen 
-RAW_INGRESS=$($SSH_CMD -o StrictHostKeyChecking=no -o LogLevel=QUIET "bash -l -c 'kubectl get ingress -n party-pic party-pic-server-ingress --no-headers'")
+RAW_INGRESS=$($SSH_CMD -o StrictHostKeyChecking=no -o LogLevel=QUIET "export PATH=\$PATH:/usr/local/bin:/snap/bin:/var/lib/rancher/rke2/bin:/usr/bin:/bin; kubectl get ingress -n party-pic party-pic-server-ingress --no-headers")
+
+# Wir nehmen das 4. Element (die Adresse/Hostname)
 LB_HOSTNAME=$(echo "$RAW_INGRESS" | awk '{print $4}')
 
 if [ -z "$LB_HOSTNAME" ]; then
@@ -21,7 +23,19 @@ if [ -z "$LB_HOSTNAME" ]; then
 fi
 
 # 3. IP auflösen
-LB_IP=$(dig +short $LB_HOSTNAME | head -n 1)
+if command -v dig &> /dev/null; then
+    # Wenn dig da ist, nutzen wir es
+    LB_IP=$(dig +short $LB_HOSTNAME | head -n 1)
+elif command -v getent &> /dev/null; then
+    # Linux Standard-Tool
+    LB_IP=$(getent hosts $LB_HOSTNAME | head -n 1 | awk '{print $1}')
+elif command -v python3 &> /dev/null; then
+    # Python Fallback
+    LB_IP=$(python3 -c "import socket; print(socket.gethostbyname('$LB_HOSTNAME'))")
+else
+    # Letzte Rettung: Ping
+    LB_IP=$(ping -c 1 $LB_HOSTNAME | sed -nE 's/.* \((([0-9]{1,3}\.){3}[0-9]{1,3})\).*/\1/p' | head -n 1)
+fi
 
 if [ -z "$LB_IP" ]; then
     exit 1
@@ -31,7 +45,7 @@ fi
 sed -i "s/host: .*/host: app.$LB_IP.nip.io/" party-pic_client/chart/values.yaml
 sed -i "s/host: .*/host: api.$LB_IP.nip.io/" party-pic_server/chart/values.yaml
 
-# 5. Git Push (nur bei Änderungen)
+# 5. Git Push
 if ! git diff --quiet; then
     git add party-pic_client/chart/values.yaml party-pic_server/chart/values.yaml
     git commit -m "chore: auto-update ingress IP to $LB_IP via remote-kubectl"
