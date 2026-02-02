@@ -12,7 +12,11 @@ export const createSession = async () => {
 export const getSession = async (sessionId : string) => {
     const response = await axios.get("/sessions/get", {params: {sessionId: sessionId}})
     console.log(response.data)
-    const returnedSession: Session = {sessionId: response.data.id, sessionSettings: response.data.settings, sessionMissions: response.data.missions};
+    const returnedSession: Session = {
+        sessionId: response.data.id, 
+        sessionSettings: response.data.settings || {}, 
+        sessionMissions: response.data.missions || []  // Fallback zu leerem Array
+    };
     
     return returnedSession
 }
