@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MetricsService } from './metrics/metrics.service';
 import session from 'express-session';
-import * as passport from 'passport';
+import passport from 'passport';
 import pgSession from 'connect-pg-simple';
 
 async function bootstrap() {
