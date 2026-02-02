@@ -41,15 +41,22 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // 4. HTTP-Request-Metriken Middleware (Ihr bestehender Code)
+  // 4. HTTP-Request-Metriken Middleware
   const metricsService = app.get(MetricsService);
   app.use((req, res, next) => {
+    // Timer für Request-Dauer starten
     const end = metricsService.httpRequestDuration.startTimer({
       method: req.method,
       route: req.route ? req.route.path : req.path,
     });
+    
     res.on('finish', () => {
+      // Request-Dauer Histogram aktualisieren
       end({ status_code: res.statusCode });
+      
+      // HTTP Requests Counter inkrementieren (für Dashboard-Queries)
+      const route = req.route ? req.route.path : req.path;
+      metricsService.incrementHttpRequests(req.method, route, res.statusCode);
     });
     next();
   });

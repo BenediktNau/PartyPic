@@ -44,11 +44,7 @@ export class SessionsController {
       req.user.sub,
     );
     // Prometheus Counter inkrementieren
-    this.metricsService.totalSessionsCounter.inc();
-    // Optional: Active Clients Gauge aktualisieren (z.B. alle aktiven Sessions zählen)
-    // Hier als Beispiel: Gauge auf Anzahl aller Sessions setzen
-    const allSessions = await this.sessionsDBService.getSessionsByUserId(req.user.sub);
-    this.metricsService.activeClientsGauge.set(allSessions.length);
+    this.metricsService.incrementTotalSessions();
     return { sessionId: createdSession.id };
   }
 
