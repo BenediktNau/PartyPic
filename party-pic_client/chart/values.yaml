@@ -20,7 +20,7 @@ ingress:
   annotations: {}
 
   hosts:
-    - host: app.184.73.241.20.nip.io
+    - host: app.34.235.233.52.nip.io
       paths:
         - path: /
           pathType: Prefix
