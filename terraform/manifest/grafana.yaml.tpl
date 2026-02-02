@@ -325,7 +325,7 @@ spec:
                   "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "(sum(rate(partypic_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(partypic_http_requests_total[5m])) * 100) or (sum(rate(nginx_ingress_controller_requests{status=~\"5..\"}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) * 100) or vector(0)",
+                      "expr": "(sum(rate(partypic_http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(partypic_http_requests_total[5m])) * 100) or (sum(rate(nginx_ingress_controller_requests{status=~\"4..|5..\"}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) * 100) or vector(0)",
                       "refId": "A"
                     }
                   ],

@@ -62,8 +62,15 @@ export class DatabaseInitService implements OnModuleInit {
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_name VARCHAR(50),
             session_id UUID REFERENCES sessions(id) ON DELETE CASCADE,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            last_seen TIMESTAMPTZ DEFAULT NOW()
         );
+      `);
+
+      // Migration: last_seen Spalte hinzufügen falls sie fehlt
+      await client.query(`
+        ALTER TABLE session_users 
+        ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ DEFAULT NOW();
       `);
 
       // 5. Tabelle: PICTURES
