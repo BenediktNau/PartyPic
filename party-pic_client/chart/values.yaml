@@ -24,6 +24,8 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
+          serviceName: party-pic-client
+          servicePort: 80
 
         # 2. Die Umleitungen zum Backend (API)
         - path: /auth
