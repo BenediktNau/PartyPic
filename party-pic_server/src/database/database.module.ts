@@ -15,6 +15,10 @@ import { ConfigService } from '@nestjs/config';
           user: configService.get<string>('DB_USER'),
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_NAME'),
+          
+          ssl: {
+            rejectUnauthorized: false, 
+          },
         });
       },
     },
