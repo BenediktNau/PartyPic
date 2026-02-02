@@ -46,13 +46,14 @@ export class MetricsCollectorService {
     }
   }
 
-  // Anzahl online User aus der DB holen (basierend auf auth_sessions)
+  // Anzahl online User aus der DB holen (basierend auf session_users)
+  // Ein User gilt als "online" wenn er in den letzten 15 Minuten einer Session beigetreten ist
   private async collectOnlineUsers() {
     try {
       const result = await this.pool.query(`
-        SELECT COUNT(DISTINCT sess->'passport'->>'user') as count 
-        FROM auth_sessions 
-        WHERE expire > NOW()
+        SELECT COUNT(DISTINCT user_name) as count 
+        FROM session_users 
+        WHERE created_at > NOW() - INTERVAL '15 minutes'
       `);
       const count = parseInt(result.rows[0]?.count || '0', 10);
       this.metricsService.setUsersOnline(count);
