@@ -8,14 +8,12 @@ import pgSession from 'connect-pg-simple';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS aktivieren (Credentials true ist wichtig für Cookies!)
   app.enableCors({
-    origin: true, // Erlaubt alle Origins (für Dev ok) oder spezifische URL setzen
+    origin: true, 
     credentials: true,
   });
 
   // 1. Datenbank-Pool aus dem AppModule holen
-  // Wir nutzen den Pool, den wir im DatabaseModule definiert haben ('PG_POOL')
   const dbPool = app.get('PG_POOL');
 
   // 2. Session Store konfigurieren
@@ -25,17 +23,16 @@ async function bootstrap() {
     session({
       store: new PGStore({
         pool: dbPool,
-        tableName: 'auth_sessions', // WICHTIG: Hier verweisen wir auf die separate Auth-Tabelle
-        createTableIfMissing: false, // Haben wir bereits im DatabaseInitService erledigt
+        tableName: 'auth_sessions', 
+        createTableIfMissing: false, 
       }),
       secret: process.env.SESSION_SECRET || 'my-very-secret-key',
       resave: false,
       saveUninitialized: false,
       cookie: {
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 Tage
+        maxAge: 30 * 24 * 60 * 60 * 1000, 
         httpOnly: true,
-        // secure: true, // Aktivieren, sobald HTTPS/SSL aktiv ist (in Prod empfohlen)
-        sameSite: 'lax', // Hilft bei CORS-Problemen
+        sameSite: 'lax', 
       },
     }),
   );
