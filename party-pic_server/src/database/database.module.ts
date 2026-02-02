@@ -1,6 +1,7 @@
 import { Module, Global } from '@nestjs/common';
 import { Pool } from 'pg';
 import { ConfigService } from '@nestjs/config';
+import { DatabaseInitService } from './database-init.service'; 
 
 @Global()
 @Module({
@@ -15,14 +16,14 @@ import { ConfigService } from '@nestjs/config';
           user: configService.get<string>('DB_USER'),
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_NAME'),
-          
           ssl: {
-            rejectUnauthorized: false, 
+            rejectUnauthorized: false,
           },
         });
       },
     },
+    DatabaseInitService, 
   ],
-  exports: ['PG_POOL'],
+  exports: ['PG_POOL', DatabaseInitService], 
 })
 export class DatabaseModule {}
