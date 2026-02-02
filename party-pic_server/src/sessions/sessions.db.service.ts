@@ -84,4 +84,22 @@ export class SessionsDbService {
     const result = await this.pool.query(queryText, values);
     return result.rows[0];
   }
+
+  // Heartbeat: last_seen aktualisieren
+  async updateUserLastSeen(userId: string) {
+    const queryText = `UPDATE session_users SET last_seen = NOW() WHERE id = $1 RETURNING *;`;
+    const values = [userId];
+    const result = await this.pool.query(queryText, values);
+    return result.rows[0];
+  }
+
+  // Anzahl der wirklich online User (last_seen in letzter Minute)
+  async countOnlineUsers(): Promise<number> {
+    const result = await this.pool.query(`
+      SELECT COUNT(DISTINCT id) as count 
+      FROM session_users 
+      WHERE last_seen > NOW() - INTERVAL '1 minute'
+    `);
+    return parseInt(result.rows[0]?.count || '0', 10);
+  }
 }

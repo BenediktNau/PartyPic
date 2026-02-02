@@ -11,6 +11,18 @@ export interface PresignedResponse {
     bucket: string;
 }
 
+export interface Picture {
+    id: string;
+    u_name: string;
+    session_id: string;
+    original_filename: string;
+    s3_key: string;
+    mimetype: string;
+    filesize_bytes: number;
+    created_at: string;
+    url?: string; // Presigned URL zum Anzeigen
+}
+
 export const initUpload = async (dto: InitUploadDto): Promise<PresignedResponse> => {
     const response = await axios.post("/pictures/init-upload", dto);
     return response.data as PresignedResponse;
@@ -37,4 +49,10 @@ export const finalizeUpload = async (payload: {
 }) => {
     const response = await axios.post("/pictures/finalize-upload", payload);
     return response.data;
+};
+
+// Bilder einer Session abrufen
+export const getSessionPictures = async (sessionId: string): Promise<Picture[]> => {
+    const response = await axios.get("/pictures/session", { params: { sessionId } });
+    return response.data as Picture[];
 };

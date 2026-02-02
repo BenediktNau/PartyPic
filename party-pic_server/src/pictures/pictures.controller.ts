@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { MetricsService } from '../metrics/metrics.service';
 import { StorageService } from '../s3/s3.service';
 import { PicturesDbService } from './pictures.db.service';
@@ -61,5 +61,25 @@ export class PicturesController {
         // Prometheus Counter inkrementieren
         this.metricsService.uploadedPhotosCounter.inc();
         return dbEntry;
+    }
+
+    // Bilder einer Session abrufen (mit presigned URLs zum Anzeigen)
+    @Get('session')
+    async getSessionPictures(@Query('sessionId') sessionId: string) {
+        if (!sessionId) {
+            throw new HttpException('Session ID is required', HttpStatus.BAD_REQUEST);
+        }
+
+        const pictures = await this.picturesDbService.getPicturesBySessionId(sessionId);
+        
+        // Presigned URLs zum Anzeigen generieren
+        const picturesWithUrls = await Promise.all(
+            pictures.map(async (pic) => ({
+                ...pic,
+                url: await this.storageService.getPresignedDownloadUrl(pic.s3_key),
+            }))
+        );
+
+        return picturesWithUrls;
     }
 }

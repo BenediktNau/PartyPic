@@ -44,4 +44,15 @@ export class StorageService {
       bucket: this.bucketName,
     };
   }
+
+  // Presigned URL zum Herunterladen/Anzeigen eines Bildes
+  async getPresignedDownloadUrl(key: string): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+
+    // URL ist 1 Stunde gültig
+    return await getSignedUrl(this.s3Client, command, { expiresIn: 3600 });
+  }
 }

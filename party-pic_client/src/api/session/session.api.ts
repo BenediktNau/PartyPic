@@ -33,3 +33,13 @@ export const loginSessionUserWithId = async (userId: string, sessionId: string) 
     const response = await axios.post('/sessions/loginSessionUser', { userId, sessionId});
     return response.data;
 }
+
+// Heartbeat für Online-Status (wird alle 30s im Hintergrund aufgerufen)
+export const sendHeartbeat = async (userId: string) => {
+    try {
+        await axios.post('/sessions/heartbeat', { userId });
+    } catch (error) {
+        // Fehler still ignorieren, da Heartbeat nicht kritisch ist
+        console.debug('Heartbeat failed:', error);
+    }
+}

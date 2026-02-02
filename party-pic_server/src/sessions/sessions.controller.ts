@@ -118,4 +118,15 @@ export class SessionsController {
     }
     return sessionUser;
   }
+
+  // Heartbeat-Endpoint für Online-User-Tracking (wird vom Client alle 30s aufgerufen)
+  @Post('heartbeat')
+  async heartbeat(@Body() body: { userId: string }) {
+    const { userId } = body;
+    if (!userId) {
+      throw new HttpException('User ID is required', HttpStatus.BAD_REQUEST);
+    }
+    await this.sessionsDBService.updateUserLastSeen(userId);
+    return { success: true };
+  }
 }

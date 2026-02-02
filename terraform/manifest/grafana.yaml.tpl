@@ -571,16 +571,50 @@ spec:
                 {
                   "fieldConfig": {
                     "defaults": {
+                      "color": {
+                        "mode": "palette-classic"
+                      },
                       "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 20,
+                        "gradientMode": "opacity",
                         "hideFrom": {
                           "legend": false,
                           "tooltip": false,
                           "viz": false
                         },
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 5,
                         "scaleDistribution": {
                           "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": true,
+                        "stacking": {
+                          "group": "A",
+                          "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                          "mode": "off"
                         }
-                      }
+                      },
+                      "mappings": [],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "green",
+                            "value": null
+                          }
+                        ]
+                      },
+                      "unit": "s"
                     },
                     "overrides": []
                   },
@@ -592,53 +626,37 @@ spec:
                   },
                   "id": 8,
                   "options": {
-                    "calculate": true,
-                    "calculation": {},
-                    "cellGap": 2,
-                    "cellValues": {},
-                    "color": {
-                      "exponent": 0.5,
-                      "fill": "dark-orange",
-                      "mode": "scheme",
-                      "reverse": false,
-                      "scale": "exponential",
-                      "scheme": "Oranges",
-                      "steps": 128
-                    },
-                    "exemplars": {
-                      "color": "rgba(255,0,255,0.7)"
-                    },
-                    "filterValues": {
-                      "le": 1e-9
-                    },
                     "legend": {
-                      "show": false
+                      "calcs": [],
+                      "displayMode": "list",
+                      "placement": "bottom",
+                      "showLegend": true
                     },
-                    "rowsFrame": {
-                      "layout": "auto"
-                    },
-                    "showValue": "never",
                     "tooltip": {
-                      "mode": "none",
-                      "showColorScale": false,
-                      "yHistogram": false
-                    },
-                    "yAxis": {
-                      "axisPlacement": "left",
-                      "reverse": false
+                      "mode": "multi",
+                      "sort": "desc"
                     }
                   },
                   "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "sum(increase(partypic_http_request_duration_seconds_bucket[5m])) by (le)",
-                      "format": "heatmap",
-                      "legendFormat": "{{le}}",
+                      "expr": "histogram_quantile(0.50, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p50",
                       "refId": "A"
+                    },
+                    {
+                      "expr": "histogram_quantile(0.95, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p95",
+                      "refId": "B"
+                    },
+                    {
+                      "expr": "histogram_quantile(0.99, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p99",
+                      "refId": "C"
                     }
                   ],
                   "title": "Request Duration Distribution",
-                  "type": "heatmap"
+                  "type": "timeseries"
                 }
               ],
               "preload": false,
