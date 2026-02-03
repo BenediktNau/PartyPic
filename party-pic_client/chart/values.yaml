@@ -25,24 +25,3 @@ ingress:
           pathType: Prefix
           serviceName: party-pic-client
           servicePort: 80
-        # 2. Die Umleitungen zum Backend (API)
-        - path: /auth
-          pathType: Prefix
-          serviceName: party-pic-server
-          servicePort: 3000
-        - path: /sessions
-          pathType: Prefix
-          serviceName: party-pic-server
-          servicePort: 3000
-        - path: /users
-          pathType: Prefix
-          serviceName: party-pic-server
-          servicePort: 3000
-        - path: /pictures
-          pathType: Prefix
-          serviceName: party-pic-server
-          servicePort: 3000
-        - path: /metrics
-          pathType: Prefix
-          serviceName: party-pic-server
-          servicePort: 3000

@@ -6,7 +6,7 @@ data "external" "env" {
 data "aws_instances" "worker_nodes" {
   instance_tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
-    Name = "${var.cluster_name}-worker" # Must match the tag in your Launch Template
+    Name                                        = "${var.cluster_name}-worker" # Must match the tag in your Launch Template
   }
 
   instance_state_names = ["running"]
@@ -215,7 +215,7 @@ resource "aws_instance" "rke2_server" {
 # --- 2. RKE2 WORKER LAUNCH TEMPLATE ---
 resource "aws_launch_template" "rke2_worker_lt" {
   name_prefix   = "${var.cluster_name}-worker-"
-  image_id      = "ami-0ecb62995f68bb549" 
+  image_id      = "ami-0ecb62995f68bb549"
   instance_type = var.instance_type
   key_name      = aws_key_pair.local_key.key_name
 
@@ -279,8 +279,8 @@ resource "aws_autoscaling_group" "rke2_workers" {
   desired_capacity = var.worker_count
   max_size         = 10
   min_size         = 1
-  
-  vpc_zone_identifier = data.aws_subnets.default.ids 
+
+  vpc_zone_identifier = data.aws_subnets.default.ids
 
   launch_template {
     id      = aws_launch_template.rke2_worker_lt.id
@@ -303,7 +303,7 @@ resource "aws_autoscaling_group" "rke2_workers" {
 resource "aws_s3_bucket" "partypic_bucket" {
   bucket = var.partypic_s3_bucket_name
 
-  force_destroy = true 
+  force_destroy = false
 
   tags = {
     Name        = "PartyPic Storage"
@@ -347,11 +347,12 @@ resource "aws_security_group" "rds_sg" {
   description = "Allow PostgreSQL traffic from RKE2 cluster"
   vpc_id      = data.aws_vpc.default.id
 
+
   ingress {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [aws_security_group.rke2_sg.id] 
+    security_groups = [aws_security_group.rke2_sg.id]
   }
 
   tags = {
@@ -360,13 +361,13 @@ resource "aws_security_group" "rds_sg" {
 }
 
 resource "aws_db_instance" "partypic_db" {
-  identifier        = "${var.cluster_name}-db"
-  
+  identifier = "${var.cluster_name}-db"
+
   engine            = "postgres"
-  engine_version    = "16"            
-  instance_class    = "db.t3.micro"   
-  allocated_storage = 20              
-  storage_type      = "gp3"           
+  engine_version    = "16"
+  instance_class    = "db.t3.micro"
+  allocated_storage = 20
+  storage_type      = "gp3"
 
   db_name  = var.partypic_db_name
   username = var.partypic_db_user
@@ -382,7 +383,7 @@ resource "aws_db_instance" "partypic_db" {
 # --- 6. MANIFEST SYNC ---
 resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
-  
+
   triggers = {
     ccm_content = templatefile("${path.module}/manifest/aws-cloud-controller-manager.yaml.tpl", {
       cluster_name      = var.cluster_name
@@ -392,7 +393,7 @@ resource "null_resource" "sync_manifests" {
     })
     ingress_config = templatefile("${path.module}/manifest/ingress-config.yaml.tpl", {
       eip_allocation_id = aws_eip.ingress_ip.allocation_id
-      subnet_id = aws_instance.rke2_server.subnet_id
+      subnet_id         = aws_instance.rke2_server.subnet_id
     })
     agrocd_ingress = templatefile("${path.module}/manifest/argocd-ingress.yaml.tpl", {
       ip = aws_eip.ingress_ip.public_ip
@@ -411,35 +412,45 @@ resource "null_resource" "sync_manifests" {
       alertmanager_smtp_username = var.alertmanager_smtp_username
       alertmanager_smtp_password = var.alertmanager_smtp_password
     })
-    
+
     // Loki Stack (Loki + Promtail)
     loki_content = templatefile("${path.module}/manifest/loki-stack.yaml.tpl", {
       monitoring_namespace = var.monitoring_namespace
       loki_version         = var.loki_version
     })
-    
+
     // Grafana (Visualization)
     grafana_content = templatefile("${path.module}/manifest/grafana.yaml.tpl", {
       monitoring_namespace   = var.monitoring_namespace
       grafana_version        = var.grafana_version
       grafana_admin_password = var.grafana_admin_password
     })
+
     grafana_ingress_content = templatefile("${path.module}/manifest/grafana-ingress.yaml.tpl", {
       monitoring_namespace = var.monitoring_namespace
       ip                   = aws_eip.ingress_ip.public_ip
     })
+
     party_pic_secrets = templatefile("${path.module}/manifest/party-pic-secrets.yaml.tpl", {
-      db_host            = aws_db_instance.partypic_db.address
-      s3_bucket_name     = aws_s3_bucket.partypic_bucket.id
-      db_password        = var.partypic_db_password
-      db_name            = var.partypic_db_name
-      db_user            = var.partypic_db_user
-      jwt_secret         = var.partypic_jwt_secret
-      s3_region          = var.partypic_s3_region
-      s3_endpoint        = var.partypic_s3_endpoint
-      s3_access_key      = local.aws_access_key
-      s3_secret_key      = local.aws_secret_key
-      s3_session_token   = local.aws_session_token
+      db_host          = aws_db_instance.partypic_db.address
+      s3_bucket_name   = aws_s3_bucket.partypic_bucket.id
+      db_password      = var.partypic_db_password
+      db_name          = var.partypic_db_name
+      db_user          = var.partypic_db_user
+      jwt_secret       = var.partypic_jwt_secret
+      s3_region        = var.partypic_s3_region
+      s3_endpoint      = var.partypic_s3_endpoint
+      s3_access_key    = local.aws_access_key
+      s3_secret_key    = local.aws_secret_key
+      s3_session_token = local.aws_session_token
+    })
+
+    partypiclient_ingress = templatefile("${path.module}/manifest/party-pic-client-ingress.yaml.tpl", {
+      ip = aws_eip.ingress_ip.public_ip
+    })
+
+    partypicserver_ingress = templatefile("${path.module}/manifest/party-pic-server-ingress.yaml.tpl", {
+      ip = aws_eip.ingress_ip.public_ip
     })
   }
 
@@ -485,7 +496,7 @@ resource "null_resource" "sync_manifests" {
   }
 
   provisioner "file" {
-    content = self.triggers.grafana_ingress_content
+    content     = self.triggers.grafana_ingress_content
     destination = "/tmp/grafana-ingress.yaml"
   }
 
@@ -494,14 +505,21 @@ resource "null_resource" "sync_manifests" {
     destination = "/tmp/party-pic-secrets.yaml"
   }
 
-  // --- VERSCHIEBEN & ANWENDEN ---
+  provisioner "file" {
+    content     = self.triggers.partypiclient_ingress
+    destination = "/tmp/partypic-client-ingress.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.partypicserver_ingress
+    destination = "/tmp/partypic-server-ingress.yaml"
+  }
+
   provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
-      
+
       "sudo mv /tmp/*.yaml /var/lib/rancher/rke2/server/manifests/",
-      
-      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
 
       "sleep 30"
     ]
@@ -509,14 +527,14 @@ resource "null_resource" "sync_manifests" {
 }
 
 resource "null_resource" "sync_autoscaler" {
-  depends_on = [aws_autoscaling_group.rke2_workers , null_resource.sync_manifests]
+  depends_on = [aws_autoscaling_group.rke2_workers, null_resource.sync_manifests]
   triggers = {
     content = templatefile("${path.module}/manifest/cluster-autoscaler.yaml.tpl", {
       cluster_name      = var.cluster_name
       aws_access_key    = local.aws_access_key
       aws_secret_key    = local.aws_secret_key
-      aws_session_token = local.aws_session_token      
-    })    
+      aws_session_token = local.aws_session_token
+    })
   }
   connection {
     type = "ssh"
@@ -535,7 +553,7 @@ resource "null_resource" "sync_autoscaler" {
   }
 }
 
-  resource "null_resource" "sync_argocd_apps" {
+resource "null_resource" "sync_argocd_apps" {
   depends_on = [null_resource.sync_manifests]
 
   connection {

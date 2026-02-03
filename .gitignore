@@ -3,8 +3,7 @@
 test.pem
 .terraform*
 rke2/
-terraform.tfstate
-terraform.tfstate.backup
+terraform.tfstate*
 *input.txt
 terraform.tfvars
 .DS_Store
