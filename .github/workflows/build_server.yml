@@ -3,8 +3,7 @@ name: Build Server
 on:
   push:
     branches:
-      - "master"
-      - "elias"
+      - master
     paths:
       - 'party-pic_server/**'         # Watch everything in the server folder...
       - '!party-pic_server/chart/**'  # ...BUT ignore the helm chart to prevent infinite loops
