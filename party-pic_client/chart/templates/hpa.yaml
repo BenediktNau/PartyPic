@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "party-pic-client.fullname" . }}-hpa
+  name: party-pic-client-hpa
   labels:
-    {{- include "party-pic-client.labels" . | nindent 4 }}
+    app: party-pic-client
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "party-pic-client.fullname" . }}
+    name: party-pic-client
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "party-pic-client.fullname" . }}-ingress
+  name: party-pic-client-ingress
   labels:
-    {{- include "party-pic-client.labels" . | nindent 4 }}
+    app: party-pic-client
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -21,10 +21,9 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                # Hier ist der Trick: Wir erlauben einen manuellen Service-Namen
-                name: {{ .serviceName | default (include "party-pic-client.fullname" $) }}
+                name: {{ .serviceName }}
                 port:
-                  number: {{ .servicePort | default $.Values.service.port }}
+                  number: {{ .servicePort }}
           {{- end }}
     {{- end }}
 {{- end }}
