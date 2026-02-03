@@ -1,19 +1,40 @@
 # Replicas configuration
-replicaCount: 1
+replicaCount: 2
+
 # Image configuration
 image:
   repository: ghcr.io/benediktnau/partypic-client
   pullPolicy: Always
   tag: "sha-102018183bdb297d49b3bd1cb984cb4d9a7e2195"
+
+# Resource Limits (required for HPA)
+resources:
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
 # App configuration (Non-Sensitive)
 nodeEnv: "production"
 port: "80"
 s3ForcePathStyle: "false"
 apiadresse: "http://api.ip.nip.io"
+
 service:
   type: ClusterIP
   port: 80
   targetPort: 80
+
 ingress:
   enabled: true
   className: "nginx"
