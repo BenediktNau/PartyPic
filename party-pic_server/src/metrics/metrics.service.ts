@@ -1,42 +1,48 @@
 import { Injectable } from '@nestjs/common';
-import { Registry, collectDefaultMetrics, Gauge, Counter, Histogram } from 'prom-client';
+import { Gauge, Counter, Histogram } from 'prom-client';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { 
+  METRIC_HTTP_REQUESTS_TOTAL,
+  METRIC_ACTIVE_SESSIONS, 
+  METRIC_USERS_ONLINE,
+  METRIC_SESSIONS_TOTAL, 
+  METRIC_PHOTOS_UPLOADED, 
+  METRIC_HTTP_DURATION 
+} from './metrics.constants'; 
 
 @Injectable()
 export class MetricsService {
-  public readonly registry: Registry;
-  public readonly activeClientsGauge: Gauge;
-  public readonly totalSessionsCounter: Counter;
-  public readonly uploadedPhotosCounter: Counter;
-  public readonly httpRequestDuration: Histogram;
+  constructor(
+    @InjectMetric(METRIC_HTTP_REQUESTS_TOTAL) public readonly httpRequestsTotal: Counter<string>,
+    @InjectMetric(METRIC_ACTIVE_SESSIONS) public readonly activeSessionsGauge: Gauge<string>,
+    @InjectMetric(METRIC_USERS_ONLINE) public readonly usersOnlineGauge: Gauge<string>,
+    @InjectMetric(METRIC_SESSIONS_TOTAL) public readonly totalSessionsCounter: Counter<string>,
+    @InjectMetric(METRIC_PHOTOS_UPLOADED) public readonly uploadedPhotosCounter: Counter<string>,
+    @InjectMetric(METRIC_HTTP_DURATION) public readonly httpRequestDuration: Histogram<string>,
+  ) {}
 
-  constructor() {
-    this.registry = new Registry();
-    collectDefaultMetrics({ register: this.registry });
+  // HTTP Request zählen (wird von Middleware aufgerufen)
+  incrementHttpRequests(method: string, route: string, status: number) {
+    this.httpRequestsTotal.inc({ method, route, status: status.toString() });
+  }
 
-    this.activeClientsGauge = new Gauge({
-      name: 'partypic_active_clients',
-      help: 'Anzahl aktiver Clients/Sessions',
-      registers: [this.registry],
-    });
+  // Aktive Sessions setzen (wird von CronJob aufgerufen)
+  setActiveSessions(count: number) {
+    this.activeSessionsGauge.set(count);
+  }
 
-    this.totalSessionsCounter = new Counter({
-      name: 'partypic_total_sessions',
-      help: 'Anzahl aller erstellten Sessions',
-      registers: [this.registry],
-    });
+  // Online User setzen (wird von CronJob aufgerufen)
+  setUsersOnline(count: number) {
+    this.usersOnlineGauge.set(count);
+  }
 
-    this.uploadedPhotosCounter = new Counter({
-      name: 'partypic_uploaded_photos',
-      help: 'Anzahl aller hochgeladenen Fotos',
-      registers: [this.registry],
-    });
+  // Session erstellt Counter erhöhen
+  incrementTotalSessions() {
+    this.totalSessionsCounter.inc();
+  }
 
-    this.httpRequestDuration = new Histogram({
-      name: 'http_request_duration_seconds',
-      help: 'HTTP-Request Dauer in Sekunden',
-      labelNames: ['method', 'route', 'status_code'],
-      buckets: [0.05, 0.1, 0.2, 0.5, 1, 2, 5],
-      registers: [this.registry],
-    });
+  // Foto hochgeladen Counter erhöhen
+  incrementPhotosUploaded() {
+    this.uploadedPhotosCounter.inc();
   }
 }

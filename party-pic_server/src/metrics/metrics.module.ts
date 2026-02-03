@@ -1,31 +1,67 @@
-// metrics.module.ts
 import { Module, Global } from '@nestjs/common';
-import { PrometheusModule, makeCounterProvider } from '@willsoto/nestjs-prometheus';
+import { PrometheusModule, makeCounterProvider, makeGaugeProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
+import { ScheduleModule } from '@nestjs/schedule';
+import { MetricsService } from './metrics.service';
+import { MetricsCollectorService } from './metrics-collector.service';
+import { 
+  METRIC_HTTP_REQUESTS_TOTAL,
+  METRIC_ACTIVE_SESSIONS, 
+  METRIC_USERS_ONLINE,
+  METRIC_SESSIONS_TOTAL, 
+  METRIC_PHOTOS_UPLOADED, 
+  METRIC_HTTP_DURATION 
+} from './metrics.constants';
 
-// Define the metric name as a constant to avoid typos later
-export const METRIC_APP_REQUEST_COUNT = 'app_request_count';
-
-@Global() // Makes this module available everywhere without importing it specifically in every module
+@Global()
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     PrometheusModule.register({
       path: '/metrics',
       defaultMetrics: {
-        enabled: true, // Enables standard CPU/Memory metrics
+        enabled: true,
       },
     }),
   ],
   providers: [
-    // Define your custom metrics here
+    MetricsService,
+    MetricsCollectorService,
+    // Counter für HTTP Requests (für Dashboard-Queries mit status Label)
     makeCounterProvider({
-      name: METRIC_APP_REQUEST_COUNT,
-      help: 'Total number of application requests',
-      labelNames: ['method', 'status'],
+      name: METRIC_HTTP_REQUESTS_TOTAL,
+      help: 'Total number of HTTP requests',
+      labelNames: ['method', 'route', 'status'],
+    }),
+    // Gauge für aktuell aktive Sessions
+    makeGaugeProvider({
+      name: METRIC_ACTIVE_SESSIONS,
+      help: 'Aktuelle Anzahl aktiver Sessions in der DB (via CronJob)',
+    }),
+    // Gauge für aktuell online User
+    makeGaugeProvider({
+      name: METRIC_USERS_ONLINE,
+      help: 'Aktuelle Anzahl online User (via CronJob)',
+    }),
+    // Counter für alle erstellten Sessions
+    makeCounterProvider({
+      name: METRIC_SESSIONS_TOTAL,
+      help: 'Anzahl aller jemals erstellten Sessions',
+    }),
+    // Counter für alle hochgeladenen Fotos
+    makeCounterProvider({
+      name: METRIC_PHOTOS_UPLOADED,
+      help: 'Anzahl aller hochgeladenen Fotos',
+    }),
+    // Histogram für HTTP Request Dauer
+    makeHistogramProvider({
+      name: METRIC_HTTP_DURATION,
+      help: 'Dauer der HTTP Requests',
+      labelNames: ['method', 'route', 'status_code'],
+      buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
     }),
   ],
   exports: [
-    // Export the custom metric provider so other services can inject it
-    METRIC_APP_REQUEST_COUNT, 
+    MetricsService,
   ],
 })
 export class MetricsModule {}

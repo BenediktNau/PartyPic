@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import CameraView from "../../views/camera.view";
+import GalleryView from "../../views/gallery.view";
 import { useEffect, useRef, useState } from "react";
 import SessionContext from "../../utils/contexts/session.context";
 import { useAuth } from "../../auth.context";
@@ -11,11 +12,7 @@ import {
   registerSessionUser,
 } from "../../api/session/session.api";
 import type { session_User } from "../../models/sessions/session_user.model";
-const MainView = () => (
-  <div className="w-full h-full bg-white text-black flex items-center justify-center">
-    🏠 Main Feed
-  </div>
-);
+import { useHeartbeat } from "../../utils/hooks/useHeartbeat";
 
 export const Route = createFileRoute("/session/$sessionId")({
   component: RouteComponent,
@@ -29,6 +26,10 @@ function RouteComponent() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const cameraPageRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Heartbeat für Online-Status (läuft im Hintergrund)
+  useHeartbeat(sessionUser?.id || null);
 
   useEffect(() => {
     cookieStore.get("sessionUserId").then((cookie) => {
@@ -36,6 +37,7 @@ function RouteComponent() {
         loginSessionUserWithId(cookie.value, sessionId)
           .then((user) => {
             console.log("Logged in session user from cookie:", user);
+            setSessionUser(user);
           })
           .catch((error) => {
             console.error(
@@ -48,7 +50,7 @@ function RouteComponent() {
         setModalOpen(true);
       }
     });
-  }, [sessionUser]);
+  }, [sessionId]);
 
 
   useEffect(() => {
@@ -80,8 +82,6 @@ function RouteComponent() {
     sessionSettings: {},
     sessionMissions: [],
   });
-
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Helper to scroll to a specific "page" (0 = Camera, 1 = Main, 2 = Settings)
   const scrollToPage = (pageIndex: number) => {
@@ -144,12 +144,16 @@ function RouteComponent() {
           ref={cameraPageRef} 
           className="w-screen h-screen shrink-0 snap-center"
         >
-          <CameraView sessionId={sessionId} cameraOn={isCameraActive} />
+          <CameraView 
+            sessionId={sessionId} 
+            cameraOn={isCameraActive}
+            userName={sessionUser?.user_name}
+          />
         </div>
 
-        {/* VIEW 2: MAIN */}
+        {/* VIEW 2: GALLERY */}
         <div className="w-screen h-screen shrink-0 snap-center relative">
-          <MainView />
+          <GalleryView sessionId={sessionId} />
         </div>
 
         <Modal
@@ -171,7 +175,7 @@ function RouteComponent() {
                 sessionId
               );
 
-              console.log("Registered session user:", sessionUser);
+              console.log("Registered session user:", newSessionUser);
 
               setModalOpen(false);
               document.cookie = `sessionUserId=${newSessionUser.id}; path=/; max-age=${60 * 60 * 24 * 7}`;

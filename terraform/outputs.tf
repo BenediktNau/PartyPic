@@ -17,7 +17,3 @@ output "loadbalancer_IP" {
   value       = aws_eip.ingress_ip.public_ip
 }
 
-output "grafana_ingress_command" {
-  description = "Grafana Ingress Hostname ausgeben (auf dem Server ausfuehren)"
-  value       = "kubectl get ingress -n monitoring grafana-ingress -o jsonpath='{.spec.rules[0].host}'"  
-}

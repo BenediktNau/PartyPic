@@ -299,7 +299,87 @@ resource "aws_autoscaling_group" "rke2_workers" {
   }
 }
 
-# --- 4. MANIFEST SYNC ---
+# --- 4. S3 BUCKET FOR PARTYPIC ---
+resource "aws_s3_bucket" "partypic_bucket" {
+  bucket = var.partypic_s3_bucket_name
+
+  force_destroy = true 
+
+  tags = {
+    Name        = "PartyPic Storage"
+    Environment = "Dev"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "partypic_bucket_access" {
+  bucket = aws_s3_bucket.partypic_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_cors_configuration" "partypic_bucket_cors" {
+  bucket = aws_s3_bucket.partypic_bucket.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST", "GET", "HEAD"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
+# --- 5. RDS POSTGRESQL INSTANCE FOR PARTY-PIC ---
+resource "aws_db_subnet_group" "rds_subnet_group" {
+  name       = "${var.cluster_name}-db-subnet-group"
+  subnet_ids = data.aws_subnets.default.ids
+
+  tags = {
+    Name = "${var.cluster_name}-db-subnet-group"
+  }
+}
+
+resource "aws_security_group" "rds_sg" {
+  name        = "${var.cluster_name}-rds-sg"
+  description = "Allow PostgreSQL traffic from RKE2 cluster"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.rke2_sg.id] 
+  }
+
+  tags = {
+    Name = "${var.cluster_name}-rds-sg"
+  }
+}
+
+resource "aws_db_instance" "partypic_db" {
+  identifier        = "${var.cluster_name}-db"
+  
+  engine            = "postgres"
+  engine_version    = "16"            
+  instance_class    = "db.t3.micro"   
+  allocated_storage = 20              
+  storage_type      = "gp3"           
+
+  db_name  = var.partypic_db_name
+  username = var.partypic_db_user
+  password = var.partypic_db_password
+
+  db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+
+  skip_final_snapshot = true
+
+}
+
+# --- 6. MANIFEST SYNC ---
 resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
   
@@ -348,6 +428,19 @@ resource "null_resource" "sync_manifests" {
       monitoring_namespace = var.monitoring_namespace
       ip                   = aws_eip.ingress_ip.public_ip
     })
+    party_pic_secrets = templatefile("${path.module}/manifest/party-pic-secrets.yaml.tpl", {
+      db_host            = aws_db_instance.partypic_db.address
+      s3_bucket_name     = aws_s3_bucket.partypic_bucket.id
+      db_password        = var.partypic_db_password
+      db_name            = var.partypic_db_name
+      db_user            = var.partypic_db_user
+      jwt_secret         = var.partypic_jwt_secret
+      s3_region          = var.partypic_s3_region
+      s3_endpoint        = var.partypic_s3_endpoint
+      s3_access_key      = local.aws_access_key
+      s3_secret_key      = local.aws_secret_key
+      s3_session_token   = local.aws_session_token
+    })
   }
 
   connection {
@@ -394,6 +487,11 @@ resource "null_resource" "sync_manifests" {
   provisioner "file" {
     content = self.triggers.grafana_ingress_content
     destination = "/tmp/grafana-ingress.yaml"
+  }
+
+  provisioner "file" {
+    content     = self.triggers.party_pic_secrets
+    destination = "/tmp/party-pic-secrets.yaml"
   }
 
   // --- VERSCHIEBEN & ANWENDEN ---

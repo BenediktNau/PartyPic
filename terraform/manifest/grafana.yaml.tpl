@@ -92,8 +92,8 @@ spec:
               "editable": true,
               "fiscalYearStartMonth": 0,
               "graphTooltip": 0,
+              "id": 2,
               "links": [],
-              "liveNow": false,
               "panels": [
                 {
                   "fieldConfig": {
@@ -102,11 +102,13 @@ spec:
                         "mode": "palette-classic"
                       },
                       "custom": {
+                        "axisBorderShow": false,
                         "axisCenteredZero": false,
                         "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
+                        "barWidthFactor": 0.6,
                         "drawStyle": "line",
                         "fillOpacity": 0,
                         "gradientMode": "none",
@@ -123,6 +125,7 @@ spec:
                           "type": "linear"
                         },
                         "showPoints": "auto",
+                        "showValues": false,
                         "spanNulls": false,
                         "stacking": {
                           "group": "A",
@@ -138,7 +141,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           },
                           {
                             "color": "red",
@@ -165,10 +168,12 @@ spec:
                       "showLegend": true
                     },
                     "tooltip": {
+                      "hideZeros": false,
                       "mode": "single",
                       "sort": "none"
                     }
                   },
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "sum(rate(partypic_http_requests_total[5m])) or sum(rate(nginx_ingress_controller_requests[5m])) or vector(0)",
@@ -186,11 +191,13 @@ spec:
                         "mode": "palette-classic"
                       },
                       "custom": {
+                        "axisBorderShow": false,
                         "axisCenteredZero": false,
                         "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
+                        "barWidthFactor": 0.6,
                         "drawStyle": "line",
                         "fillOpacity": 0,
                         "gradientMode": "none",
@@ -207,6 +214,7 @@ spec:
                           "type": "linear"
                         },
                         "showPoints": "auto",
+                        "showValues": false,
                         "spanNulls": false,
                         "stacking": {
                           "group": "A",
@@ -222,7 +230,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           },
                           {
                             "color": "red",
@@ -249,10 +257,12 @@ spec:
                       "showLegend": true
                     },
                     "tooltip": {
+                      "hideZeros": false,
                       "mode": "single",
                       "sort": "none"
                     }
                   },
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "histogram_quantile(0.95, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le)) or histogram_quantile(0.95, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket[5m])) by (le)) or vector(0)",
@@ -274,7 +284,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           },
                           {
                             "color": "yellow",
@@ -298,6 +308,8 @@ spec:
                   },
                   "id": 3,
                   "options": {
+                    "minVizHeight": 75,
+                    "minVizWidth": 75,
                     "orientation": "auto",
                     "reduceOptions": {
                       "calcs": [
@@ -307,12 +319,13 @@ spec:
                       "values": false
                     },
                     "showThresholdLabels": false,
-                    "showThresholdMarkers": true
+                    "showThresholdMarkers": true,
+                    "sizing": "auto"
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "(sum(rate(partypic_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(partypic_http_requests_total[5m])) * 100) or (sum(rate(nginx_ingress_controller_requests{status=~\"5..\"}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) * 100) or vector(0)",
+                      "expr": "(sum(rate(partypic_http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(partypic_http_requests_total[5m])) * 100) or (sum(rate(nginx_ingress_controller_requests{status=~\"4..|5..\"}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) * 100) or vector(0)",
                       "refId": "A"
                     }
                   ],
@@ -357,11 +370,14 @@ spec:
                       "fields": "",
                       "values": false
                     },
+                    "sort": "desc",
                     "tooltip": {
+                      "hideZeros": false,
                       "mode": "single",
                       "sort": "none"
                     }
                   },
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "sum by (status) (increase(nginx_ingress_controller_requests[1h])) or sum by (status) (increase(partypic_http_requests_total[1h]))",
@@ -373,6 +389,10 @@ spec:
                   "type": "piechart"
                 },
                 {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
                   "fieldConfig": {
                     "defaults": {
                       "color": {
@@ -385,7 +405,7 @@ spec:
                         "steps": [
                           {
                             "color": "blue",
-                            "value": null
+                            "value": 0
                           }
                         ]
                       }
@@ -404,6 +424,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -411,12 +432,16 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "partypic_active_sessions or vector(0)",
+                      "editorMode": "code",
+                      "expr": "sum(partypic_active_sessions) or vector(0)",
+                      "range": true,
                       "refId": "A"
                     }
                   ],
@@ -424,6 +449,10 @@ spec:
                   "type": "stat"
                 },
                 {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
                   "fieldConfig": {
                     "defaults": {
                       "color": {
@@ -436,7 +465,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           }
                         ]
                       }
@@ -455,6 +484,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -462,12 +492,16 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "partypic_users_online or vector(0)",
+                      "editorMode": "code",
+                      "expr": "sum(partypic_users_online) or vector(0)",
+                      "range": true,
                       "refId": "A"
                     }
                   ],
@@ -475,6 +509,10 @@ spec:
                   "type": "stat"
                 },
                 {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
                   "fieldConfig": {
                     "defaults": {
                       "color": {
@@ -487,7 +525,7 @@ spec:
                         "steps": [
                           {
                             "color": "purple",
-                            "value": null
+                            "value": 0
                           }
                         ]
                       }
@@ -506,6 +544,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -513,12 +552,16 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "partypic_photos_uploaded_total or vector(0)",
+                      "editorMode": "code",
+                      "expr": "sum(partypic_photos_uploaded_total) or vector(0)",
+                      "range": true,
                       "refId": "A"
                     }
                   ],
@@ -528,16 +571,50 @@ spec:
                 {
                   "fieldConfig": {
                     "defaults": {
+                      "color": {
+                        "mode": "palette-classic"
+                      },
                       "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 20,
+                        "gradientMode": "opacity",
                         "hideFrom": {
                           "legend": false,
                           "tooltip": false,
                           "viz": false
                         },
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 5,
                         "scaleDistribution": {
                           "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": true,
+                        "stacking": {
+                          "group": "A",
+                          "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                          "mode": "off"
                         }
-                      }
+                      },
+                      "mappings": [],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "green",
+                            "value": null
+                          }
+                        ]
+                      },
+                      "unit": "s"
                     },
                     "overrides": []
                   },
@@ -549,56 +626,42 @@ spec:
                   },
                   "id": 8,
                   "options": {
-                    "calculate": true,
-                    "calculation": {},
-                    "cellGap": 2,
-                    "cellValues": {},
-                    "color": {
-                      "exponent": 0.5,
-                      "fill": "dark-orange",
-                      "mode": "scheme",
-                      "reverse": false,
-                      "scale": "exponential",
-                      "scheme": "Oranges",
-                      "steps": 128
-                    },
-                    "exemplars": {
-                      "color": "rgba(255,0,255,0.7)"
-                    },
-                    "filterValues": {
-                      "le": 1e-9
-                    },
                     "legend": {
-                      "show": false
+                      "calcs": [],
+                      "displayMode": "list",
+                      "placement": "bottom",
+                      "showLegend": true
                     },
-                    "rowsFrame": {
-                      "layout": "auto"
-                    },
-                    "showValue": "never",
                     "tooltip": {
-                      "show": false,
-                      "yHistogram": false
-                    },
-                    "yAxis": {
-                      "axisPlacement": "left",
-                      "reverse": false
+                      "mode": "multi",
+                      "sort": "desc"
                     }
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "sum(increase(nginx_ingress_controller_request_duration_seconds_bucket[5m])) by (le)",
-                      "legendFormat": "{{le}}",
+                      "expr": "histogram_quantile(0.50, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p50",
                       "refId": "A"
+                    },
+                    {
+                      "expr": "histogram_quantile(0.95, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p95",
+                      "refId": "B"
+                    },
+                    {
+                      "expr": "histogram_quantile(0.99, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p99",
+                      "refId": "C"
                     }
                   ],
                   "title": "Request Duration Distribution",
-                  "type": "heatmap"
+                  "type": "timeseries"
                 }
               ],
+              "preload": false,
               "refresh": "30s",
-              "schemaVersion": 38,
-              "style": "dark",
+              "schemaVersion": 42,
               "tags": [],
               "templating": {
                 "list": []
@@ -611,8 +674,7 @@ spec:
               "timezone": "",
               "title": "Application Metrics",
               "uid": "app-metrics",
-              "version": 1,
-              "weekStart": ""
+              "version": 1
             }
         # ======================================================================
         # 2. INFRASTRUCTURE METRICS

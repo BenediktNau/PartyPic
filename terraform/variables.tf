@@ -132,3 +132,38 @@ variable "loki_version" {
   default     = "2.10.3"
 }
 
+# --- PARTY PIC APPLICATION SECRETS ---
+variable "partypic_db_password" { 
+  type = string
+  default = ""
+  }
+
+variable "partypic_db_name" { 
+  type = string
+  default = ""
+  }
+
+variable "partypic_db_user" { 
+  type = string 
+  default = ""
+  }
+
+variable "partypic_s3_endpoint" { 
+  type = string
+  default = "" 
+  }
+
+variable "partypic_s3_bucket_name" { 
+  type = string
+  default = "" 
+  }
+
+variable "partypic_s3_region" { 
+  type = string
+  default = "" 
+  }
+
+variable "partypic_jwt_secret" { 
+  type = string
+  default = "" 
+  }

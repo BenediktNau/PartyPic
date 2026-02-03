@@ -4,14 +4,45 @@ replicaCount: 1
 image:
   repository: ghcr.io/benediktnau/partypic-client
   pullPolicy: Always
-  tag: "sha-4ad0d7bf111df076624667e2947d1eab400ad8fd"
+  tag: "sha-102018183bdb297d49b3bd1cb984cb4d9a7e2195"
 # App configuration (Non-Sensitive)
 nodeEnv: "production"
 port: "80"
 s3ForcePathStyle: "false"
 apiadresse: "http://api.ip.nip.io"
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
 ingress:
   enabled: true
-  host: "app.ip.nip.io"
-  certManager: false
-  tls: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: app.34.235.233.52.nip.io
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: party-pic-client
+          servicePort: 80
+        # 2. Die Umleitungen zum Backend (API)
+        - path: /auth
+          pathType: Prefix
+          serviceName: party-pic-server
+          servicePort: 3000
+        - path: /sessions
+          pathType: Prefix
+          serviceName: party-pic-server
+          servicePort: 3000
+        - path: /users
+          pathType: Prefix
+          serviceName: party-pic-server
+          servicePort: 3000
+        - path: /pictures
+          pathType: Prefix
+          serviceName: party-pic-server
+          servicePort: 3000
+        - path: /metrics
+          pathType: Prefix
+          serviceName: party-pic-server
+          servicePort: 3000
