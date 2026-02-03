@@ -1,22 +1,18 @@
-/**
- * normal-traffic.ts - Realistischer normaler Verkehr
+/*
+ * normal-traffic.ts
  * 
- * Simuliert einen typischen Tag bei einer Hochzeit/Event:
- * - Gäste kommen an, registrieren sich, machen Fotos
- * - Normaler Verkehr, der die App im Alltag erlebt
- * - Dauer: ~10 Minuten, simuliert komprimiert einen Event-Tag
+ * Simuliert normalen Event-Verkehr (Hochzeit, Geburtstag, etc.)
+ * Läuft ca. 10 Minuten und testet ob die App stabil bleibt.
  */
 
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter, Trend } from 'k6/metrics';
 
-// ============================================================================
-// KONFIGURATION
-// ============================================================================
+// Config - IP anpassen!
 const BASE_URL = 'http://api.52.7.172.243.nip.io';
 
-// Custom Metrics
+// Metriken
 const registrations = new Counter('registrations_success');
 const logins = new Counter('logins_success');
 const sessionsCreated = new Counter('sessions_created');
@@ -24,12 +20,9 @@ const photosUploaded = new Counter('photos_uploaded');
 const heartbeats = new Counter('heartbeats_sent');
 const responseTime = new Trend('response_time_ms');
 
-// ============================================================================
-// TEST KONFIGURATION - Normaler Event-Verkehr
-// ============================================================================
 export const options = {
   scenarios: {
-    // Szenario 1: Event-Organisator erstellt Session (1 User)
+    // Organisator erstellt die Session
     organizer: {
       executor: 'per-vu-iterations',
       vus: 1,
@@ -37,92 +30,79 @@ export const options = {
       exec: 'organizerFlow',
       startTime: '0s',
     },
-    // Szenario 2: Gäste kommen langsam an (ramp up)
+    // Gäste kommen nach und nach
     guests_arriving: {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '1m', target: 5 },   // Erste Gäste
-        { duration: '2m', target: 15 },  // Mehr Gäste kommen
-        { duration: '3m', target: 20 },  // Event in vollem Gange
-        { duration: '2m', target: 10 },  // Gäste gehen langsam
-        { duration: '2m', target: 0 },   // Event endet
+        { duration: '1m', target: 5 },   // erste Gäste
+        { duration: '2m', target: 15 },  // mehr kommen
+        { duration: '3m', target: 20 },  // volle Party
+        { duration: '2m', target: 10 },  // Leute gehen
+        { duration: '2m', target: 0 },   // Ende
       ],
       exec: 'guestFlow',
-      startTime: '10s', // Warten bis Organizer Session erstellt hat
+      startTime: '10s',
     },
   },
   thresholds: {
-    http_req_failed: ['rate<0.05'],      // <5% Fehlerrate
-    http_req_duration: ['p(95)<2000'],   // 95% unter 2s
+    http_req_failed: ['rate<0.05'],
+    http_req_duration: ['p(95)<2000'],
   },
 };
 
-// Shared Session ID (wird vom Organizer gesetzt)
+// Session ID die vom Organisator erstellt wird
 let sharedSessionId: string | null = null;
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-function generateEmail(): string {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(7);
-  return `guest_${timestamp}_${random}@event.de`;
-}
+// --- Helper ---
 
-function generatePassword(): string {
-  return 'EventPass2024!';
+function generateEmail(): string {
+  return `guest_${Date.now()}_${Math.random().toString(36).substring(7)}@event.de`;
 }
 
 function getHeaders(token?: string): { [key: string]: string } {
-  const headers: { [key: string]: string } = {
-    'Content-Type': 'application/json',
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  const headers: { [key: string]: string } = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
   return headers;
 }
 
-// Simuliere ein kleines Foto (Base64 encoded)
+// 1x1 PNG - reicht zum Testen
 function generateSmallPhoto(): string {
-  // Kleines 1x1 PNG als Base64
   return 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 }
 
-// ============================================================================
-// ORGANIZER FLOW - Event-Organisator erstellt Session
-// ============================================================================
+// --- Organisator Flow ---
+
 export function organizerFlow() {
   const email = `organizer_${Date.now()}@event.de`;
-  const password = generatePassword();
+  const password = 'EventPass2024!';
   const eventName = `Hochzeit_${new Date().toISOString().split('T')[0]}`;
 
-  console.log(`[Organizer] Erstelle Event: ${eventName}`);
+  console.log(`Erstelle Event: ${eventName}`);
 
-  // 1. Registrierung
+  // Registrieren
   const registerRes = http.post(
     `${BASE_URL}/auth/register`,
     JSON.stringify({ name: 'Event Organisator', email, password }),
     { headers: getHeaders() }
   );
 
-  if (!check(registerRes, { 'Organizer registriert': (r) => r.status === 201 })) {
-    console.error('[Organizer] Registrierung fehlgeschlagen');
+  if (!check(registerRes, { 'register ok': (r) => r.status === 201 })) {
+    console.error('Registrierung fehlgeschlagen');
     return;
   }
   registrations.add(1);
   sleep(1);
 
-  // 2. Login
+  // Login
   const loginRes = http.post(
     `${BASE_URL}/auth/login`,
     JSON.stringify({ email, password }),
     { headers: getHeaders() }
   );
 
-  if (!check(loginRes, { 'Organizer eingeloggt': (r) => r.status === 201 })) {
-    console.error('[Organizer] Login fehlgeschlagen');
+  if (!check(loginRes, { 'login ok': (r) => r.status === 201 })) {
+    console.error('Login fehlgeschlagen');
     return;
   }
   logins.add(1);
@@ -131,16 +111,16 @@ export function organizerFlow() {
   try {
     token = JSON.parse(loginRes.body as string).access_token;
   } catch {
-    console.error('[Organizer] Token parsing fehlgeschlagen');
+    console.error('Token parsing error');
     return;
   }
   sleep(1);
 
-  // 3. Session erstellen
+  // Session erstellen
   const sessionRes = http.post(
     `${BASE_URL}/sessions/create`,
     JSON.stringify({
-      settings: { name: eventName, description: 'Willkommen zu unserem Event!' },
+      settings: { name: eventName, description: 'Willkommen!' },
       missions: [
         { title: 'Brautpaar', description: 'Foto mit dem Brautpaar' },
         { title: 'Torte', description: 'Die Hochzeitstorte' },
@@ -150,23 +130,22 @@ export function organizerFlow() {
     { headers: getHeaders(token) }
   );
 
-  if (!check(sessionRes, { 'Session erstellt': (r) => r.status === 201 })) {
-    console.error('[Organizer] Session-Erstellung fehlgeschlagen');
+  if (!check(sessionRes, { 'session created': (r) => r.status === 201 })) {
+    console.error('Session erstellen fehlgeschlagen');
     return;
   }
   sessionsCreated.add(1);
 
   try {
-    const sessionData = JSON.parse(sessionRes.body as string);
-    sharedSessionId = sessionData.id;
-    console.log(`[Organizer] Session erstellt: ${sharedSessionId}`);
+    sharedSessionId = JSON.parse(sessionRes.body as string).id;
+    console.log(`Session erstellt: ${sharedSessionId}`);
   } catch {
-    console.error('[Organizer] Session ID parsing fehlgeschlagen');
+    console.error('Session ID parsing error');
   }
 
-  // Organizer bleibt online und sendet Heartbeats
+  // Organisator bleibt online
   for (let i = 0; i < 30; i++) {
-    sleep(20); // Alle 20 Sekunden Heartbeat
+    sleep(20);
     if (sharedSessionId) {
       http.post(
         `${BASE_URL}/sessions/heartbeat`,
@@ -178,11 +157,10 @@ export function organizerFlow() {
   }
 }
 
-// ============================================================================
-// GUEST FLOW - Event-Gast nimmt teil
-// ============================================================================
+// --- Gast Flow ---
+
 export function guestFlow() {
-  // Warten bis Session existiert
+  // Warten bis Session da ist
   let attempts = 0;
   while (!sharedSessionId && attempts < 30) {
     sleep(1);
@@ -190,15 +168,15 @@ export function guestFlow() {
   }
 
   if (!sharedSessionId) {
-    console.warn('[Gast] Keine Session verfügbar, überspringe...');
+    console.warn('Keine Session gefunden');
     return;
   }
 
   const guestName = `Gast_${__VU}_${Date.now().toString(36)}`;
   const email = generateEmail();
-  const password = generatePassword();
+  const password = 'EventPass2024!';
 
-  // 1. Registrierung (50% der Gäste sind neu)
+  // 50% sind neue User
   if (Math.random() < 0.5) {
     const registerRes = http.post(
       `${BASE_URL}/auth/register`,
@@ -206,14 +184,14 @@ export function guestFlow() {
       { headers: getHeaders() }
     );
 
-    if (check(registerRes, { 'Gast registriert': (r) => r.status === 201 })) {
+    if (check(registerRes, { 'guest registered': (r) => r.status === 201 })) {
       registrations.add(1);
       responseTime.add(registerRes.timings.duration);
     }
     sleep(randomBetween(1, 3));
   }
 
-  // 2. Login
+  // Login
   const loginRes = http.post(
     `${BASE_URL}/auth/login`,
     JSON.stringify({ email, password }),
@@ -221,19 +199,16 @@ export function guestFlow() {
   );
 
   let token: string | null = null;
-  if (check(loginRes, { 'Gast eingeloggt': (r) => r.status === 201 })) {
+  if (check(loginRes, { 'guest login': (r) => r.status === 201 })) {
     logins.add(1);
     responseTime.add(loginRes.timings.duration);
     try {
       token = JSON.parse(loginRes.body as string).access_token;
-    } catch {
-      // Ignorieren
-    }
+    } catch { /* ignore */ }
   }
   sleep(randomBetween(2, 5));
 
-  // Falls Login fehlschlägt, als anonymer Gast weitermachen
-  // 3. Session beitreten
+  // Session beitreten
   const joinRes = http.post(
     `${BASE_URL}/sessions/registerSessionUser`,
     JSON.stringify({ session_id: sharedSessionId, user_name: guestName }),
@@ -241,49 +216,39 @@ export function guestFlow() {
   );
 
   let sessionUserId: string | null = null;
-  if (check(joinRes, { 'Session beigetreten': (r) => r.status === 201 })) {
+  if (check(joinRes, { 'joined session': (r) => r.status === 201 })) {
     try {
       sessionUserId = JSON.parse(joinRes.body as string).id;
-    } catch {
-      // Ignorieren
-    }
+    } catch { /* ignore */ }
   }
 
-  // 4. Gast-Aktivität: Fotos machen, Gallery anschauen, Heartbeats
-  const activityDuration = randomBetween(60, 180); // 1-3 Minuten aktiv
+  // Gast macht Sachen: Fotos, Gallery, Heartbeats
+  const activityDuration = randomBetween(60, 180);
   const startTime = Date.now();
 
   while ((Date.now() - startTime) / 1000 < activityDuration) {
     const action = Math.random();
 
     if (action < 0.3) {
-      // 30%: Foto hochladen
       uploadPhoto(token, sharedSessionId, guestName);
     } else if (action < 0.6) {
-      // 30%: Gallery anschauen
       viewGallery(token, sharedSessionId);
-    } else {
-      // 40%: Heartbeat senden
-      if (sessionUserId) {
-        http.post(
-          `${BASE_URL}/sessions/heartbeat`,
-          JSON.stringify({ sessionId: sharedSessionId }),
-          { headers: getHeaders(token || undefined) }
-        );
-        heartbeats.add(1);
-      }
+    } else if (sessionUserId) {
+      http.post(
+        `${BASE_URL}/sessions/heartbeat`,
+        JSON.stringify({ sessionId: sharedSessionId }),
+        { headers: getHeaders(token || undefined) }
+      );
+      heartbeats.add(1);
     }
 
-    // Realistische Pause zwischen Aktionen (5-30 Sekunden)
     sleep(randomBetween(5, 30));
   }
 }
 
-// ============================================================================
-// HELPER: Foto hochladen
-// ============================================================================
+// --- Foto Upload ---
+
 function uploadPhoto(token: string | null, sessionId: string, userName: string) {
-  // 1. Init Upload
   const initRes = http.post(
     `${BASE_URL}/pictures/init-upload`,
     JSON.stringify({
@@ -295,64 +260,47 @@ function uploadPhoto(token: string | null, sessionId: string, userName: string) 
     { headers: getHeaders(token || undefined) }
   );
 
-  if (!check(initRes, { 'Upload initiiert': (r) => r.status === 201 })) {
-    return;
-  }
+  if (!check(initRes, { 'init upload': (r) => r.status === 201 })) return;
 
   let uploadUrl: string, pictureId: string;
   try {
     const data = JSON.parse(initRes.body as string);
     uploadUrl = data.uploadUrl;
     pictureId = data.pictureId;
-  } catch {
-    return;
-  }
+  } catch { return; }
 
-  // 2. Upload zu S3 (simuliert)
-  const photoData = generateSmallPhoto();
-  const s3Res = http.put(uploadUrl, photoData, {
+  // S3 upload
+  const s3Res = http.put(uploadUrl, generateSmallPhoto(), {
     headers: { 'Content-Type': 'image/jpeg' },
   });
 
-  if (!check(s3Res, { 'S3 Upload OK': (r) => r.status === 200 })) {
-    return;
-  }
+  if (!check(s3Res, { 's3 upload': (r) => r.status === 200 })) return;
 
-  // 3. Finalize
+  // Finalize
   const finalRes = http.post(
     `${BASE_URL}/pictures/finalize-upload`,
     JSON.stringify({ pictureId }),
     { headers: getHeaders(token || undefined) }
   );
 
-  if (check(finalRes, { 'Upload finalisiert': (r) => r.status === 201 })) {
+  if (check(finalRes, { 'finalize': (r) => r.status === 201 })) {
     photosUploaded.add(1);
     responseTime.add(initRes.timings.duration + finalRes.timings.duration);
   }
 }
 
-// ============================================================================
-// HELPER: Gallery anschauen
-// ============================================================================
 function viewGallery(token: string | null, sessionId: string) {
   const res = http.get(`${BASE_URL}/pictures/session?session_id=${sessionId}`, {
     headers: getHeaders(token || undefined),
   });
-
-  check(res, { 'Gallery geladen': (r) => r.status === 200 });
+  check(res, { 'gallery loaded': (r) => r.status === 200 });
   responseTime.add(res.timings.duration);
 }
 
-// ============================================================================
-// HELPER: Zufallszahl zwischen min und max
-// ============================================================================
 function randomBetween(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
 
-// ============================================================================
-// DEFAULT EXPORT
-// ============================================================================
 export default function () {
-  // Wird nicht verwendet, da wir Scenarios nutzen
+  // nicht verwendet, wir nutzen scenarios
 }
