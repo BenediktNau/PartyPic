@@ -3,9 +3,8 @@ const path = require('path');
 module.exports = {
   mode: 'production',
   entry: {
-    'loadtest': './src/loadtest.ts',
-    'stress-test': './src/stress-test.ts',
-    'realistic-test': './src/realistic-test.ts',
+    'normal-traffic': './src/normal-traffic.ts',
+    'peak-traffic': './src/peak-traffic.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),

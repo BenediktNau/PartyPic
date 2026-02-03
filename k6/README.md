@@ -1,6 +1,6 @@
 # PartyPic Load Testing mit k6
 
-Diese Skripte dienen zur Demonstration des Autoscalings (HPA) für das PartyPic Projekt.
+Diese Skripte dienen zur Demonstration des Autoscalings (HPA + Cluster Autoscaler) für das PartyPic Projekt.
 
 ## Voraussetzungen
 
@@ -10,130 +10,164 @@ Diese Skripte dienen zur Demonstration des Autoscalings (HPA) für das PartyPic 
 # macOS
 brew install k6
 
-# Ubuntu/Debian
-sudo gpg -k
-sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-sudo apt-get update
-sudo apt-get install k6
+# Ubuntu/Debian (ARM64)
+curl -L https://github.com/grafana/k6/releases/download/v0.49.0/k6-v0.49.0-linux-arm64.tar.gz | tar xz
+sudo mv k6-v0.49.0-linux-arm64/k6 /usr/local/bin/
 
 # Docker
-docker run --rm -i grafana/k6 run - <loadtest.js
+docker run --rm -i grafana/k6 run - <script.js
 ```
 
-## Skripte
-
-### 1. loadtest.js - Ramp-Up Test
-
-Simuliert realistischen Traffic mit graduellem Anstieg:
+### Node.js Dependencies
 
 ```bash
-k6 run loadtest.js
+cd k6
+npm install
 ```
 
-**Phasen:**
-- Warm-up: 30s (0 → 10 VUs)
-- Ramp-up: 1m (10 → 50 VUs)
-- Peak Load: 2m (50 → 100 VUs)
-- Sustained: 2m (100 VUs)
-- Scale-down: 1m (100 → 50 VUs)
-- Cool-down: 30s (50 → 0 VUs)
+## Verfügbare Skripte
 
-### 2. stress-test.js - Quick HPA Trigger
+### 1. `normal-traffic.ts` - Normaler Event-Verkehr
 
-Erzeugt schnell hohe Last um HPA-Skalierung zu triggern:
+Simuliert einen typischen Tag bei einer Hochzeit/Event:
+- Ein Organisator erstellt eine Session
+- Gäste kommen langsam an, registrieren sich, machen Fotos
+- Realistisches Nutzerverhalten mit Pausen
 
 ```bash
-k6 run stress-test.js
+npm run normal
 ```
 
-**Phasen:**
-- Quick ramp: 10s (0 → 50 VUs)
-- Spike: 20s (50 → 200 VUs)
-- Hold: 2m (200 VUs)
-- Push: 1m (200 → 300 VUs)
-- Sustained: 2m (300 VUs)
-- Drop: 30s (300 → 0 VUs)
+**Verhalten:**
+| Phase | Dauer | VUs | Beschreibung |
+|-------|-------|-----|--------------|
+| Organisator | Start | 1 | Erstellt Session |
+| Erste Gäste | 1m | 0→5 | Langsame Ankunft |
+| Mehr Gäste | 2m | 5→15 | Event füllt sich |
+| Peak | 3m | 15→20 | Event in vollem Gange |
+| Gäste gehen | 2m | 20→10 | Langsamer Rückgang |
+| Event endet | 2m | 10→0 | Abreise |
 
-## Konfiguration
+**Erwartetes Scaling:** Keine Skalierung, Server bei 2 Pods stabil.
 
-Über Umgebungsvariablen:
+---
+
+### 2. `peak-traffic.ts` - Extreme Last (HPA + Autoscaler Trigger)
+
+Simuliert einen viralen Moment / Großevent:
+- Hunderte gleichzeitige Nutzer
+- Massive Foto-Uploads
+- CPU-intensive Registrierungen
 
 ```bash
-# Andere URLs verwenden
-k6 run --env BASE_URL=http://localhost:5173 --env API_URL=http://localhost:3000 loadtest.js
-
-# Mehr oder weniger VUs
-k6 run --vus 50 --duration 2m loadtest.js
+npm run peak
 ```
+
+**Verhalten:**
+| Phase | Dauer | VUs | Beschreibung |
+|-------|-------|-----|--------------|
+| Ramp-up | 30s | 0→50 | Schneller Start |
+| Anstieg | 1m | 50→150 | Starker Anstieg |
+| Peak | 2m | 150→300 | HPA triggern |
+| Extrem | 3m | 300→400 | Cluster Autoscaler triggern |
+| Rückgang | 2m | 400→200 | Langsamer Rückgang |
+| Normal | 1m | 200→50 | Normalisierung |
+| Ende | 30s | 50→0 | Abschluss |
+
+**Erwartetes Scaling:**
+- HPA: Server Pods 2 → 10 → 25
+- Cluster Autoscaler: Neue Worker Nodes bei Bedarf
+
+---
+
+## HPA Konfiguration
+
+| Component | Min Pods | Max Pods | CPU Target | Memory Target |
+|-----------|----------|----------|------------|---------------|
+| **Server** | 2 | 25 | 70% | 80% |
+| **Client** | 1 | 3 | 70% | 80% |
+
+Der Client skaliert selten, da Nginx nur statische Files ausliefert (<5% CPU).
+
+---
 
 ## Monitoring während des Tests
 
-In separaten Terminals:
+### Terminal-Befehle
 
 ```bash
-# HPA-Status beobachten
-kubectl get hpa -w
+# HPA-Status live beobachten
+ssh ubuntu@<SERVER_IP> "sudo /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml get hpa -n party-pic -w"
 
 # Pod-Skalierung beobachten
-kubectl get pods -w
+ssh ubuntu@<SERVER_IP> "sudo /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml get pods -n party-pic -w"
 
-# Detaillierte HPA-Infos
-kubectl describe hpa party-pic-server-application
-
-# Top Pods (CPU/Memory)
-kubectl top pods
+# Node-Skalierung (Cluster Autoscaler)
+ssh ubuntu@<SERVER_IP> "sudo /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml get nodes -w"
 ```
 
-## Grafana Dashboard
+### Prometheus Metriken
 
-Während des Lasttests folgende Metriken in Grafana beobachten:
+```bash
+# Aktuelle Metriken abrufen
+curl http://api.52.7.172.243.nip.io/metrics | grep partypic_
+```
 
-1. **Pod Replicas**: `kube_deployment_status_replicas{deployment=~"party-pic.*"}`
-2. **CPU Usage**: `rate(container_cpu_usage_seconds_total{pod=~"party-pic.*"}[1m])`
-3. **Memory Usage**: `container_memory_working_set_bytes{pod=~"party-pic.*"}`
-4. **Request Rate**: `rate(partypic_http_requests_total[1m])`
-5. **HPA Target**: `kube_horizontalpodautoscaler_status_current_replicas`
+### Grafana Dashboards
 
-## Erwartetes Verhalten
+URL: `http://grafana.52.7.172.243.nip.io`
 
-1. **Ohne Last**: 
-   - Server: 1 Pod (minReplicas)
-   - Client: 2 Pods (minReplicas)
+Wichtige Panels:
+1. **Server Pods (HPA)** - Aktuelle Anzahl Server Pods
+2. **Client Pods (HPA)** - Aktuelle Anzahl Client Pods  
+3. **Pod Scaling Timeline** - Graph über Zeit
+4. **Active Sessions** - Anzahl aktiver Sessions
+5. **Photos Uploaded** - Hochgeladene Fotos
 
-2. **Unter Last (CPU > 70%)**:
-   - HPA erhöht `desiredReplicas`
-   - Neue Pods werden erstellt
-   - Bei Node-Ressourcenengpass: Cluster Autoscaler skaliert Worker-Nodes
+---
 
-3. **Nach Last**:
-   - 5-Minuten Stabilisierungszeit
-   - Graduelle Reduzierung auf minReplicas
-   - Cluster Autoscaler kann überschüssige Nodes entfernen
+## Architektur & Lastverteilung
+
+### Warum Scaling funktioniert ohne Session-Probleme:
+
+1. **JWT-Tokens sind stateless** - Jeder Pod kann Tokens validieren
+2. **Session-Daten in PostgreSQL** - Zentral, nicht im Pod-Memory
+3. **Fotos in S3** - Zentral, nicht auf einem Pod
+4. **Kubernetes Service** - Verteilt Requests automatisch
+
+**Fazit:** Ein User merkt nichts, egal auf welchem Pod er landet!
+
+---
+
+## Entwicklung
+
+### Skripte bauen
+
+```bash
+npm run build
+```
+
+### Manuell ausführen
+
+```bash
+# Mit eigenen Optionen
+k6 run --vus 50 --duration 2m dist/normal-traffic.js
+
+# Andere API URL
+k6 run --env BASE_URL=http://localhost:3000 dist/normal-traffic.js
+```
+
+---
 
 ## Troubleshooting
 
+### "No sessions available"
+Der Peak-Test braucht Sessions zum Beitreten. Die `setup()` Funktion erstellt initial 5 Sessions.
+
 ### HPA skaliert nicht
+- CPU unter 70%? Test generiert nicht genug Last
+- Prüfen: `kubectl describe hpa` für Events
 
-```bash
-# Prüfen ob HPA Metriken bekommt
-kubectl get hpa
-# "TARGETS" sollte Werte zeigen, nicht "<unknown>"
-
-# Prüfen ob metrics-server läuft
-kubectl get pods -n kube-system | grep metrics-server
-
-# HPA Events prüfen
-kubectl describe hpa party-pic-server-application
-```
-
-### Pods erreichen nicht "Running"
-
-```bash
-# Pod-Status prüfen
-kubectl get pods
-kubectl describe pod <pod-name>
-
-# Ressourcen-Limits prüfen
-kubectl top nodes
-```
+### Fehler bei Registrierung
+- Email-Uniqueness? Jeder VU generiert unique Emails
+- DB Connection Pool erschöpft? Mehr Server Pods nötig

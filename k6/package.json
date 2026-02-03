@@ -1,13 +1,12 @@
 {
   "name": "k6-loadtests",
-  "version": "1.0.0",
-  "description": "k6 Load Tests für PartyPic Autoscaling Demo",
-  "main": "dist/loadtest.js",
+  "version": "2.0.0",
+  "description": "k6 Load Tests für PartyPic - Normal & Peak Traffic",
+  "main": "dist/normal-traffic.js",
   "scripts": {
     "build": "webpack",
-    "loadtest": "npm run build && k6 run dist/loadtest.js",
-    "stress": "npm run build && k6 run dist/stress-test.js",
-    "realistic": "npm run build && k6 run dist/realistic-test.js"
+    "normal": "npm run build && k6 run dist/normal-traffic.js",
+    "peak": "npm run build && k6 run dist/peak-traffic.js"
   },
   "keywords": ["k6", "loadtest", "autoscaling"],
   "author": "",
