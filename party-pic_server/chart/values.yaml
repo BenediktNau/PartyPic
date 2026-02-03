@@ -1,12 +1,10 @@
 # Replicas configuration
 replicaCount: 1
-
 # Image configuration
 image:
   repository: ghcr.io/benediktnau/partypic-server
   pullPolicy: Always
-  tag: "sha-e88af542a8bdd3bb6b4afa70b0088db8aa5af48a"
-
+  tag: "sha-3c74ddb43e94de88121f62a447a7ff389f7b6197"
 # Resource Limits (required for HPA)
 resources:
   requests:
@@ -15,7 +13,6 @@ resources:
   limits:
     cpu: "500m"
     memory: "512Mi"
-
 # Horizontal Pod Autoscaler
 autoscaling:
   enabled: true
@@ -23,15 +20,12 @@ autoscaling:
   maxReplicas: 10
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
-
 # App configuration (Non-Sensitive)
 nodeEnv: "production"
 port: "3000"
 s3ForcePathStyle: "false"
-
 # Secret Name (So you can swap the secret source if needed)
 secretName: "party-pic-secrets"
-
 ingress:
   enabled: true
   host: api.52.7.172.243.nip.io
