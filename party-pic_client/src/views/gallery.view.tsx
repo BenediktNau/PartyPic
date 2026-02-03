@@ -66,7 +66,7 @@ function GalleryView({ sessionId }: GalleryViewProps) {
   }
 
   return (
-    <div className="w-full h-full bg-gray-100 overflow-y-auto p-4">
+    <div className="w-full h-full  overflow-y-auto p-4">
       {/* Header mit Refresh-Button */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-gray-800">
