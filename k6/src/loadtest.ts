@@ -19,8 +19,8 @@ const requestDuration = new Trend('request_duration');
 const successfulRequests = new Counter('successful_requests');
 
 // Configuration
-const BASE_URL = __ENV.BASE_URL || 'http://app.100.50.133.182.nip.io';
-const API_URL = __ENV.API_URL || 'http://api.100.50.133.182.nip.io';
+const BASE_URL = __ENV.BASE_URL || 'http://app.52.7.172.243.nip.io';
+const API_URL = __ENV.API_URL || 'http://api.52.7.172.243.nip.io';
 
 // Test user interface
 interface TestUser {

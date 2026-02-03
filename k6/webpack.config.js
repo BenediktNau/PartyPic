@@ -5,6 +5,7 @@ module.exports = {
   entry: {
     'loadtest': './src/loadtest.ts',
     'stress-test': './src/stress-test.ts',
+    'realistic-test': './src/realistic-test.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
