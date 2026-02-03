@@ -19,7 +19,7 @@ ingress:
   className: "nginx"
   annotations: {}
   hosts:
-    - host: app.34.235.233.52.nip.io
+    - host: app.100.50.133.182.nip.io
       paths:
         - path: /
           pathType: Prefix

@@ -13,6 +13,6 @@ s3ForcePathStyle: "false"
 secretName: "party-pic-secrets"
 ingress:
   enabled: true
-  host: api.34.235.233.52.nip.io
+  host: api.100.50.133.182.nip.io
   certManager: false
   tls: false
