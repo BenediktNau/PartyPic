@@ -94,7 +94,7 @@ function AdminPage() {
                   key={element.id}
                   className="border p-4 rounded bg-white shadow-sm flex justify-between text-black flex-row w-full"
                 >
-                  <p className="w-5/6 flex items-center break-words">
+                  <p className="w-5/6 flex items-center wrap-break-words">
                     {element.description}
                   </p>
                   <div className="flex items-center">
