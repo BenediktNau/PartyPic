@@ -303,7 +303,7 @@ resource "aws_autoscaling_group" "rke2_workers" {
 resource "aws_s3_bucket" "partypic_bucket" {
   bucket = var.partypic_s3_bucket_name
 
-  force_destroy = false
+  force_destroy = true
 
   tags = {
     Name        = "PartyPic Storage"
