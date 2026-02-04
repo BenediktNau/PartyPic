@@ -8,7 +8,7 @@ spec:
 
   source:
     repoURL: https://github.com/BenediktNau/PartyPic.git
-    targetRevision: elias
+    targetRevision: master
     path: party-pic_client/chart
 
   destination:
