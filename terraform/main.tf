@@ -445,13 +445,11 @@ resource "null_resource" "sync_manifests" {
       s3_session_token = local.aws_session_token
     })
 
-    partypiclient_ingress = templatefile("${path.module}/manifest/party-pic-client-ingress.yaml.tpl", {
+    partypic_ingress = templatefile("${path.module}/manifest/party-pic-ingress.yaml.tpl", {
       ip = aws_eip.ingress_ip.public_ip
     })
 
-    partypicserver_ingress = templatefile("${path.module}/manifest/party-pic-server-ingress.yaml.tpl", {
-      ip = aws_eip.ingress_ip.public_ip
-    })
+
   }
 
   connection {
@@ -506,13 +504,8 @@ resource "null_resource" "sync_manifests" {
   }
 
   provisioner "file" {
-    content     = self.triggers.partypiclient_ingress
-    destination = "/tmp/partypic-client-ingress.yaml"
-  }
-
-  provisioner "file" {
-    content     = self.triggers.partypicserver_ingress
-    destination = "/tmp/partypic-server-ingress.yaml"
+    content     = self.triggers.partypic_ingress
+    destination = "/tmp/partypic-ingress.yaml"
   }
 
   provisioner "remote-exec" {
