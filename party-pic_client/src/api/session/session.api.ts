@@ -1,4 +1,4 @@
-import type { mission, MissionsResponse } from "../../models/sessions/missions.model.ts"
+import type { MissionsResponse } from "../../models/sessions/missions.model.ts"
 import axios from "../api-client.ts"
 import type { Session } from "../../models/sessions/session.model.ts"
 

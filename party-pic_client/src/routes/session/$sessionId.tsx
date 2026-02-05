@@ -80,7 +80,7 @@ function RouteComponent() {
   const [session,] = useState<Session>({
     sessionId: sessionId,
     sessionSettings: {},
-    sessionMissions: [],
+    sessionMissions: { data: [] },
   });
 
   // Helper to scroll to a specific "page" (0 = Camera, 1 = Main, 2 = Settings)

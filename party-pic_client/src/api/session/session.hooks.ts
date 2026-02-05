@@ -2,7 +2,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { createSession, getSession, setMissionsAsync } from "./session.api"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { mission, MissionsResponse } from "../../models/sessions/missions.model";
+import type { MissionsResponse } from "../../models/sessions/missions.model";
 import { useContext } from "react";
 import SessionContext from "../../utils/contexts/session.context";
 
