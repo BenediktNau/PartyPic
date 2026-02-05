@@ -5,14 +5,25 @@
  * Kein DDoS - alles echte User-Flows, nur halt viele gleichzeitig.
  * 
  * Ziel: Server von 2 auf 25 Pods hochskalieren.
+ *
+ * Nutzung:
+ *   # IP automatisch von AWS holen und Test starten:
+ *   LB_IP=$(aws ec2 describe-addresses --query "Addresses[?Tags[?Key=='Name' && contains(Value,'partypic')]].PublicIp" --output text) && \
+ *   k6 run -e BASE_URL=http://api.$LB_IP.nip.io dist/peak-traffic.js
+ *
+ *   # Oder manuell:
+ *   k6 run -e BASE_URL=http://api.1.2.3.4.nip.io dist/peak-traffic.js
+ *
+ *   # Lokal testen:
+ *   k6 run dist/peak-traffic.js
  */
 
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter, Trend, Rate } from 'k6/metrics';
 
-// Config - IP anpassen!
-const BASE_URL = 'http://api.52.7.172.243.nip.io';
+// URL aus Environment Variable oder Fallback auf localhost
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
 
 // Metriken
 const registrations = new Counter('registrations_success');

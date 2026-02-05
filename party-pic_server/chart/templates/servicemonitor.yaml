@@ -1,16 +1,23 @@
+# =============================================================================
+# PROMETHEUS SERVICE MONITOR
+#
+# Sagt Prometheus wo die Metriken abgeholt werden sollen.
+# Scraped /metrics alle 15 Sekunden.
+# Das "release: prometheus-stack" Label ist wichtig fuer Discovery.
+# =============================================================================
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: party-pic-server-monitor
   labels:
     app: party-pic-server
-    release: prometheus-stack
+    release: prometheus-stack  # Muss zu Prometheus Release passen
 spec:
   selector:
     matchLabels:
       app: party-pic-server
   endpoints:
     - port: http
-      path: /metrics
-      interval: 15s
-      scrapeTimeout: 10s
+      path: /metrics       # Endpoint wo NestJS Metriken liefert
+      interval: 15s        # Scrape-Intervall
+      scrapeTimeout: 10s   # Timeout pro Scrape

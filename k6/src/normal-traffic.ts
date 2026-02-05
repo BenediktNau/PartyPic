@@ -2,15 +2,26 @@
  * normal-traffic.ts
  * 
  * Simuliert normalen Event-Verkehr (Hochzeit, Geburtstag, etc.)
- * Läuft ca. 10 Minuten und testet ob die App stabil bleibt.
+ * Laeuft ca. 10 Minuten und testet ob die App stabil bleibt.
+ *
+ * Nutzung:
+ *   # IP automatisch von AWS holen und Test starten:
+ *   LB_IP=$(aws ec2 describe-addresses --query "Addresses[?Tags[?Key=='Name' && contains(Value,'partypic')]].PublicIp" --output text) && \
+ *   k6 run -e BASE_URL=http://api.$LB_IP.nip.io dist/normal-traffic.js
+ *
+ *   # Oder manuell:
+ *   k6 run -e BASE_URL=http://api.1.2.3.4.nip.io dist/normal-traffic.js
+ *
+ *   # Lokal testen:
+ *   k6 run dist/normal-traffic.js
  */
 
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter, Trend } from 'k6/metrics';
 
-// Config - IP anpassen!
-const BASE_URL = 'http://api.52.7.172.243.nip.io';
+// URL aus Environment Variable oder Fallback auf localhost
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
 
 // Metriken
 const registrations = new Counter('registrations_success');
@@ -30,12 +41,12 @@ export const options = {
       exec: 'organizerFlow',
       startTime: '0s',
     },
-    // Gäste kommen nach und nach
+    // Gaeste kommen nach und nach
     guests_arriving: {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '1m', target: 5 },   // erste Gäste
+        { duration: '1m', target: 5 },   // erste Gaeste
         { duration: '2m', target: 15 },  // mehr kommen
         { duration: '3m', target: 20 },  // volle Party
         { duration: '2m', target: 10 },  // Leute gehen

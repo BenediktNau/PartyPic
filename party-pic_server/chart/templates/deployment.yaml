@@ -1,3 +1,11 @@
+# =============================================================================
+# PARTY-PIC SERVER DEPLOYMENT
+#
+# Kubernetes Deployment fuer das NestJS Backend.
+# - Rolling Updates (kein Downtime)
+# - Liveness/Readiness Probes fuer Health Checks
+# - Secrets werden aus party-pic-secrets geladen
+# =============================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -9,8 +17,8 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      maxSurge: 1        # Max 1 neuer Pod waehrend Update
+      maxUnavailable: 0  # Kein Pod darf fehlen
   selector:
     matchLabels:
       app: party-pic-server
@@ -28,6 +36,7 @@ spec:
               containerPort: 3000
               protocol: TCP
           env:
+            # App-Konfiguration
             - name: NODE_ENV
               value: {{ .Values.nodeEnv | quote }}
             - name: PORT
@@ -78,7 +87,7 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secretName }}
                   key: s3-session-token
-                  optional: true
+                  optional: true  # Optional da lokal nicht noetig
             - name: S3_BUCKET_NAME
               valueFrom:
                 secretKeyRef:

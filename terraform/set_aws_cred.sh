@@ -1,10 +1,26 @@
 #!/usr/bin/env bash
+# =============================================================================
+# Set AWS Credentials Script
+#
+# Schreibt AWS Credentials aus stdin in ~/.aws/credentials.
+# Wird verwendet um temporaere AWS Academy Credentials zu setzen.
+#
+# Nutzung:
+#   cat credentials.txt | ./set_aws_cred.sh
+#   pbpaste | ./set_aws_cred.sh  (macOS)
+#
+# Format der Eingabe (AWS Academy Format):
+#   [default]
+#   aws_access_key_id=AKIA...
+#   aws_secret_access_key=...
+#   aws_session_token=...
+# =============================================================================
 set -euo pipefail
 
-
+# Ziel-Datei (kann ueberschrieben werden)
 TARGET_FILE="${TARGET_FILE:-$HOME/.aws/credentials}"
 
-
+# Eingabe von stdin lesen
 INPUT="$(cat)"
 
 if [[ -z "$INPUT" ]]; then

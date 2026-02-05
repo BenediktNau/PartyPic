@@ -1,33 +1,47 @@
-# Replicas configuration
+# =============================================================================
+# PARTY-PIC SERVER - HELM VALUES
+#
+# Konfiguration fuer das NestJS Backend.
+# Alle sensitiven Werte kommen aus dem K8s Secret (party-pic-secrets).
+# =============================================================================
+
+# Anzahl der Pod-Replikate (wird von HPA ueberschrieben)
 replicaCount: 1
-# Image configuration
+
+# Container Image Konfiguration
 image:
   repository: ghcr.io/benediktnau/partypic-server
-  pullPolicy: Always
+  pullPolicy: Always  # Immer aktuelles Image ziehen
   tag: "sha-3c74ddb43e94de88121f62a447a7ff389f7b6197"
-# Resource Limits (required for HPA)
+
+# Resource Limits (wichtig fuer HPA!)
 resources:
   requests:
-    cpu: "100m"
+    cpu: "100m"      # 0.1 CPU Kerne
     memory: "128Mi"
   limits:
-    cpu: "500m"
+    cpu: "500m"      # 0.5 CPU Kerne
     memory: "512Mi"
+
 # Horizontal Pod Autoscaler
 autoscaling:
   enabled: true
-  minReplicas: 2
-  maxReplicas: 25
-  targetCPUUtilizationPercentage: 70
-  targetMemoryUtilizationPercentage: 80
-# App configuration (Non-Sensitive)
+  minReplicas: 2       # Minimum fuer High Availability
+  maxReplicas: 25      # Maximum bei Last
+  targetCPUUtilizationPercentage: 70     # Scale-Up bei 70% CPU
+  targetMemoryUtilizationPercentage: 80  # Scale-Up bei 80% Memory
+
+# App-Konfiguration (nicht-sensitiv)
 nodeEnv: "production"
 port: "3000"
 s3ForcePathStyle: "false"
-# Secret Name (So you can swap the secret source if needed)
+
+# Name des K8s Secrets mit den Credentials
 secretName: "party-pic-secrets"
+
+# Ingress-Konfiguration
 ingress:
   enabled: true
-  host: api.52.7.172.243.nip.io
-  certManager: false
+  host: api.52.7.172.243.nip.io  # API-Endpoint
+  certManager: false              # Kein TLS fuer Demo
   tls: false

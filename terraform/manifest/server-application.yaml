@@ -1,3 +1,9 @@
+# =============================================================================
+# PARTY-PIC SERVER - ArgoCD Application
+#
+# ArgoCD deployed und synced den Server aus dem Git-Repo.
+# Helm Chart liegt unter party-pic_server/chart/
+# =============================================================================
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -17,7 +23,7 @@ spec:
 
   syncPolicy:
     automated:
-      prune: true
-      selfHeal: true
+      prune: true      # Loescht Ressourcen die nicht mehr im Git sind
+      selfHeal: true   # Korrigiert manuelle Aenderungen automatisch
     syncOptions:
       - CreateNamespace=true

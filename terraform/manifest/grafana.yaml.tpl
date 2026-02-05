@@ -1,5 +1,15 @@
 # =============================================================================
 # GRAFANA - Visualization & Dashboards
+#
+# Grafana wird als HelmChart deployed und enthaelt:
+# - Admin-Credentials (aus terraform.tfvars)
+# - Datasources: Prometheus (Metriken) + Loki (Logs)
+# - Vorkonfigurierte Dashboards (embedded als JSON)
+#
+# Zugang: grafana.<lb_ip>.nip.io (Login: admin / aus tfvars)
+#
+# HINWEIS: Diese Datei ist sehr gross (~3000 Zeilen) weil die
+# Dashboard-JSONs direkt eingebettet sind. Nicht manuell editieren!
 # =============================================================================
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
@@ -13,6 +23,7 @@ spec:
   targetNamespace: ${monitoring_namespace}
   createNamespace: true
   valuesContent: |-
+    # Admin-Credentials (aus terraform.tfvars)
     adminUser: admin
     adminPassword: "${grafana_admin_password}"
 
@@ -34,7 +45,7 @@ spec:
       periodSeconds: 10
       timeoutSeconds: 3
       
-    # Datasources
+    # Datasources - Prometheus fuer Metriken, Loki fuer Logs
     datasources:
       datasources.yaml:
         apiVersion: 1

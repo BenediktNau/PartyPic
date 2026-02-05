@@ -1,6 +1,15 @@
 #!/bin/bash
-
-# env.sh - Liest AWS Credentials aus ~/.aws/credentials oder Umgebungsvariablen
+# =============================================================================
+# AWS Credentials External Data Source
+#
+# Wird von Terraform als external data source aufgerufen.
+# Liest AWS Credentials aus Umgebungsvariablen oder ~/.aws/credentials.
+# Gibt JSON zurueck das Terraform parsen kann.
+#
+# Reihenfolge:
+# 1. Umgebungsvariablen (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+# 2. ~/.aws/credentials Datei (default Profil)
+# =============================================================================
 
 CRED_FILE="$HOME/.aws/credentials"
 

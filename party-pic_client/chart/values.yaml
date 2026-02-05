@@ -1,16 +1,23 @@
-# Replicas configuration
+# =============================================================================
+# PARTY-PIC CLIENT - HELM VALUES
+#
+# Konfiguration fuer das React Frontend (Nginx).
+# Das Ingress routet sowohl Frontend als auch API-Calls.
+# =============================================================================
+
+# Anzahl der Pod-Replikate
 replicaCount: 2
 
-# Image configuration
+# Container Image Konfiguration
 image:
   repository: ghcr.io/benediktnau/partypic-client
   pullPolicy: Always
   tag: "sha-c66415722ec2e0596f1a48819adc5af36b1dd83d"
 
-# Resource Limits (required for HPA)
+# Resource Limits (wichtig fuer HPA)
 resources:
   requests:
-    cpu: "50m"
+    cpu: "50m"       
     memory: "64Mi"
   limits:
     cpu: "200m"
@@ -24,17 +31,19 @@ autoscaling:
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
 
-# App configuration (Non-Sensitive)
+# App-Konfiguration
 nodeEnv: "production"
 port: "80"
 s3ForcePathStyle: "false"
-apiadresse: "http://api.ip.nip.io"
+apiadresse: "http://api.ip.nip.io"  # Wird vom Frontend verwendet
 
+# Service-Konfiguration
 service:
   type: ClusterIP
   port: 80
   targetPort: 80
 
+# Ingress-Konfiguration (routet Frontend + API)
 ingress:
   enabled: true
   className: "nginx"
@@ -42,11 +51,12 @@ ingress:
   hosts:
     - host: app.52.7.172.243.nip.io
       paths:
+        # 1. Frontend-Routen (alles was nicht API ist)
         - path: /
           pathType: Prefix
           serviceName: party-pic-client
           servicePort: 80
-        # 2. Die Umleitungen zum Backend (API)
+        # 2. API-Routen -> werden zum Backend weitergeleitet
         - path: /auth
           pathType: Prefix
           serviceName: party-pic-server

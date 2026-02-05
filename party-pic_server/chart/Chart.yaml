@@ -1,3 +1,9 @@
+# =============================================================================
+# PARTY-PIC SERVER HELM CHART
+#
+# Helm Chart fuer das NestJS Backend.
+# Deployed Deployment, Service, Ingress, HPA, PDB und ServiceMonitor.
+# =============================================================================
 apiVersion: v2
 name: party-pic-server
 description: A Helm chart for the party pic server

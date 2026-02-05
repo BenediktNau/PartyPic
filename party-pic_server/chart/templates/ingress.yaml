@@ -1,18 +1,24 @@
+# =============================================================================
+# SERVER INGRESS (Optional)
+#
+# Macht den Server direkt unter api.<ip>.nip.io erreichbar.
+# Alternativ wird der Traffic ueber den Client-Ingress geroutet.
+# =============================================================================
 {{- if .Values.ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: party-pic-server-ingress
   annotations:
-    # We can still hardcode nginx, or make it configurable later
     kubernetes.io/ingress.class: nginx
     {{- if .Values.ingress.certManager }}
+    # Automatische TLS-Zertifikate mit cert-manager
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     {{- end }}
 spec:
   ingressClassName: nginx
   rules:
-    - host: {{ .Values.ingress.host | quote }} # <--- THIS is what you want to edit in UI
+    - host: {{ .Values.ingress.host | quote }}
       http:
         paths:
           - path: /
@@ -23,6 +29,7 @@ spec:
                 port:
                   number: 80 
   {{- if .Values.ingress.tls }}
+  # TLS-Konfiguration (wenn aktiviert)
   tls:
     - hosts:
         - {{ .Values.ingress.host | quote }}
