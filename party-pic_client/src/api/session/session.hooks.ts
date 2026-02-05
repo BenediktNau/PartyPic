@@ -2,7 +2,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { createSession, getSession, setMissionsAsync } from "./session.api"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { mission } from "../../models/sessions/missions.model";
+import type { mission, MissionsResponse } from "../../models/sessions/missions.model";
 import { useContext } from "react";
 import SessionContext from "../../utils/contexts/session.context";
 
@@ -30,10 +30,9 @@ export const useSetMissions = () => {
     const { sessionId } = useContext(SessionContext);
     const queryClient = useQueryClient();
 
-    return useMutation<any, Error, mission[]>({
-        mutationFn: async (missions: mission[]) => {
+    return useMutation<any, Error, MissionsResponse>({
+        mutationFn: async (missions: MissionsResponse) => {
             if (!sessionId) throw new Error("No Session ID available");
-            console.log("Setting Missions for ID:", sessionId);
             // Wir übergeben die sessionId hier explizit an die API
             return await setMissionsAsync(missions, sessionId);
         },

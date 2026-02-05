@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { MetricsService } from '../metrics/metrics.service';
+import { missions } from '../models/sessions/missions.model';
 
 @Injectable()
 export class SessionsDbService {
@@ -35,7 +36,7 @@ export class SessionsDbService {
       VALUES ($1, $2, $3)
       RETURNING *; 
     `;
-    const values = [userId, {}, []];
+    const values = [userId, {}, {data: []}];
     const result = await this.pool.query(queryText, values);
     
     this.metricsService.incrementTotalSessions();
@@ -57,7 +58,7 @@ export class SessionsDbService {
     return result.rows;
   }
 
-  async updateMissions(sessionId: string, missions: any[]) {
+  async updateMissions(sessionId: string, missions: missions) {
     const queryText = `UPDATE sessions SET missions = $2 WHERE id = $1 RETURNING *;`;
     const values = [sessionId, JSON.stringify(missions)]; 
     const result = await this.pool.query(queryText, values);

@@ -20,21 +20,20 @@ function AdminPage() {
     const newMission: mission = {
       id: crypto.randomUUID(),
       description: missionText,
-    };
+    }; 
 
-    const currentMissions = Session?.sessionMissions || [];
-    saveMissions([...currentMissions, newMission]);
-
+    const currentMissions = Session?.sessionMissions || {data: []};
+    saveMissions({data: [...currentMissions.data, newMission]});
     e.currentTarget.reset();
   };
 
   // 2. Remove
   const handleRemoveMission = (id: string) => {
     if (!!Session?.sessionMissions) {
-      const updatedMissions = Session.sessionMissions.filter(
-        (e) => e.id !== id
+      const updatedMissions = Session.sessionMissions.data.filter(
+        (e) => e.id !== id,
       );
-      saveMissions(updatedMissions);
+      saveMissions({data: updatedMissions});
     }
   };
 
@@ -61,8 +60,8 @@ function AdminPage() {
         description: line,
       }));
 
-      const currentMissions = Session?.sessionMissions || [];
-      saveMissions([...currentMissions, ...newMissions]);
+      const currentMissions = Session?.sessionMissions || {data: []};
+      saveMissions({data: [...currentMissions.data, ...newMissions]});
     };
 
     reader.readAsText(file);
@@ -88,8 +87,8 @@ function AdminPage() {
 
           {/* Mission List */}
           <div className="space-y-2 max-h-[400px] overflow-y-auto overflow-x-clip rounded">
-            {Session?.sessionMissions && Session?.sessionMissions.length > 0 ? (
-              Session.sessionMissions.map((element: mission) => (
+            {Session?.sessionMissions && Session?.sessionMissions.data.length > 0 ? (
+              Session.sessionMissions.data.map((element: mission) => (
                 <div
                   key={element.id}
                   className="border p-4 rounded bg-white shadow-sm flex justify-between text-black flex-row w-full"

@@ -1,4 +1,4 @@
-import type { mission } from "../../models/sessions/missions.model.ts"
+import type { mission, MissionsResponse } from "../../models/sessions/missions.model.ts"
 import axios from "../api-client.ts"
 import type { Session } from "../../models/sessions/session.model.ts"
 
@@ -22,7 +22,7 @@ export const getSession = async (sessionId : string) => {
 }
 
 
-export const setMissionsAsync = async (missions: mission[], sessionId: string) => {
+export const setMissionsAsync = async (missions: MissionsResponse, sessionId: string) => {
     // sessionId wird als Argument übergeben
     const response = await axios.post("/sessions/setmissions", { missions, sessionId })
     return response.data

@@ -186,7 +186,7 @@ function RouteComponent() {
               type="text"
               name="username"
               placeholder="Dein Name"
-              className="w-full p-2 rounded border border-gray-300 mb-4 text-black"
+              className="w-full p-2 rounded border border-gray-300 mb-4 text-white"
               required
             />
             <button

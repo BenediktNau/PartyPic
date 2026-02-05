@@ -16,6 +16,7 @@ import { MetricsService } from '../metrics/metrics.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import * as sessionsModel from '../models/sessions/sessions.model';
 import { session_User } from '../models/sessions/session_User.model';
+import { missions } from '../models/sessions/missions.model';
 
 interface CreateSessionDto {
   user_id: string;
@@ -67,7 +68,7 @@ export class SessionsController {
   @UseGuards(JwtAuthGuard)
   @Post('setmissions')
   async setMissions(
-    @Body() body: { missions: {}[]; sessionId: string },
+    @Body() body: { missions: missions; sessionId: string },
     @Request() req,
   ) {
     const { sessionId, missions } = body;
