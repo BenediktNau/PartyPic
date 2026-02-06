@@ -4,7 +4,7 @@ replicaCount: 1
 image:
   repository: ghcr.io/benediktnau/partypic-client
   pullPolicy: Always
-  tag: "sha-7456a333a96338c50f612e473c5adfbfa1aac314"
+  tag: "sha-615f23381162f8fc536f9ff732d0a1340bd4e7b5"
 # App configuration (Non-Sensitive)
 nodeEnv: "production"
 port: "80"
