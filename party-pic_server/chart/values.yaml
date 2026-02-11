@@ -15,18 +15,18 @@ image:
 # Resource Limits (wichtig fuer HPA!)
 resources:
   requests:
-    cpu: "100m" # 0.1 CPU Kerne
+    cpu: "250m"
     memory: "128Mi"
   limits:
-    cpu: "500m" # 0.5 CPU Kerne
+    cpu: "500m" 
     memory: "512Mi"
 # Horizontal Pod Autoscaler
 autoscaling:
   enabled: true
   minReplicas: 2 # Minimum fuer High Availability
   maxReplicas: 25 # Maximum bei Last
-  targetCPUUtilizationPercentage: 70 # Scale-Up bei 70% CPU
-  targetMemoryUtilizationPercentage: 80 # Scale-Up bei 80% Memory
+  targetCPUUtilizationPercentage: 60 # Scale-Up bei 60% CPU
+  targetMemoryUtilizationPercentage: 70 # Scale-Up bei 70% Memory
 # App-Konfiguration (nicht-sensitiv)
 nodeEnv: "production"
 port: "3000"

@@ -41,20 +41,20 @@ spec:
   behavior:
     # Scale-Down: Langsam und vorsichtig
     scaleDown:
-      stabilizationWindowSeconds: 60  # 60s warten nach letzter Aenderung
+      stabilizationWindowSeconds: 120  # 120s warten
       policies:
         - type: Percent
-          value: 50       # Max 50% der Pods entfernen
+          value: 25       # Max 25% entfernen 
           periodSeconds: 60
     # Scale-Up: Schnell reagieren
     scaleUp:
-      stabilizationWindowSeconds: 0   # Sofort skalieren
+      stabilizationWindowSeconds: 0
       policies:
-        - type: Percent
-          value: 100      # Pods verdoppeln erlaubt
-          periodSeconds: 15
-        - type: Pods
-          value: 4        # Oder max 4 Pods hinzufuegen
-          periodSeconds: 15
-      selectPolicy: Max   # Groessere Policy waehlen
+      - type: Percent
+        value: 100      # Verdoppeln bei Last
+        periodSeconds: 15
+      - type: Pods
+        value: 4        # Oder max 4 Pods hinzufügen
+        periodSeconds: 15
+      selectPolicy: Max   # Aggressivste Policy wählen
 {{- end }}
