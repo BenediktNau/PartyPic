@@ -1,372 +1,260 @@
-/*
- * peak-traffic.ts
+/**
+ * k6 Lasttest: Peak Traffic Simulation
  * 
- * Stress-Test um HPA und Cluster Autoscaler zu triggern.
- * Kein DDoS - alles echte User-Flows, nur halt viele gleichzeitig.
+ * Simuliert realistisches Benutzerverhalten mit:
+ * - 20 Sessions
+ * - 20-30 User pro Session (insgesamt ~500 User)
+ * - Menschliche Reaktionszeiten und Tippgeschwindigkeiten
+ * - Registrierung -> Login -> Session erstellen -> Bilder hochladen -> Galerie anschauen
  * 
- * Ziel: Server von 2 auf 25 Pods hochskalieren.
- *
- * Nutzung:
- *   # IP automatisch von AWS holen und Test starten:
- *   LB_IP=$(aws ec2 describe-addresses --query "Addresses[?Tags[?Key=='Name' && contains(Value,'partypic')]].PublicIp" --output text) && \
- *   k6 run -e BASE_URL=http://api.$LB_IP.nip.io dist/peak-traffic.js
- *
- *   # Oder manuell:
- *   k6 run -e BASE_URL=http://api.1.2.3.4.nip.io dist/peak-traffic.js
- *
- *   # Lokal testen:
- *   k6 run dist/peak-traffic.js
+ * USAGE:
+ * ------
+ * 1. Hole die Ingress-URL aus AWS:
+ *    export APP_URL=$(kubectl get ingress party-pic-ingress -n default -o jsonpath='{.spec.rules[0].host}')
+ *    echo "http://$APP_URL"
+ * 
+ * 2. Fuehre das Skript aus:
+ *    cd k6/
+ *    APP_URL=http://app.<ip>.nip.io npm run peak
+ *    
+ *    ODER mit kubectl-URL:
+ *    APP_URL=$(kubectl get ingress party-pic-ingress -n default -o jsonpath='{.spec.rules[0].host}' | xargs -I {} echo "http://{}") npm run peak
  */
 
+import { sleep } from 'k6';
+import { Options } from 'k6/options';
 import http from 'k6/http';
-import { check, sleep } from 'k6';
-import { Counter, Trend, Rate } from 'k6/metrics';
+import {
+  generateUser,
+  registerUser,
+  loginUser,
+  createSession,
+  getSession,
+  initUpload,
+  uploadImage,
+  finalizeUpload,
+  getGallery,
+  generateDummyImage,
+  humanThinkTime,
+  typingDelay,
+  registerSessionUser,
+  sendHeartbeat,
+  User,
+  Session,
+} from './helpers';
 
-// URL aus Environment Variable oder Fallback auf localhost
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
-
-// Metriken
-const registrations = new Counter('registrations_success');
-const logins = new Counter('logins_success');
-const sessionsCreated = new Counter('sessions_created');
-const photosUploaded = new Counter('photos_uploaded');
-const heartbeats = new Counter('heartbeats_sent');
-const responseTime = new Trend('response_time_ms');
-const errorRate = new Rate('error_rate');
-
-export const options = {
-  scenarios: {
-    // User Journey - schnell durchlaufen
-    ramp_up: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      stages: [
-        { duration: '30s', target: 50 },
-        { duration: '1m', target: 150 },
-        { duration: '2m', target: 300 },  // ab hier sollte HPA reagieren
-        { duration: '3m', target: 400 },  // maximale Last
-        { duration: '2m', target: 200 },
-        { duration: '1m', target: 50 },
-        { duration: '30s', target: 0 },
-      ],
-      exec: 'userFlow',
-    },
-    // Viele Sessions erstellen (CPU-lastig wegen bcrypt)
-    session_creators: {
-      executor: 'constant-arrival-rate',
-      rate: 10,
-      timeUnit: '1s',
-      duration: '8m',
-      preAllocatedVUs: 50,
-      maxVUs: 100,
-      exec: 'createSessionFlow',
-      startTime: '30s',
-    },
-    // Foto-Uploads (I/O lastig)
-    photo_uploaders: {
-      executor: 'constant-arrival-rate',
-      rate: 20,
-      timeUnit: '1s',
-      duration: '7m',
-      preAllocatedVUs: 100,
-      maxVUs: 200,
-      exec: 'photoUploadFlow',
-      startTime: '1m',
-    },
-  },
+// k6 Test-Konfiguration
+export const options: Options = {
+  stages: [
+    { duration: '2m', target: 50 },   // Langsamer Start
+    { duration: '3m', target: 150 },  // Ramp-Up
+    { duration: '3m', target: 300 },  // Peak
+    { duration: '2m', target: 0 },    // Ramp-Down
+  ],
   thresholds: {
-    http_req_failed: ['rate<0.10'],     // unter Last akzeptieren wir mehr Fehler
-    http_req_duration: ['p(95)<5000'],
-    error_rate: ['rate<0.15'],
+    http_req_duration: ['p(95)<3000'], // 95% der Requests unter 3s
+    http_req_failed: ['rate<0.10'],    // Fehlerrate unter 10%
   },
 };
 
-// Pool von Sessions für die Photo-Uploader
-const sessions: string[] = [];
+// Globale Variablen fuer Session-Verwaltung
+const SESSIONS: Session[] = [];
+const SESSION_COUNT = 20;
 
-// --- Helper ---
+export function setup() {
+  const baseUrl = __ENV.APP_URL || 'http://localhost:3000';
+  
+  console.log('Starting Peak Traffic Simulation');
+  console.log('Target URL: ' + baseUrl);
+  console.log('Creating ' + SESSION_COUNT + ' sessions...');
+  console.log('');
+  
+  // Test connectivity first
+  console.log('Testing connectivity to: ' + baseUrl);
+  const testResponse = http.get(baseUrl);
+  console.log('Base URL test - Status: ' + testResponse.status);
+  console.log('');
 
-function generateEmail(): string {
-  const vu = __VU || 0;
-  return `peak_${vu}_${Date.now()}_${Math.random().toString(36).substring(7)}@load.test`;
+  // Erstelle 20 Sessions
+  for (let i = 0; i < SESSION_COUNT; i++) {
+    const admin = generateUser(`admin_session${i}`);
+    
+    if (registerUser(baseUrl, admin)) {
+      sleep(0.5);
+      const token = loginUser(baseUrl, admin);
+      
+      if (token) {
+        sleep(0.5);
+        const session = createSession(
+          baseUrl,
+          token
+        );
+        
+        if (session) {
+          SESSIONS.push(session);
+          console.log('Session ' + (i + 1) + ' created: ' + session.id);
+        } else {
+          console.log('Session creation failed for admin ' + (i + 1));
+        }
+      } else {
+        console.log('Login failed for admin ' + (i + 1));
+      }
+    } else {
+      console.log('Registration failed for admin ' + (i + 1));
+    }
+    
+    sleep(0.5);
+  }
+
+  console.log('Setup complete: ' + SESSIONS.length + ' sessions ready');
+  
+  if (SESSIONS.length === 0) {
+    console.error('FATAL: No sessions were created! Check backend connectivity.');
+  }
+  
+  return {
+    baseUrl,
+    sessions: SESSIONS,
+  };
 }
 
-function getHeaders(token?: string): { [key: string]: string } {
-  const headers: { [key: string]: string } = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return headers;
+export default function (data: any) {
+  const baseUrl = data.baseUrl;
+  const sessions = data.sessions;
+
+  if (!sessions || sessions.length === 0) {
+    console.error('No sessions available! Aborting.');
+    return;
+  }
+
+  // Waehle zufaellige Session
+  const session = sessions[Math.floor(Math.random() * sessions.length)];
+  
+  // Simuliere Benutzerflow
+  userJourneyPeak(baseUrl, session);
 }
 
-function generateSmallPhoto(): string {
-  return 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-}
+/**
+ * Simuliert Peak-Benutzer-Journey mit realistischen Delays
+ */
+function userJourneyPeak(baseUrl: string, session: Session) {
+  const user = generateUser('peak');
 
-function getRandomSession(): string | null {
-  if (sessions.length === 0) return null;
-  return sessions[Math.floor(Math.random() * sessions.length)];
-}
+  // 1. REGISTRIERUNG (simuliere Formular-Ausfüllen)
+  sleep(humanThinkTime()); // Nutzer denkt nach
+  sleep(typingDelay(user.email.length)); // Tippt Email
+  sleep(0.5); // Kurze Pause
+  sleep(typingDelay(user.username.length)); // Tippt Username
+  sleep(0.5);
+  sleep(typingDelay(12)); // Tippt Passwort (~12 Zeichen)
+  
+  const registered = registerUser(baseUrl, user);
+  if (!registered) {
+    console.log('Registration failed for ' + user.email);
+    return;
+  }
+  
+  sleep(humanThinkTime()); // Reaktionszeit nach Registrierung
 
-// --- User Flow (schnell) ---
+  // 2. LOGIN
+  sleep(typingDelay(user.email.length)); // Email eingeben
+  sleep(0.3);
+  sleep(typingDelay(12)); // Passwort eingeben
+  
+  const token = loginUser(baseUrl, user);
+  if (!token) {
+    console.log('Login failed');
+    return;
+  }
+  
+  sleep(humanThinkTime()); // Nach Login kurz warten
 
-export function userFlow() {
-  const email = generateEmail();
-  const password = 'LoadTest2024!';
-  const userName = `User_${__VU}_${__ITER}`;
-
-  // Register
-  const registerRes = http.post(
-    `${BASE_URL}/auth/register`,
-    JSON.stringify({ name: userName, email, password }),
-    { headers: getHeaders(), timeout: '10s' }
-  );
-
-  const regOk = check(registerRes, { 'register': (r) => r.status === 201 });
-  errorRate.add(!regOk);
-  if (regOk) {
-    registrations.add(1);
-    responseTime.add(registerRes.timings.duration);
+  // 3. ALS SESSION-USER REGISTRIEREN (fuer Online-Status)
+  const sessionUserId = registerSessionUser(baseUrl, user.username, session.id);
+  if (sessionUserId) {
+    user.sessionUserId = sessionUserId;
+    sendHeartbeat(baseUrl, sessionUserId); // Initial Heartbeat
   }
   sleep(0.5);
 
-  // Login
-  const loginRes = http.post(
-    `${BASE_URL}/auth/login`,
-    JSON.stringify({ email, password }),
-    { headers: getHeaders(), timeout: '10s' }
-  );
+  // 4. SESSION ABRUFEN
+  getSession(baseUrl, session.id);
+  sleep(1 + Math.random() * 2); // Schaut sich Session an
+  
+  // Heartbeat waehrend Aktivitaet
+  if (sessionUserId) sendHeartbeat(baseUrl, sessionUserId);
 
-  let token: string | null = null;
-  const loginOk = check(loginRes, { 'login': (r) => r.status === 201 });
-  errorRate.add(!loginOk);
-  if (loginOk) {
-    logins.add(1);
-    responseTime.add(loginRes.timings.duration);
-    try {
-      token = JSON.parse(loginRes.body as string).access_token;
-    } catch { /* ignore */ }
-  }
-  sleep(0.3);
+  // 5. GALERIE LADEN (vor Upload)
+  getGallery(baseUrl, session.id);
+  sleep(1 + Math.random()); // Schaut sich Galerie an
+  
+  // Heartbeat waehrend Aktivitaet
+  if (sessionUserId) sendHeartbeat(baseUrl, sessionUserId);
 
-  // Session beitreten falls vorhanden
-  const sessionId = getRandomSession();
-  if (sessionId && token) {
-    const joinRes = http.post(
-      `${BASE_URL}/sessions/registerSessionUser`,
-      JSON.stringify({ session_id: sessionId, user_name: userName }),
-      { headers: getHeaders(token), timeout: '10s' }
+  // 6. BILDER HOCHLADEN (2-4 Bilder)
+  const imageCount = 2 + Math.floor(Math.random() * 3); // 2-4 Bilder
+  
+  for (let i = 0; i < imageCount; i++) {
+    sleep(2 + Math.random() * 3); // "Bild machen" dauert 2-5s
+    
+    // Heartbeat waehrend Upload
+    if (sessionUserId) sendHeartbeat(baseUrl, sessionUserId);
+    
+    const filename = `photo_${Date.now()}_${i}.jpg`;
+    const imageSize = 100; // 100KB
+    const imageData = generateDummyImage(imageSize);
+    
+    const uploadData = initUpload(
+      baseUrl,
+      session.id,
+      'image/jpeg'
     );
-    check(joinRes, { 'join': (r) => r.status === 201 });
-    sleep(0.2);
-
-    // Paar schnelle Aktionen
-    for (let i = 0; i < 3; i++) {
-      http.post(
-        `${BASE_URL}/sessions/heartbeat`,
-        JSON.stringify({ sessionId }),
-        { headers: getHeaders(token), timeout: '5s' }
-      );
-      heartbeats.add(1);
-      sleep(0.2);
-
-      http.get(`${BASE_URL}/pictures/session?session_id=${sessionId}`, {
-        headers: getHeaders(token),
-        timeout: '10s',
-      });
+    
+    if (uploadData && uploadData.uploadUrl && uploadData.key) {
       sleep(0.3);
-    }
-  }
-}
-
-// --- Session erstellen (CPU-lastig) ---
-
-export function createSessionFlow() {
-  const email = generateEmail();
-  const password = 'LoadTest2024!';
-  const userName = `Creator_${__VU}_${__ITER}`;
-
-  // Register (bcrypt = CPU)
-  const registerRes = http.post(
-    `${BASE_URL}/auth/register`,
-    JSON.stringify({ name: userName, email, password }),
-    { headers: getHeaders(), timeout: '15s' }
-  );
-
-  if (!check(registerRes, { 'creator reg': (r) => r.status === 201 })) {
-    errorRate.add(true);
-    return;
-  }
-  registrations.add(1);
-  sleep(0.3);
-
-  // Login (bcrypt.compare = CPU)
-  const loginRes = http.post(
-    `${BASE_URL}/auth/login`,
-    JSON.stringify({ email, password }),
-    { headers: getHeaders(), timeout: '15s' }
-  );
-
-  if (!check(loginRes, { 'creator login': (r) => r.status === 201 })) {
-    errorRate.add(true);
-    return;
-  }
-  logins.add(1);
-
-  let token: string;
-  try {
-    token = JSON.parse(loginRes.body as string).access_token;
-  } catch { return; }
-  sleep(0.2);
-
-  // Session erstellen
-  const sessionRes = http.post(
-    `${BASE_URL}/sessions/create`,
-    JSON.stringify({
-      settings: { name: `Event_${Date.now()}`, description: 'Load Test' },
-      missions: [
-        { title: 'Test 1', description: 'desc' },
-        { title: 'Test 2', description: 'desc' },
-      ],
-    }),
-    { headers: getHeaders(token), timeout: '10s' }
-  );
-
-  if (check(sessionRes, { 'session': (r) => r.status === 201 })) {
-    sessionsCreated.add(1);
-    try {
-      const data = JSON.parse(sessionRes.body as string);
-      if (data.id) {
-        sessions.push(data.id);
-        if (sessions.length > 100) sessions.shift(); // nicht zu viele speichern
+      
+      if (uploadImage(uploadData.uploadUrl, imageData)) {
+        sleep(0.3);
+        
+        finalizeUpload(
+          baseUrl,
+          user.username,
+          session.id,
+          uploadData.key,
+          filename,
+          imageSize * 1024,
+          'image/jpeg'
+        );
+        console.log('User uploaded image ' + (i + 1) + '/' + imageCount);
       }
-    } catch { /* ignore */ }
-  } else {
-    errorRate.add(true);
-  }
-}
-
-// --- Foto Upload (I/O lastig) ---
-
-export function photoUploadFlow() {
-  const sessionId = getRandomSession();
-  if (!sessionId) {
-    sleep(1);
-    return;
-  }
-
-  const userName = `Uploader_${__VU}_${__ITER}`;
-
-  // Init
-  const initRes = http.post(
-    `${BASE_URL}/pictures/init-upload`,
-    JSON.stringify({
-      session_id: sessionId,
-      original_filename: `peak_${Date.now()}.jpg`,
-      mimetype: 'image/jpeg',
-      u_name: userName,
-    }),
-    { headers: getHeaders(), timeout: '10s' }
-  );
-
-  if (!check(initRes, { 'init': (r) => r.status === 201 })) {
-    errorRate.add(true);
-    return;
-  }
-
-  let uploadUrl: string, pictureId: string;
-  try {
-    const data = JSON.parse(initRes.body as string);
-    uploadUrl = data.uploadUrl;
-    pictureId = data.pictureId;
-  } catch {
-    errorRate.add(true);
-    return;
-  }
-
-  // S3
-  const s3Res = http.put(uploadUrl, generateSmallPhoto(), {
-    headers: { 'Content-Type': 'image/jpeg' },
-    timeout: '15s',
-  });
-
-  if (!check(s3Res, { 's3': (r) => r.status === 200 })) {
-    errorRate.add(true);
-    return;
-  }
-
-  // Finalize
-  const finalRes = http.post(
-    `${BASE_URL}/pictures/finalize-upload`,
-    JSON.stringify({ pictureId }),
-    { headers: getHeaders(), timeout: '10s' }
-  );
-
-  if (check(finalRes, { 'finalize': (r) => r.status === 201 })) {
-    photosUploaded.add(1);
-    responseTime.add(initRes.timings.duration + finalRes.timings.duration);
-  } else {
-    errorRate.add(true);
-  }
-}
-
-export default function () {
-  // nicht verwendet
-}
-
-// --- Setup: ein paar Sessions vorab erstellen ---
-
-export function setup() {
-  console.log('=== PEAK TRAFFIC TEST ===');
-  console.log('Ziel: 2 -> 25 Pods');
-
-  const email = `setup_${Date.now()}@load.test`;
-  const password = 'LoadTest2024!';
-
-  const regRes = http.post(
-    `${BASE_URL}/auth/register`,
-    JSON.stringify({ name: 'Setup', email, password }),
-    { headers: getHeaders() }
-  );
-  if (regRes.status !== 201) return { sessions: [] };
-
-  const loginRes = http.post(
-    `${BASE_URL}/auth/login`,
-    JSON.stringify({ email, password }),
-    { headers: getHeaders() }
-  );
-  if (loginRes.status !== 201) return { sessions: [] };
-
-  let token: string;
-  try {
-    token = JSON.parse(loginRes.body as string).access_token;
-  } catch { return { sessions: [] }; }
-
-  // 5 Sessions erstellen
-  const initialSessions: string[] = [];
-  for (let i = 0; i < 5; i++) {
-    const res = http.post(
-      `${BASE_URL}/sessions/create`,
-      JSON.stringify({
-        settings: { name: `Init_${i}`, description: 'Setup' },
-        missions: [{ title: 'Test', description: 'test' }],
-      }),
-      { headers: getHeaders(token) }
-    );
-
-    if (res.status === 201) {
-      try {
-        const data = JSON.parse(res.body as string);
-        if (data.id) {
-          initialSessions.push(data.id);
-          sessions.push(data.id);
-        }
-      } catch { /* ignore */ }
+      
+      sleep(1 + Math.random());
+    } else {
+      console.log('Init upload failed, skipping image');
     }
   }
 
-  console.log(`${initialSessions.length} Sessions erstellt`);
-  return { sessions: initialSessions };
+  // 7. GALERIE NOCHMAL LADEN (nach Uploads)
+  sleep(humanThinkTime());
+  if (sessionUserId) sendHeartbeat(baseUrl, sessionUserId);
+  
+  getGallery(baseUrl, session.id);
+  
+  // 8. DURCH GALERIE SCROLLEN
+  sleep(3 + Math.random() * 5); // 3-8 Sekunden Galerie anschauen
+  if (sessionUserId) sendHeartbeat(baseUrl, sessionUserId);
+  
+  // 9. NOCHMAL GALERIE REFRESHEN
+  if (Math.random() > 0.5) { // 50% Chance
+    sleep(humanThinkTime());
+    getGallery(baseUrl, session.id);
+    sleep(2 + Math.random() * 3);
+    if (sessionUserId) sendHeartbeat(baseUrl, sessionUserId);
+  }
 }
 
-export function teardown() {
-  console.log('=== TEST BEENDET ===');
+export function teardown(data: any) {
+  console.log('Normal Traffic Test complete');
+  console.log('Tested ' + data.sessions.length + ' sessions');
 }
+

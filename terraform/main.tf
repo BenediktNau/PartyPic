@@ -391,8 +391,9 @@ resource "aws_db_parameter_group" "partypic_params" {
   family = "postgres16"
 
   parameter {
-    name  = "max_connections"
-    value = "600"
+    name         = "max_connections"
+    value        = "600"
+    apply_method = "pending-reboot"
   }
 
   tags = {

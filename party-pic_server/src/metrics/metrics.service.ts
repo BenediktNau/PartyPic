@@ -5,8 +5,8 @@ import {
   METRIC_HTTP_REQUESTS_TOTAL,
   METRIC_ACTIVE_SESSIONS, 
   METRIC_USERS_ONLINE,
-  METRIC_SESSIONS_TOTAL, 
-  METRIC_PHOTOS_UPLOADED, 
+  METRIC_SESSIONS_TOTAL,
+  METRIC_PHOTOS_TOTAL, 
   METRIC_HTTP_DURATION 
 } from './metrics.constants'; 
 
@@ -17,7 +17,7 @@ export class MetricsService {
     @InjectMetric(METRIC_ACTIVE_SESSIONS) public readonly activeSessionsGauge: Gauge<string>,
     @InjectMetric(METRIC_USERS_ONLINE) public readonly usersOnlineGauge: Gauge<string>,
     @InjectMetric(METRIC_SESSIONS_TOTAL) public readonly totalSessionsCounter: Counter<string>,
-    @InjectMetric(METRIC_PHOTOS_UPLOADED) public readonly uploadedPhotosCounter: Counter<string>,
+    @InjectMetric(METRIC_PHOTOS_TOTAL) public readonly totalPhotosGauge: Gauge<string>,
     @InjectMetric(METRIC_HTTP_DURATION) public readonly httpRequestDuration: Histogram<string>,
   ) {}
 
@@ -41,8 +41,8 @@ export class MetricsService {
     this.totalSessionsCounter.inc();
   }
 
-  // Foto hochgeladen Counter erhöhen
-  incrementPhotosUploaded() {
-    this.uploadedPhotosCounter.inc();
+  // Gesamtanzahl Fotos aus DB setzen (wird von CronJob aufgerufen)
+  setTotalPhotos(count: number) {
+    this.totalPhotosGauge.set(count);
   }
 }

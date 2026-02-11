@@ -10,8 +10,8 @@ export const METRIC_USERS_ONLINE = 'partypic_users_online';
 // Counter für alle jemals erstellten Sessions
 export const METRIC_SESSIONS_TOTAL = 'partypic_sessions_created_total';
 
-// Counter für alle hochgeladenen Fotos
-export const METRIC_PHOTOS_UPLOADED = 'partypic_photos_uploaded_total';
+// Gauge für GESAMTE Anzahl Fotos aus DB 
+export const METRIC_PHOTOS_TOTAL = 'partypic_photos_total';
 
 // Histogram für HTTP Request Dauer
 export const METRIC_HTTP_DURATION = 'partypic_http_request_duration_seconds';

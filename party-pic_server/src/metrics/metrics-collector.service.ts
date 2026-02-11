@@ -22,6 +22,7 @@ export class MetricsCollectorService {
       await Promise.all([
         this.collectActiveSessions(),
         this.collectOnlineUsers(),
+        this.collectTotalPhotos(),
       ]);
     } catch (error) {
       this.logger.error('Fehler beim Sammeln der Metriken:', error);
@@ -62,6 +63,21 @@ export class MetricsCollectorService {
       // Falls Tabelle nicht existiert oder Spalte fehlt, setze 0
       this.logger.warn('Konnte online User nicht abrufen:', error.message);
       this.metricsService.setUsersOnline(0);
+    }
+  }
+
+  // GESAMTE Anzahl Fotos aus der DB holen
+  private async collectTotalPhotos() {
+    try {
+      const result = await this.pool.query(`
+        SELECT COUNT(*) as count FROM pictures
+      `);
+      const count = parseInt(result.rows[0]?.count || '0', 10);
+      this.metricsService.setTotalPhotos(count);
+      this.logger.debug(`Total Photos: ${count}`);
+    } catch (error) {
+      this.logger.warn('Konnte Foto-Anzahl nicht abrufen:', error.message);
+      this.metricsService.setTotalPhotos(0);
     }
   }
 }

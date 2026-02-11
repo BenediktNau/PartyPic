@@ -58,8 +58,6 @@ export class PicturesController {
             filesize_bytes: body.filesize_bytes,
             mission_id: body.session_id, 
         });
-        // Prometheus Counter inkrementieren
-        this.metricsService.uploadedPhotosCounter.inc();
         return dbEntry;
     }
 

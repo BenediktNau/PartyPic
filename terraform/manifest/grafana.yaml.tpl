@@ -103,7 +103,7 @@ spec:
               "editable": true,
               "fiscalYearStartMonth": 0,
               "graphTooltip": 0,
-              "id": 2,
+              "id": 4,
               "links": [],
               "panels": [
                 {
@@ -312,7 +312,7 @@ spec:
                     "overrides": []
                   },
                   "gridPos": {
-                    "h": 8,
+                    "h": 7,
                     "w": 6,
                     "x": 0,
                     "y": 8
@@ -361,7 +361,7 @@ spec:
                     "overrides": []
                   },
                   "gridPos": {
-                    "h": 8,
+                    "h": 7,
                     "w": 6,
                     "x": 6,
                     "y": 8
@@ -400,276 +400,6 @@ spec:
                   "type": "piechart"
                 },
                 {
-                  "datasource": {
-                    "type": "prometheus",
-                    "uid": "PBFA97CFB590B2093"
-                  },
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "Sessions",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "blue",
-                            "value": 0
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 12,
-                    "y": 8
-                  },
-                  "id": 5,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "percentChangeColorMode": "standard",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "showPercentChange": false,
-                    "textMode": "auto",
-                    "wideLayout": true
-                  },
-                  "pluginVersion": "12.3.1",
-                  "targets": [
-                    {
-                      "editorMode": "code",
-                      "expr": "max(partypic_active_sessions) or vector(0)",
-                      "range": true,
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Active Sessions (PartyPic)",
-                  "type": "stat"
-                },
-                {
-                  "datasource": {
-                    "type": "prometheus",
-                    "uid": "PBFA97CFB590B2093"
-                  },
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "Users",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": 0
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 18,
-                    "y": 8
-                  },
-                  "id": 6,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "percentChangeColorMode": "standard",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "showPercentChange": false,
-                    "textMode": "auto",
-                    "wideLayout": true
-                  },
-                  "pluginVersion": "12.3.1",
-                  "targets": [
-                    {
-                      "editorMode": "code",
-                      "expr": "max(partypic_users_online) or vector(0)",
-                      "range": true,
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Users Online (PartyPic)",
-                  "type": "stat"
-                },
-                {
-                  "datasource": {
-                    "type": "prometheus",
-                    "uid": "PBFA97CFB590B2093"
-                  },
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "Total Photos",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "purple",
-                            "value": 0
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 12,
-                    "y": 12
-                  },
-                  "id": 7,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "percentChangeColorMode": "standard",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "showPercentChange": false,
-                    "textMode": "auto",
-                    "wideLayout": true
-                  },
-                  "pluginVersion": "12.3.1",
-                  "targets": [
-                    {
-                      "editorMode": "code",
-                      "expr": "max(partypic_photos_uploaded_total) or vector(0)",
-                      "range": true,
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Photos Uploaded (PartyPic)",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "palette-classic"
-                      },
-                      "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 20,
-                        "gradientMode": "opacity",
-                        "hideFrom": {
-                          "legend": false,
-                          "tooltip": false,
-                          "viz": false
-                        },
-                        "lineInterpolation": "smooth",
-                        "lineWidth": 2,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                          "type": "linear"
-                        },
-                        "showPoints": "never",
-                        "spanNulls": true,
-                        "stacking": {
-                          "group": "A",
-                          "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                          "mode": "off"
-                        }
-                      },
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          }
-                        ]
-                      },
-                      "unit": "s"
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 18,
-                    "y": 12
-                  },
-                  "id": 8,
-                  "options": {
-                    "legend": {
-                      "calcs": [],
-                      "displayMode": "list",
-                      "placement": "bottom",
-                      "showLegend": true
-                    },
-                    "tooltip": {
-                      "mode": "multi",
-                      "sort": "desc"
-                    }
-                  },
-                  "pluginVersion": "12.3.1",
-                  "targets": [
-                    {
-                      "expr": "histogram_quantile(0.50, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
-                      "legendFormat": "p50",
-                      "refId": "A"
-                    },
-                    {
-                      "expr": "histogram_quantile(0.95, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
-                      "legendFormat": "p95",
-                      "refId": "B"
-                    },
-                    {
-                      "expr": "histogram_quantile(0.99, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
-                      "legendFormat": "p99",
-                      "refId": "C"
-                    }
-                  ],
-                  "title": "Request Duration Distribution",
-                  "type": "timeseries"
-                },
-                {
                   "fieldConfig": {
                     "defaults": {
                       "color": {
@@ -704,8 +434,8 @@ spec:
                   "gridPos": {
                     "h": 4,
                     "w": 6,
-                    "x": 0,
-                    "y": 16
+                    "x": 12,
+                    "y": 8
                   },
                   "id": 9,
                   "options": {
@@ -772,8 +502,8 @@ spec:
                   "gridPos": {
                     "h": 4,
                     "w": 6,
-                    "x": 6,
-                    "y": 16
+                    "x": 18,
+                    "y": 8
                   },
                   "id": 10,
                   "options": {
@@ -806,17 +536,23 @@ spec:
                   "type": "stat"
                 },
                 {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
                   "fieldConfig": {
                     "defaults": {
                       "color": {
                         "mode": "palette-classic"
                       },
                       "custom": {
+                        "axisBorderShow": false,
                         "axisCenteredZero": false,
                         "axisColorMode": "text",
                         "axisLabel": "Pods",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
+                        "barWidthFactor": 0.6,
                         "drawStyle": "line",
                         "fillOpacity": 20,
                         "gradientMode": "opacity",
@@ -825,35 +561,44 @@ spec:
                           "tooltip": false,
                           "viz": false
                         },
+                        "insertNulls": false,
                         "lineInterpolation": "smooth",
+                        "lineStyle": {
+                          "fill": "solid"
+                        },
                         "lineWidth": 2,
                         "pointSize": 5,
                         "scaleDistribution": {
                           "type": "linear"
                         },
                         "showPoints": "never",
+                        "showValues": false,
                         "spanNulls": true,
                         "stacking": {
                           "group": "A",
                           "mode": "none"
                         },
                         "thresholdsStyle": {
-                          "mode": "line+area"
+                          "mode": "dashed+area"
                         }
                       },
                       "mappings": [],
-                      "max": 12,
+                      "max": 25,
                       "min": 0,
                       "thresholds": {
                         "mode": "absolute",
                         "steps": [
                           {
                             "color": "transparent",
-                            "value": null
+                            "value": 0
+                          },
+                          {
+                            "color": "#EAB839",
+                            "value": 10
                           },
                           {
                             "color": "red",
-                            "value": 10
+                            "value": 20
                           }
                         ]
                       }
@@ -861,10 +606,10 @@ spec:
                     "overrides": []
                   },
                   "gridPos": {
-                    "h": 6,
+                    "h": 15,
                     "w": 12,
                     "x": 12,
-                    "y": 16
+                    "y": 12
                   },
                   "id": 11,
                   "options": {
@@ -875,6 +620,7 @@ spec:
                       "showLegend": true
                     },
                     "tooltip": {
+                      "hideZeros": false,
                       "mode": "multi",
                       "sort": "desc"
                     }
@@ -882,8 +628,11 @@ spec:
                   "pluginVersion": "12.3.1",
                   "targets": [
                     {
+                      "editorMode": "code",
                       "expr": "sum(kube_deployment_status_replicas{deployment=\"party-pic-server\"}) or vector(0)",
+                      "instant": false,
                       "legendFormat": "Server Pods",
+                      "range": true,
                       "refId": "A"
                     },
                     {
@@ -894,6 +643,281 @@ spec:
                   ],
                   "title": "Pod Scaling Timeline (HPA)",
                   "type": "timeseries"
+                },
+                {
+                  "fieldConfig": {
+                    "defaults": {
+                      "color": {
+                        "mode": "palette-classic"
+                      },
+                      "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 20,
+                        "gradientMode": "opacity",
+                        "hideFrom": {
+                          "legend": false,
+                          "tooltip": false,
+                          "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                          "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "showValues": false,
+                        "spanNulls": true,
+                        "stacking": {
+                          "group": "A",
+                          "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                          "mode": "off"
+                        }
+                      },
+                      "mappings": [],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "green",
+                            "value": 0
+                          }
+                        ]
+                      },
+                      "unit": "s"
+                    },
+                    "overrides": []
+                  },
+                  "gridPos": {
+                    "h": 6,
+                    "w": 6,
+                    "x": 0,
+                    "y": 15
+                  },
+                  "id": 8,
+                  "options": {
+                    "legend": {
+                      "calcs": [],
+                      "displayMode": "list",
+                      "placement": "bottom",
+                      "showLegend": true
+                    },
+                    "tooltip": {
+                      "hideZeros": false,
+                      "mode": "multi",
+                      "sort": "desc"
+                    }
+                  },
+                  "pluginVersion": "12.3.1",
+                  "targets": [
+                    {
+                      "expr": "histogram_quantile(0.50, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p50",
+                      "refId": "A"
+                    },
+                    {
+                      "expr": "histogram_quantile(0.95, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p95",
+                      "refId": "B"
+                    },
+                    {
+                      "expr": "histogram_quantile(0.99, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p99",
+                      "refId": "C"
+                    }
+                  ],
+                  "title": "Request Duration Distribution",
+                  "type": "timeseries"
+                },
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
+                  "fieldConfig": {
+                    "defaults": {
+                      "color": {
+                        "mode": "thresholds"
+                      },
+                      "displayName": "Total Photos",
+                      "mappings": [],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "purple",
+                            "value": 0
+                          }
+                        ]
+                      }
+                    },
+                    "overrides": []
+                  },
+                  "gridPos": {
+                    "h": 6,
+                    "w": 6,
+                    "x": 6,
+                    "y": 15
+                  },
+                  "id": 7,
+                  "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "percentChangeColorMode": "standard",
+                    "reduceOptions": {
+                      "calcs": [
+                        "lastNotNull"
+                      ],
+                      "fields": "",
+                      "values": false
+                    },
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
+                  },
+                  "pluginVersion": "12.3.1",
+                  "targets": [
+                    {
+                      "editorMode": "code",
+                      "expr": "partypic_photos_total or vector(0)",
+                      "range": true,
+                      "refId": "A"
+                    }
+                  ],
+                  "title": "Photos Uploaded (PartyPic)",
+                  "type": "stat"
+                },
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
+                  "fieldConfig": {
+                    "defaults": {
+                      "color": {
+                        "mode": "thresholds"
+                      },
+                      "displayName": "Users",
+                      "mappings": [],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "green",
+                            "value": 0
+                          }
+                        ]
+                      }
+                    },
+                    "overrides": []
+                  },
+                  "gridPos": {
+                    "h": 6,
+                    "w": 6,
+                    "x": 0,
+                    "y": 21
+                  },
+                  "id": 6,
+                  "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "percentChangeColorMode": "standard",
+                    "reduceOptions": {
+                      "calcs": [
+                        "lastNotNull"
+                      ],
+                      "fields": "",
+                      "values": false
+                    },
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
+                  },
+                  "pluginVersion": "12.3.1",
+                  "targets": [
+                    {
+                      "editorMode": "code",
+                      "expr": "max(partypic_users_online) or vector(0)",
+                      "range": true,
+                      "refId": "A"
+                    }
+                  ],
+                  "title": "Users Online (PartyPic)",
+                  "type": "stat"
+                },
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
+                  "fieldConfig": {
+                    "defaults": {
+                      "color": {
+                        "mode": "thresholds"
+                      },
+                      "displayName": "Sessions",
+                      "mappings": [],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "blue",
+                            "value": 0
+                          }
+                        ]
+                      }
+                    },
+                    "overrides": []
+                  },
+                  "gridPos": {
+                    "h": 6,
+                    "w": 6,
+                    "x": 6,
+                    "y": 21
+                  },
+                  "id": 5,
+                  "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "percentChangeColorMode": "standard",
+                    "reduceOptions": {
+                      "calcs": [
+                        "lastNotNull"
+                      ],
+                      "fields": "",
+                      "values": false
+                    },
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
+                  },
+                  "pluginVersion": "12.3.1",
+                  "targets": [
+                    {
+                      "editorMode": "code",
+                      "expr": "max(partypic_active_sessions) or vector(0)",
+                      "range": true,
+                      "refId": "A"
+                    }
+                  ],
+                  "title": "Active Sessions (PartyPic)",
+                  "type": "stat"
                 }
               ],
               "preload": false,
@@ -2659,7 +2683,7 @@ spec:
 
                       "editorMode": "code",
 
-                      "expr": "# EC2 t3.medium @ $0.0416/h\n(count(kube_node_info) OR vector(0)) * 0.0416\n+\n# Elastic IP @ $0.005/h\n0.005\n+\n# NLB @ $0.0225/h\n(count(kube_service_spec_type{type=\"LoadBalancer\"}) OR vector(0)) * 0.0225\n+\n# RDS db.t3.micro @ $0.017/h + 20GB Storage\n0.017 + (20 * 0.000158)\n+\n# S3 @ $0.023/GB/Monat (geschaetzt 2MB/Foto)\n(max(partypic_photos_uploaded_total) OR vector(0)) * 2 / 1024 * 0.000032\n+\n# EBS gp3 @ $0.08/GB/Monat\n(sum(kube_persistentvolume_capacity_bytes) OR vector(0)) / 1073741824 * 0.00011",
+                      "expr": "# EC2 t3.medium @ $0.0416/h\n(count(kube_node_info) OR vector(0)) * 0.0416\n+\n# Elastic IP @ $0.005/h\n0.005\n+\n# NLB @ $0.0225/h\n(count(kube_service_spec_type{type=\"LoadBalancer\"}) OR vector(0)) * 0.0225\n+\n# RDS db.t3.micro @ $0.017/h + 20GB Storage\n0.017 + (20 * 0.000158)\n+\n# S3 @ $0.023/GB/Monat (geschaetzt 2MB/Foto)\n(partypic_photos_total OR vector(0)) * 2 / 1024 * 0.000032\n+\n# EBS gp3 @ $0.08/GB/Monat\n(sum(kube_persistentvolume_capacity_bytes) OR vector(0)) / 1073741824 * 0.00011",
 
                       "range": true,
 
@@ -3023,7 +3047,7 @@ spec:
 
                       "editorMode": "code",
 
-                      "expr": "(\n  # EC2 t3.medium @ $30.37/Monat\n  (count(kube_node_info) OR vector(0)) * 30.37\n  +\n  # Elastic IP @ $3.65/Monat\n  3.65\n  +\n  # NLB @ $16.43/Monat\n  (count(kube_service_spec_type{type=\"LoadBalancer\"}) OR vector(0)) * 16.43\n  +\n  # RDS db.t3.micro @ $12.41/Monat + 20GB @ $2.30/Monat\n  12.41 + 2.30\n  +\n  # S3 @ $0.023/GB/Monat (geschaetzt 2MB/Foto)\n  (max(partypic_photos_uploaded_total) OR vector(0)) * 2 / 1024 * 0.023\n  +\n  # EBS gp3 @ $0.08/GB/Monat\n  (sum(kube_persistentvolume_capacity_bytes) OR vector(0)) / 1073741824 * 0.08\n)",
+                      "expr": "(\n  # EC2 t3.medium @ $30.37/Monat\n  (count(kube_node_info) OR vector(0)) * 30.37\n  +\n  # Elastic IP @ $3.65/Monat\n  3.65\n  +\n  # NLB @ $16.43/Monat\n  (count(kube_service_spec_type{type=\"LoadBalancer\"}) OR vector(0)) * 16.43\n  +\n  # RDS db.t3.micro @ $12.41/Monat + 20GB @ $2.30/Monat\n  12.41 + 2.30\n  +\n  # S3 @ $0.023/GB/Monat (geschaetzt 2MB/Foto)\n  (partypic_photos_total OR vector(0)) * 2 / 1024 * 0.023\n  +\n  # EBS gp3 @ $0.08/GB/Monat\n  (sum(kube_persistentvolume_capacity_bytes) OR vector(0)) / 1073741824 * 0.08\n)",
 
                       "range": true,
 

@@ -6,7 +6,9 @@
   "scripts": {
     "build": "webpack",
     "normal": "npm run build && k6 run dist/normal-traffic.js",
-    "peak": "npm run build && k6 run dist/peak-traffic.js"
+    "peak": "npm run build && k6 run dist/peak-traffic.js",
+    "test:normal": "npm run normal",
+    "test:peak": "npm run peak"
   },
   "keywords": ["k6", "loadtest", "autoscaling"],
   "author": "",

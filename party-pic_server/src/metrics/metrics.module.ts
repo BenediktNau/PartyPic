@@ -7,8 +7,8 @@ import {
   METRIC_HTTP_REQUESTS_TOTAL,
   METRIC_ACTIVE_SESSIONS, 
   METRIC_USERS_ONLINE,
-  METRIC_SESSIONS_TOTAL, 
-  METRIC_PHOTOS_UPLOADED, 
+  METRIC_SESSIONS_TOTAL,
+  METRIC_PHOTOS_TOTAL, 
   METRIC_HTTP_DURATION 
 } from './metrics.constants';
 
@@ -47,10 +47,10 @@ import {
       name: METRIC_SESSIONS_TOTAL,
       help: 'Anzahl aller jemals erstellten Sessions',
     }),
-    // Counter für alle hochgeladenen Fotos
-    makeCounterProvider({
-      name: METRIC_PHOTOS_UPLOADED,
-      help: 'Anzahl aller hochgeladenen Fotos',
+    // Gauge für Anzahl Fotos aus DB
+    makeGaugeProvider({
+      name: METRIC_PHOTOS_TOTAL,
+      help: 'Gesamtanzahl aller Fotos in der Datenbank (aus DB)',
     }),
     // Histogram für HTTP Request Dauer
     makeHistogramProvider({
