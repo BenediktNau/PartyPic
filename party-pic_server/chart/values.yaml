@@ -11,7 +11,7 @@ replicaCount: 1
 image:
   repository: ghcr.io/benediktnau/partypic-server
   pullPolicy: Always # Immer aktuelles Image ziehen
-  tag: "sha-83e8ecdac7b8997645f199ceea1800761ca65e53"
+  tag: "sha-4c248a32f26e2e9201734b08240a3c717a3bf032"
 # Resource Limits (wichtig fuer HPA!)
 resources:
   requests:
