@@ -31,7 +31,7 @@ spec:
       - --configure-cloud-routes=false
       - --use-service-account-credentials=false
     
-    # AWS Credentials (von Terraform)
+    # Hier fügen wir die Credentials aus dem Terraform ein, da wir keine IAM-Rollen erstellen können Im Produktivsystem sollte das jedoch geschehen
     env:
       - name: AWS_ACCESS_KEY_ID
         value: "${aws_access_key}"

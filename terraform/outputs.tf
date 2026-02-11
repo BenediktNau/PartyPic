@@ -1,10 +1,3 @@
-# =============================================================================
-# OUTPUTS
-# =============================================================================
-
-# -----------------------------------------------------------------------------
-# SSH Zugang
-# -----------------------------------------------------------------------------
 output "ssh_command_server" {
   description = "SSH command to connect to the RKE2 server"
   value       = "ssh ubuntu@${aws_instance.rke2_server.public_ip}"
@@ -43,25 +36,7 @@ output "grafana_url" {
 
 output "argocd_url" {
   description = "ArgoCD Dashboard URL"
-  value       = "http://argocd.${aws_eip.ingress_ip.public_ip}.nip.io"
-}
-
-# -----------------------------------------------------------------------------
-# Cluster Info
-# -----------------------------------------------------------------------------
-output "cluster_name" {
-  description = "Name des RKE2 Clusters"
-  value       = var.cluster_name
-}
-
-output "worker_count" {
-  description = "Anzahl der Worker Nodes"
-  value       = var.worker_count
-}
-
-output "aws_region" {
-  description = "AWS Region"
-  value       = var.aws_region
+  value       = "http://argo.${aws_eip.ingress_ip.public_ip}.nip.io"
 }
 
 # -----------------------------------------------------------------------------
