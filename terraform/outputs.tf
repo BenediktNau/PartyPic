@@ -21,7 +21,7 @@ output "loadbalancer_ip" {
 # -----------------------------------------------------------------------------
 output "app_url" {
   description = "PartyPic Frontend URL"
-  value       = "https://app.${aws_eip.ingress_ip.public_ip}.nip.io"
+  value       = "http://app.${aws_eip.ingress_ip.public_ip}.nip.io"
 }
 
 output "grafana_url" {
@@ -39,11 +39,11 @@ output "argocd_url" {
 # -----------------------------------------------------------------------------
 output "k6_normal_test_command" {
   description = "Befehl um k6 Normal-Traffic Test zu starten"
-  value       = "k6 run -e BASE_URL=http://api.${aws_eip.ingress_ip.public_ip}.nip.io dist/normal-traffic.js"
+  value       = "cd k6/ && APP_URL=http://app.${aws_eip.ingress_ip.public_ip}.nip.io npm run normal"
 }
 
 output "k6_peak_test_command" {
   description = "Befehl um k6 Peak-Traffic Test zu starten"
-  value       = "k6 run -e BASE_URL=http://api.${aws_eip.ingress_ip.public_ip}.nip.io dist/peak-traffic.js"
+  value       = "cd k6/ && APP_URL=http://app.${aws_eip.ingress_ip.public_ip}.nip.io npm run peak"
 }
 
