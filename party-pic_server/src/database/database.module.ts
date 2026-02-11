@@ -20,7 +20,8 @@ import { DatabaseInitService } from './database-init.service';
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_NAME'),
           ssl: {
-            rejectUnauthorized: true,
+            // Für Prod ist SSL notwendig 
+            rejectUnauthorized: false,
           },
         }) : new Pool({
           host: configService.get<string>('DB_HOST'),
