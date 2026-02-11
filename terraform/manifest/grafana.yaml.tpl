@@ -2659,7 +2659,7 @@ spec:
 
                       "editorMode": "code",
 
-                      "expr": "(count(kube_node_info) OR vector(0)) * 0.0416\n+\n(count(kube_service_spec_type{type=\"LoadBalancer\"}) OR vector(0)) * 0.025\n+\n(sum(kube_persistentvolume_capacity_bytes) OR vector(0)) / 1024 / 1024 / 1024 * 0.08 / 730",
+                      "expr": "# EC2 t3.medium @ $0.0416/h\n(count(kube_node_info) OR vector(0)) * 0.0416\n+\n# Elastic IP @ $0.005/h\n0.005\n+\n# NLB @ $0.0225/h\n(count(kube_service_spec_type{type=\"LoadBalancer\"}) OR vector(0)) * 0.0225\n+\n# RDS db.t3.micro @ $0.017/h + 20GB Storage\n0.017 + (20 * 0.000158)\n+\n# S3 @ $0.023/GB/Monat (geschaetzt 2MB/Foto)\n(max(partypic_photos_uploaded_total) OR vector(0)) * 2 / 1024 * 0.000032\n+\n# EBS gp3 @ $0.08/GB/Monat\n(sum(kube_persistentvolume_capacity_bytes) OR vector(0)) / 1073741824 * 0.00011",
 
                       "range": true,
 
@@ -3023,7 +3023,7 @@ spec:
 
                       "editorMode": "code",
 
-                      "expr": "(\n  ((count(kube_node_info) OR vector(0)) * 0.0416)\n  +\n  ((count(kube_service_spec_type{type=\"LoadBalancer\"}) OR vector(0)) * 0.025)\n  +\n  ((sum(kube_persistentvolume_capacity_bytes) OR vector(0)) / 1024 / 1024 / 1024 * 0.08 / 730)\n) * 730",
+                      "expr": "(\n  # EC2 t3.medium @ $30.37/Monat\n  (count(kube_node_info) OR vector(0)) * 30.37\n  +\n  # Elastic IP @ $3.65/Monat\n  3.65\n  +\n  # NLB @ $16.43/Monat\n  (count(kube_service_spec_type{type=\"LoadBalancer\"}) OR vector(0)) * 16.43\n  +\n  # RDS db.t3.micro @ $12.41/Monat + 20GB @ $2.30/Monat\n  12.41 + 2.30\n  +\n  # S3 @ $0.023/GB/Monat (geschaetzt 2MB/Foto)\n  (max(partypic_photos_uploaded_total) OR vector(0)) * 2 / 1024 * 0.023\n  +\n  # EBS gp3 @ $0.08/GB/Monat\n  (sum(kube_persistentvolume_capacity_bytes) OR vector(0)) / 1073741824 * 0.08\n)",
 
                       "range": true,
 
