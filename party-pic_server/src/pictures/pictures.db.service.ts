@@ -46,4 +46,14 @@ export class PicturesDbService {
     const result = await this.pool.query(queryText, values);
     return result.rows[0];
   }
+
+  async getPicturesBySessionId(sessionId: string) {
+    const queryText = `
+      SELECT * FROM pictures 
+      WHERE session_id = $1 
+      ORDER BY created_at DESC;
+    `;
+    const result = await this.pool.query(queryText, [sessionId]);
+    return result.rows;
+  }
 }

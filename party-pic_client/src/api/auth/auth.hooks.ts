@@ -8,6 +8,7 @@ interface AuthResponse {
     user: any; // Definiere, wie dein 'user'-Objekt aussieht
 }
 
+
 interface RegisterData {
     email: string;
     password: string;

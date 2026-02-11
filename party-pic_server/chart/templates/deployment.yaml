@@ -1,36 +1,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: party-pic-server
+  name: {{ include "chart.fullname" . }} 
   labels:
-    app: party-pic-server
+    {{- include "chart.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }} # <--- Templatized
+  replicas: {{ .Values.replicaCount }} 
   selector:
     matchLabels:
-      app: party-pic-server
+      {{- include "chart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: party-pic-server
+        {{- include "chart.selectorLabels" . | nindent 8 }}
     spec:
       containers:
-        - name: party-pic-server
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}" # <--- Templatized
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: 3000
+            - name: http
+              containerPort: 3000
               protocol: TCP
           env:
             - name: NODE_ENV
-              value: {{ .Values.nodeEnv | quote }} # <--- Editable in UI
+              value: {{ .Values.nodeEnv | quote }}
             - name: PORT
               value: {{ .Values.port | quote }}
             - name: S3_FORCE_PATH_STYLE
               value: {{ .Values.s3ForcePathStyle | quote }}
-              
+
             # --- DATABASE SECRETS ---
-            # We reference the Secret Name variable
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
@@ -51,7 +51,7 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secretName }}
                   key: db-user
-                  
+
             # --- S3 SECRETS ---
             - name: S3_ENDPOINT
               valueFrom:
@@ -68,6 +68,12 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secretName }}
                   key: s3-secret-key
+            - name: S3_SESSION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: s3-session-token
+                  optional: true
             - name: S3_BUCKET_NAME
               valueFrom:
                 secretKeyRef:
@@ -88,11 +94,11 @@ spec:
 
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "100m"
+              memory: '256Mi'
+              cpu: '100m'
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: '512Mi'
+              cpu: '500m'
           livenessProbe:
             httpGet:
               path: /

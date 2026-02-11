@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: party-pic-server
   labels:
-    app: party-pic-server
+    {{- include "chart.labels" . | nindent 4 }}
 spec:
   type: ClusterIP
   selector:
-    app: party-pic-server
+    {{- include "chart.selectorLabels" . | nindent 4 }}
   ports:
     - name: http
       port: 80

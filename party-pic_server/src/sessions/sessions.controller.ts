@@ -44,11 +44,7 @@ export class SessionsController {
       req.user.sub,
     );
     // Prometheus Counter inkrementieren
-    this.metricsService.totalSessionsCounter.inc();
-    // Optional: Active Clients Gauge aktualisieren (z.B. alle aktiven Sessions zählen)
-    // Hier als Beispiel: Gauge auf Anzahl aller Sessions setzen
-    const allSessions = await this.sessionsDBService.getSessionsByUserId(req.user.sub);
-    this.metricsService.activeClientsGauge.set(allSessions.length);
+    this.metricsService.incrementTotalSessions();
     return { sessionId: createdSession.id };
   }
 
@@ -121,5 +117,16 @@ export class SessionsController {
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
     return sessionUser;
+  }
+
+  // Heartbeat-Endpoint für Online-User-Tracking (wird vom Client alle 30s aufgerufen)
+  @Post('heartbeat')
+  async heartbeat(@Body() body: { userId: string }) {
+    const { userId } = body;
+    if (!userId) {
+      throw new HttpException('User ID is required', HttpStatus.BAD_REQUEST);
+    }
+    await this.sessionsDBService.updateUserLastSeen(userId);
+    return { success: true };
   }
 }

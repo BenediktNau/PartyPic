@@ -25,5 +25,6 @@ import { UsersModule } from '../users/user.module';
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy], // Unsere Logik
   controllers: [AuthController], // Unsere Endpunkte
+  exports: [AuthService],  
 })
 export class AuthModule {}

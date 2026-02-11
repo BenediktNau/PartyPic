@@ -25,7 +25,7 @@ spec:
       initialDelaySeconds: 10
       periodSeconds: 5
       timeoutSeconds: 3
-    
+      
     livenessProbe:
       httpGet:
         path: /api/health
@@ -33,10 +33,6 @@ spec:
       initialDelaySeconds: 30
       periodSeconds: 10
       timeoutSeconds: 3
-
-    service:
-      type: NodePort
-      port: 80
       
     # Datasources
     datasources:
@@ -96,8 +92,8 @@ spec:
               "editable": true,
               "fiscalYearStartMonth": 0,
               "graphTooltip": 0,
+              "id": 2,
               "links": [],
-              "liveNow": false,
               "panels": [
                 {
                   "fieldConfig": {
@@ -106,11 +102,13 @@ spec:
                         "mode": "palette-classic"
                       },
                       "custom": {
+                        "axisBorderShow": false,
                         "axisCenteredZero": false,
                         "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
+                        "barWidthFactor": 0.6,
                         "drawStyle": "line",
                         "fillOpacity": 0,
                         "gradientMode": "none",
@@ -127,6 +125,7 @@ spec:
                           "type": "linear"
                         },
                         "showPoints": "auto",
+                        "showValues": false,
                         "spanNulls": false,
                         "stacking": {
                           "group": "A",
@@ -142,7 +141,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           },
                           {
                             "color": "red",
@@ -169,10 +168,12 @@ spec:
                       "showLegend": true
                     },
                     "tooltip": {
+                      "hideZeros": false,
                       "mode": "single",
                       "sort": "none"
                     }
                   },
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "sum(rate(partypic_http_requests_total[5m])) or sum(rate(nginx_ingress_controller_requests[5m])) or vector(0)",
@@ -190,11 +191,13 @@ spec:
                         "mode": "palette-classic"
                       },
                       "custom": {
+                        "axisBorderShow": false,
                         "axisCenteredZero": false,
                         "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
+                        "barWidthFactor": 0.6,
                         "drawStyle": "line",
                         "fillOpacity": 0,
                         "gradientMode": "none",
@@ -211,6 +214,7 @@ spec:
                           "type": "linear"
                         },
                         "showPoints": "auto",
+                        "showValues": false,
                         "spanNulls": false,
                         "stacking": {
                           "group": "A",
@@ -226,7 +230,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           },
                           {
                             "color": "red",
@@ -253,10 +257,12 @@ spec:
                       "showLegend": true
                     },
                     "tooltip": {
+                      "hideZeros": false,
                       "mode": "single",
                       "sort": "none"
                     }
                   },
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "histogram_quantile(0.95, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le)) or histogram_quantile(0.95, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket[5m])) by (le)) or vector(0)",
@@ -278,7 +284,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           },
                           {
                             "color": "yellow",
@@ -302,6 +308,8 @@ spec:
                   },
                   "id": 3,
                   "options": {
+                    "minVizHeight": 75,
+                    "minVizWidth": 75,
                     "orientation": "auto",
                     "reduceOptions": {
                       "calcs": [
@@ -311,12 +319,13 @@ spec:
                       "values": false
                     },
                     "showThresholdLabels": false,
-                    "showThresholdMarkers": true
+                    "showThresholdMarkers": true,
+                    "sizing": "auto"
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "(sum(rate(partypic_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(partypic_http_requests_total[5m])) * 100) or (sum(rate(nginx_ingress_controller_requests{status=~\"5..\"}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) * 100) or vector(0)",
+                      "expr": "(sum(rate(partypic_http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(partypic_http_requests_total[5m])) * 100) or (sum(rate(nginx_ingress_controller_requests{status=~\"4..|5..\"}[5m])) / sum(rate(nginx_ingress_controller_requests[5m])) * 100) or vector(0)",
                       "refId": "A"
                     }
                   ],
@@ -361,11 +370,14 @@ spec:
                       "fields": "",
                       "values": false
                     },
+                    "sort": "desc",
                     "tooltip": {
+                      "hideZeros": false,
                       "mode": "single",
                       "sort": "none"
                     }
                   },
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "sum by (status) (increase(nginx_ingress_controller_requests[1h])) or sum by (status) (increase(partypic_http_requests_total[1h]))",
@@ -377,6 +389,10 @@ spec:
                   "type": "piechart"
                 },
                 {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
                   "fieldConfig": {
                     "defaults": {
                       "color": {
@@ -389,7 +405,7 @@ spec:
                         "steps": [
                           {
                             "color": "blue",
-                            "value": null
+                            "value": 0
                           }
                         ]
                       }
@@ -408,6 +424,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -415,12 +432,16 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "partypic_active_sessions or vector(0)",
+                      "editorMode": "code",
+                      "expr": "sum(partypic_active_sessions) or vector(0)",
+                      "range": true,
                       "refId": "A"
                     }
                   ],
@@ -428,6 +449,10 @@ spec:
                   "type": "stat"
                 },
                 {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
                   "fieldConfig": {
                     "defaults": {
                       "color": {
@@ -440,7 +465,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           }
                         ]
                       }
@@ -459,6 +484,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -466,12 +492,16 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "partypic_users_online or vector(0)",
+                      "editorMode": "code",
+                      "expr": "sum(partypic_users_online) or vector(0)",
+                      "range": true,
                       "refId": "A"
                     }
                   ],
@@ -479,6 +509,10 @@ spec:
                   "type": "stat"
                 },
                 {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
                   "fieldConfig": {
                     "defaults": {
                       "color": {
@@ -491,7 +525,7 @@ spec:
                         "steps": [
                           {
                             "color": "purple",
-                            "value": null
+                            "value": 0
                           }
                         ]
                       }
@@ -510,6 +544,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -517,12 +552,16 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "partypic_photos_uploaded_total or vector(0)",
+                      "editorMode": "code",
+                      "expr": "sum(partypic_photos_uploaded_total) or vector(0)",
+                      "range": true,
                       "refId": "A"
                     }
                   ],
@@ -532,16 +571,50 @@ spec:
                 {
                   "fieldConfig": {
                     "defaults": {
+                      "color": {
+                        "mode": "palette-classic"
+                      },
                       "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 20,
+                        "gradientMode": "opacity",
                         "hideFrom": {
                           "legend": false,
                           "tooltip": false,
                           "viz": false
                         },
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 5,
                         "scaleDistribution": {
                           "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": true,
+                        "stacking": {
+                          "group": "A",
+                          "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                          "mode": "off"
                         }
-                      }
+                      },
+                      "mappings": [],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "green",
+                            "value": null
+                          }
+                        ]
+                      },
+                      "unit": "s"
                     },
                     "overrides": []
                   },
@@ -553,56 +626,42 @@ spec:
                   },
                   "id": 8,
                   "options": {
-                    "calculate": true,
-                    "calculation": {},
-                    "cellGap": 2,
-                    "cellValues": {},
-                    "color": {
-                      "exponent": 0.5,
-                      "fill": "dark-orange",
-                      "mode": "scheme",
-                      "reverse": false,
-                      "scale": "exponential",
-                      "scheme": "Oranges",
-                      "steps": 128
-                    },
-                    "exemplars": {
-                      "color": "rgba(255,0,255,0.7)"
-                    },
-                    "filterValues": {
-                      "le": 1e-9
-                    },
                     "legend": {
-                      "show": false
+                      "calcs": [],
+                      "displayMode": "list",
+                      "placement": "bottom",
+                      "showLegend": true
                     },
-                    "rowsFrame": {
-                      "layout": "auto"
-                    },
-                    "showValue": "never",
                     "tooltip": {
-                      "show": false,
-                      "yHistogram": false
-                    },
-                    "yAxis": {
-                      "axisPlacement": "left",
-                      "reverse": false
+                      "mode": "multi",
+                      "sort": "desc"
                     }
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
-                      "expr": "sum(increase(nginx_ingress_controller_request_duration_seconds_bucket[5m])) by (le)",
-                      "legendFormat": "{{le}}",
+                      "expr": "histogram_quantile(0.50, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p50",
                       "refId": "A"
+                    },
+                    {
+                      "expr": "histogram_quantile(0.95, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p95",
+                      "refId": "B"
+                    },
+                    {
+                      "expr": "histogram_quantile(0.99, sum(rate(partypic_http_request_duration_seconds_bucket[5m])) by (le))",
+                      "legendFormat": "p99",
+                      "refId": "C"
                     }
                   ],
                   "title": "Request Duration Distribution",
-                  "type": "heatmap"
+                  "type": "timeseries"
                 }
               ],
+              "preload": false,
               "refresh": "30s",
-              "schemaVersion": 38,
-              "style": "dark",
+              "schemaVersion": 42,
               "tags": [],
               "templating": {
                 "list": []
@@ -615,8 +674,7 @@ spec:
               "timezone": "",
               "title": "Application Metrics",
               "uid": "app-metrics",
-              "version": 1,
-              "weekStart": ""
+              "version": 1
             }
         # ======================================================================
         # 2. INFRASTRUCTURE METRICS
@@ -989,9 +1047,6 @@ spec:
                 {
                   "fieldConfig": {
                     "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
                       "mappings": [],
                       "thresholds": {
                         "mode": "absolute",
@@ -1257,8 +1312,8 @@ spec:
               "editable": true,
               "fiscalYearStartMonth": 0,
               "graphTooltip": 0,
+              "id": 2,
               "links": [],
-              "liveNow": false,
               "panels": [
                 {
                   "fieldConfig": {
@@ -1298,11 +1353,14 @@ spec:
                       "fields": "",
                       "values": false
                     },
+                    "sort": "desc",
                     "tooltip": {
+                      "hideZeros": false,
                       "mode": "single",
                       "sort": "none"
                     }
                   },
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "sum by (phase) (kube_pod_status_phase)",
@@ -1326,7 +1384,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           }
                         ]
                       }
@@ -1345,6 +1403,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -1352,9 +1411,11 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})",
@@ -1377,7 +1438,7 @@ spec:
                         "steps": [
                           {
                             "color": "blue",
-                            "value": null
+                            "value": 0
                           }
                         ]
                       }
@@ -1396,6 +1457,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -1403,9 +1465,11 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "count(kube_node_info)",
@@ -1428,7 +1492,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           }
                         ]
                       }
@@ -1447,6 +1511,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -1454,9 +1519,11 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "sum(kube_pod_status_phase{phase=\"Running\"})",
@@ -1479,7 +1546,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           },
                           {
                             "color": "red",
@@ -1502,6 +1569,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -1509,9 +1577,11 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "sum(kube_pod_status_phase{phase=\"Failed\"}) or vector(0)",
@@ -1534,7 +1604,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           },
                           {
                             "color": "yellow",
@@ -1557,6 +1627,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -1564,9 +1635,11 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "sum(kube_pod_status_phase{phase=\"Pending\"}) or vector(0)",
@@ -1589,7 +1662,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           },
                           {
                             "color": "yellow",
@@ -1616,6 +1689,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -1623,9 +1697,11 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "sum(increase(kube_pod_container_status_restarts_total[15m]))",
@@ -1648,7 +1724,7 @@ spec:
                         "steps": [
                           {
                             "color": "blue",
-                            "value": null
+                            "value": 0
                           }
                         ]
                       }
@@ -1667,6 +1743,7 @@ spec:
                     "graphMode": "area",
                     "justifyMode": "auto",
                     "orientation": "auto",
+                    "percentChangeColorMode": "standard",
                     "reduceOptions": {
                       "calcs": [
                         "lastNotNull"
@@ -1674,9 +1751,11 @@ spec:
                       "fields": "",
                       "values": false
                     },
-                    "textMode": "auto"
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "count(kube_namespace_status_phase{phase=\"Active\"})",
@@ -1689,114 +1768,13 @@ spec:
                 {
                   "fieldConfig": {
                     "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "Bound PVCs",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 4,
-                    "x": 20,
-                    "y": 4
-                  },
-                  "id": 9,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "count(kube_persistentvolumeclaim_status_phase{phase=\"Bound\"})",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "PVCs Bound",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          },
-                          {
-                            "color": "red",
-                            "value": 80
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 8,
-                    "w": 12,
-                    "x": 0,
-                    "y": 8
-                  },
-                  "id": 10,
-                  "options": {
-                    "displayMode": "gradient",
-                    "minVizHeight": 10,
-                    "minVizWidth": 0,
-                    "orientation": "horizontal",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "showUnfilled": true,
-                    "valueMode": "color"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "sum by (namespace) (kube_pod_status_phase{phase=\"Running\"})",
-                      "legendFormat": "{{namespace}}",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Pods per Namespace",
-                  "type": "bargauge"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
                       "custom": {
                         "align": "auto",
                         "cellOptions": {
                           "type": "auto"
+                        },
+                        "footer": {
+                          "reducers": []
                         },
                         "inspect": false
                       },
@@ -1806,7 +1784,7 @@ spec:
                         "steps": [
                           {
                             "color": "green",
-                            "value": null
+                            "value": 0
                           },
                           {
                             "color": "red",
@@ -1815,105 +1793,81 @@ spec:
                         ]
                       }
                     },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 8,
-                    "w": 12,
-                    "x": 12,
-                    "y": 8
-                  },
-                  "id": 11,
-                  "options": {
-                    "cellHeight": "sm",
-                    "footer": {
-                      "countRows": false,
-                      "fields": "",
-                      "reducer": [
-                        "sum"
-                      ],
-                      "show": false
-                    },
-                    "showHeader": true
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "kube_deployment_status_replicas_available",
-                      "format": "table",
-                      "instant": true,
-                      "legendFormat": "{{namespace}}/{{deployment}}",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Deployment Status",
-                  "transformations": [
-                    {
-                      "id": "organize",
-                      "options": {
-                        "excludeByName": {
-                          "Time": true,
-                          "__name__": true,
-                          "instance": true,
-                          "job": true
+                    "overrides": [
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "pod"
                         },
-                        "renameByName": {
-                          "Value": "Available Replicas",
-                          "deployment": "Deployment",
-                          "namespace": "Namespace"
-                        }
-                      }
-                    }
-                  ],
-                  "type": "table"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "custom": {
-                        "align": "auto",
-                        "cellOptions": {
-                          "type": "auto"
-                        },
-                        "inspect": false
+                        "properties": [
+                          {
+                            "id": "custom.width",
+                            "value": 399
+                          }
+                        ]
                       },
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "endpoint"
+                        },
+                        "properties": [
                           {
-                            "color": "green",
-                            "value": null
-                          },
+                            "id": "custom.width",
+                            "value": 56
+                          }
+                        ]
+                      },
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "namespace"
+                        },
+                        "properties": [
                           {
-                            "color": "red",
-                            "value": 80
+                            "id": "custom.width",
+                            "value": 101
+                          }
+                        ]
+                      },
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "Node"
+                        },
+                        "properties": [
+                          {
+                            "id": "custom.width",
+                            "value": 137
+                          }
+                        ]
+                      },
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "service"
+                        },
+                        "properties": [
+                          {
+                            "id": "custom.width",
+                            "value": 280
                           }
                         ]
                       }
-                    },
-                    "overrides": []
+                    ]
                   },
                   "gridPos": {
                     "h": 6,
                     "w": 24,
                     "x": 0,
-                    "y": 16
+                    "y": 8
                   },
                   "id": 12,
                   "options": {
                     "cellHeight": "sm",
-                    "footer": {
-                      "countRows": false,
-                      "fields": "",
-                      "reducer": [
-                        "sum"
-                      ],
-                      "show": false
-                    },
                     "showHeader": true
                   },
-                  "pluginVersion": "10.1.5",
+                  "pluginVersion": "12.3.1",
                   "targets": [
                     {
                       "expr": "kube_node_status_condition{status=\"true\"}",
@@ -1946,9 +1900,9 @@ spec:
                   "type": "table"
                 }
               ],
+              "preload": false,
               "refresh": "30s",
-              "schemaVersion": 38,
-              "style": "dark",
+              "schemaVersion": 42,
               "tags": [],
               "templating": {
                 "list": []
@@ -1961,520 +1915,1000 @@ spec:
               "timezone": "",
               "title": "Kubernetes Metrics",
               "uid": "k8s-metrics",
-              "version": 1,
-              "weekStart": ""
+              "version": 1
             }
-               # ======================================================================
+        # ======================================================================
         # 4. SYSTEM OVERVIEW (Custom)
         # ======================================================================
         system-overview:
           json: |
             {
+
               "annotations": {
+
                 "list": [
+
                   {
+
                     "builtIn": 1,
+
                     "datasource": {
+
                       "type": "grafana",
+
                       "uid": "-- Grafana --"
+
                     },
+
                     "enable": true,
+
                     "hide": true,
+
                     "iconColor": "rgba(0, 211, 255, 1)",
+
                     "name": "Annotations & Alerts",
+
                     "type": "dashboard"
+
                   }
+
                 ]
+
               },
+
               "editable": true,
+
               "fiscalYearStartMonth": 0,
+
               "graphTooltip": 0,
+
+              "id": 5,
+
               "links": [],
-              "liveNow": false,
+
               "panels": [
+
                 {
+
                   "fieldConfig": {
+
                     "defaults": {
+
                       "mappings": [],
+
                       "max": 100,
+
                       "min": 0,
+
                       "thresholds": {
+
                         "mode": "absolute",
+
                         "steps": [
+
                           {
+
                             "color": "red",
-                            "value": null
+
+                            "value": 0
+
                           },
+
                           {
+
                             "color": "yellow",
+
                             "value": 70
+
                           },
+
                           {
+
                             "color": "green",
+
                             "value": 90
+
                           }
+
                         ]
+
                       },
+
                       "unit": "percent"
+
                     },
+
                     "overrides": []
+
                   },
+
                   "gridPos": {
+
                     "h": 8,
+
                     "w": 6,
+
                     "x": 0,
+
                     "y": 0
+
                   },
+
                   "id": 1,
+
                   "options": {
+
+                    "minVizHeight": 75,
+
+                    "minVizWidth": 75,
+
                     "orientation": "auto",
+
                     "reduceOptions": {
+
                       "calcs": [
+
                         "lastNotNull"
+
                       ],
+
                       "fields": "",
+
                       "values": false
+
                     },
+
                     "showThresholdLabels": false,
-                    "showThresholdMarkers": true
+
+                    "showThresholdMarkers": true,
+
+                    "sizing": "auto"
+
                   },
-                  "pluginVersion": "10.1.5",
+
+                  "pluginVersion": "12.3.1",
+
                   "targets": [
+
                     {
+
                       "expr": "(sum(kube_pod_status_phase{phase=~\"Running|Succeeded\"}) / sum(kube_pod_status_phase)) * 100",
+
                       "refId": "A"
+
                     }
+
                   ],
+
                   "title": "System Health",
+
                   "type": "gauge"
+
                 },
+
                 {
+
                   "fieldConfig": {
+
                     "defaults": {
+
                       "color": {
+
                         "mode": "thresholds"
+
                       },
+
                       "displayName": "Sessions",
+
                       "mappings": [],
+
                       "thresholds": {
+
                         "mode": "absolute",
+
                         "steps": [
+
                           {
+
                             "color": "blue",
-                            "value": null
+
+                            "value": 0
+
                           }
+
                         ]
+
                       }
+
                     },
+
                     "overrides": []
+
                   },
+
                   "gridPos": {
+
                     "h": 4,
+
                     "w": 6,
+
                     "x": 6,
+
                     "y": 0
+
                   },
+
                   "id": 2,
+
                   "options": {
+
                     "colorMode": "value",
+
                     "graphMode": "area",
+
                     "justifyMode": "auto",
+
                     "orientation": "auto",
+
+                    "percentChangeColorMode": "standard",
+
                     "reduceOptions": {
+
                       "calcs": [
+
                         "lastNotNull"
+
                       ],
+
                       "fields": "",
+
                       "values": false
+
                     },
-                    "textMode": "auto"
+
+                    "showPercentChange": false,
+
+                    "textMode": "auto",
+
+                    "wideLayout": true
+
                   },
-                  "pluginVersion": "10.1.5",
+
+                  "pluginVersion": "12.3.1",
+
                   "targets": [
+
                     {
+
                       "expr": "partypic_active_sessions or vector(0)",
+
                       "refId": "A"
+
                     }
+
                   ],
+
                   "title": "Aktive Sessions",
+
                   "type": "stat"
+
                 },
+
                 {
+
                   "fieldConfig": {
+
                     "defaults": {
+
                       "color": {
+
                         "mode": "thresholds"
+
                       },
+
                       "displayName": "Users Online",
+
                       "mappings": [],
+
                       "thresholds": {
+
                         "mode": "absolute",
+
                         "steps": [
+
                           {
+
                             "color": "green",
-                            "value": null
+
+                            "value": 0
+
                           }
+
                         ]
+
                       }
+
                     },
+
                     "overrides": []
+
                   },
+
                   "gridPos": {
+
                     "h": 4,
+
                     "w": 6,
+
                     "x": 12,
+
                     "y": 0
+
                   },
+
                   "id": 3,
+
                   "options": {
+
                     "colorMode": "value",
+
                     "graphMode": "area",
+
                     "justifyMode": "auto",
+
                     "orientation": "auto",
+
+                    "percentChangeColorMode": "standard",
+
                     "reduceOptions": {
+
                       "calcs": [
+
                         "lastNotNull"
+
                       ],
+
                       "fields": "",
+
                       "values": false
+
                     },
-                    "textMode": "auto"
+
+                    "showPercentChange": false,
+
+                    "textMode": "auto",
+
+                    "wideLayout": true
+
                   },
-                  "pluginVersion": "10.1.5",
+
+                  "pluginVersion": "12.3.1",
+
                   "targets": [
+
                     {
+
                       "expr": "partypic_users_online or vector(0)",
+
                       "refId": "A"
+
                     }
+
                   ],
+
                   "title": "Aktive User",
+
                   "type": "stat"
+
                 },
+
                 {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "decimals": 3,
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          },
-                          {
-                            "color": "yellow",
-                            "value": 0.1
-                          },
-                          {
-                            "color": "orange",
-                            "value": 0.2
-                          }
-                        ]
-                      },
-                      "unit": "currencyUSD"
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 18,
-                    "y": 0
-                  },
-                  "id": 4,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "(count(kube_node_info) * 0.0416) + (count(kube_service_spec_type{type=\"LoadBalancer\"}) * 0.025) + (sum(kube_persistentvolume_capacity_bytes) / 1024 / 1024 / 1024 * 0.08 / 730)",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "GeschÃ¤tzte Kosten/Stunde",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "Pods Running",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 6,
-                    "y": 4
-                  },
-                  "id": 5,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "sum(kube_pod_status_phase{phase=\"Running\"})",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Running Pods",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "decimals": 2,
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          },
-                          {
-                            "color": "yellow",
-                            "value": 50
-                          },
-                          {
-                            "color": "orange",
-                            "value": 100
-                          }
-                        ]
-                      },
-                      "unit": "currencyUSD"
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 18,
-                    "y": 4
-                  },
-                  "id": 14,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "((count(kube_node_info) * 0.0416) + (count(kube_service_spec_type{type=\"LoadBalancer\"}) * 0.025) + (sum(kube_persistentvolume_capacity_bytes) / 1024 / 1024 / 1024 * 0.08 / 730)) * 730",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "GeschÃ¤tzte Kosten/Monat",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "color": {
-                        "mode": "thresholds"
-                      },
-                      "displayName": "Healthy Nodes",
-                      "mappings": [],
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          }
-                        ]
-                      }
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 12,
-                    "y": 4
-                  },
-                  "id": 6,
-                  "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "textMode": "auto"
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "Nodes Ready",
-                  "type": "stat"
-                },
-                {
-                  "fieldConfig": {
-                    "defaults": {
-                      "mappings": [],
-                      "max": 100,
-                      "min": 0,
-                      "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                          {
-                            "color": "green",
-                            "value": null
-                          },
-                          {
-                            "color": "yellow",
-                            "value": 60
-                          },
-                          {
-                            "color": "red",
-                            "value": 80
-                          }
-                        ]
-                      },
-                      "unit": "percent"
-                    },
-                    "overrides": []
-                  },
-                  "gridPos": {
-                    "h": 4,
-                    "w": 6,
-                    "x": 18,
-                    "y": 4
-                  },
-                  "id": 7,
-                  "options": {
-                    "orientation": "auto",
-                    "reduceOptions": {
-                      "calcs": [
-                        "lastNotNull"
-                      ],
-                      "fields": "",
-                      "values": false
-                    },
-                    "showThresholdLabels": false,
-                    "showThresholdMarkers": true
-                  },
-                  "pluginVersion": "10.1.5",
-                  "targets": [
-                    {
-                      "expr": "(1 - avg(irate(node_cpu_seconds_total{mode=\"idle\"}[5m]))) * 100",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "CPU Auslastung",
-                  "type": "gauge"
-                },
-                {
+
                   "datasource": {
-                    "type": "loki",
-                    "uid": "loki"
+
+                    "type": "prometheus"
+
                   },
+
+                  "fieldConfig": {
+
+                    "defaults": {
+
+                      "color": {
+
+                        "mode": "thresholds"
+
+                      },
+
+                      "decimals": 3,
+
+                      "mappings": [],
+
+                      "thresholds": {
+
+                        "mode": "absolute",
+
+                        "steps": [
+
+                          {
+
+                            "color": "green",
+
+                            "value": 0
+
+                          },
+
+                          {
+
+                            "color": "yellow",
+
+                            "value": 0.1
+
+                          },
+
+                          {
+
+                            "color": "orange",
+
+                            "value": 0.2
+
+                          }
+
+                        ]
+
+                      },
+
+                      "unit": "currencyUSD"
+
+                    },
+
+                    "overrides": []
+
+                  },
+
                   "gridPos": {
-                    "h": 10,
-                    "w": 24,
-                    "x": 0,
-                    "y": 8
+
+                    "h": 4,
+
+                    "w": 6,
+
+                    "x": 18,
+
+                    "y": 0
+
                   },
-                  "id": 8,
+
+                  "id": 4,
+
                   "options": {
-                    "dedupStrategy": "none",
-                    "enableLogDetails": true,
-                    "prettifyLogMessage": false,
-                    "showCommonLabels": false,
-                    "showLabels": true,
-                    "showTime": true,
-                    "sortOrder": "Descending",
-                    "wrapLogMessage": true
+
+                    "colorMode": "value",
+
+                    "graphMode": "area",
+
+                    "justifyMode": "auto",
+
+                    "orientation": "auto",
+
+                    "percentChangeColorMode": "standard",
+
+                    "reduceOptions": {
+
+                      "calcs": [
+
+                        "lastNotNull"
+
+                      ],
+
+                      "fields": "",
+
+                      "values": false
+
+                    },
+
+                    "showPercentChange": false,
+
+                    "textMode": "auto",
+
+                    "wideLayout": true
+
                   },
+
+                  "pluginVersion": "12.3.1",
+
                   "targets": [
+
                     {
-                      "expr": "{namespace=~\".+\"} |~ \"(?i)error|fail|exception|crash|fatal\"",
+
+                      "editorMode": "code",
+
+                      "expr": "(count(kube_node_info) OR vector(0)) * 0.0416\n+\n(count(kube_service_spec_type{type=\"LoadBalancer\"}) OR vector(0)) * 0.025\n+\n(sum(kube_persistentvolume_capacity_bytes) OR vector(0)) / 1024 / 1024 / 1024 * 0.08 / 730",
+
+                      "range": true,
+
                       "refId": "A"
+
                     }
+
                   ],
+
+                  "title": "Geschaetzte Kosten/Stunde",
+
+                  "type": "stat"
+
+                },
+
+                {
+
+                  "fieldConfig": {
+
+                    "defaults": {
+
+                      "color": {
+
+                        "mode": "thresholds"
+
+                      },
+
+                      "displayName": "Pods Running",
+
+                      "mappings": [],
+
+                      "thresholds": {
+
+                        "mode": "absolute",
+
+                        "steps": [
+
+                          {
+
+                            "color": "green",
+
+                            "value": 0
+
+                          }
+
+                        ]
+
+                      }
+
+                    },
+
+                    "overrides": []
+
+                  },
+
+                  "gridPos": {
+
+                    "h": 4,
+
+                    "w": 6,
+
+                    "x": 6,
+
+                    "y": 4
+
+                  },
+
+                  "id": 5,
+
+                  "options": {
+
+                    "colorMode": "value",
+
+                    "graphMode": "area",
+
+                    "justifyMode": "auto",
+
+                    "orientation": "auto",
+
+                    "percentChangeColorMode": "standard",
+
+                    "reduceOptions": {
+
+                      "calcs": [
+
+                        "lastNotNull"
+
+                      ],
+
+                      "fields": "",
+
+                      "values": false
+
+                    },
+
+                    "showPercentChange": false,
+
+                    "textMode": "auto",
+
+                    "wideLayout": true
+
+                  },
+
+                  "pluginVersion": "12.3.1",
+
+                  "targets": [
+
+                    {
+
+                      "expr": "sum(kube_pod_status_phase{phase=\"Running\"})",
+
+                      "refId": "A"
+
+                    }
+
+                  ],
+
+                  "title": "Running Pods",
+
+                  "type": "stat"
+
+                },
+
+                {
+
+                  "fieldConfig": {
+
+                    "defaults": {
+
+                      "mappings": [],
+
+                      "max": 100,
+
+                      "min": 0,
+
+                      "thresholds": {
+
+                        "mode": "absolute",
+
+                        "steps": [
+
+                          {
+
+                            "color": "green",
+
+                            "value": 0
+
+                          },
+
+                          {
+
+                            "color": "yellow",
+
+                            "value": 60
+
+                          },
+
+                          {
+
+                            "color": "red",
+
+                            "value": 80
+
+                          }
+
+                        ]
+
+                      },
+
+                      "unit": "percent"
+
+                    },
+
+                    "overrides": []
+
+                  },
+
+                  "gridPos": {
+
+                    "h": 4,
+
+                    "w": 6,
+
+                    "x": 12,
+
+                    "y": 4
+
+                  },
+
+                  "id": 7,
+
+                  "options": {
+
+                    "minVizHeight": 75,
+
+                    "minVizWidth": 75,
+
+                    "orientation": "auto",
+
+                    "reduceOptions": {
+
+                      "calcs": [
+
+                        "lastNotNull"
+
+                      ],
+
+                      "fields": "",
+
+                      "values": false
+
+                    },
+
+                    "showThresholdLabels": false,
+
+                    "showThresholdMarkers": true,
+
+                    "sizing": "auto"
+
+                  },
+
+                  "pluginVersion": "12.3.1",
+
+                  "targets": [
+
+                    {
+
+                      "expr": "(1 - avg(irate(node_cpu_seconds_total{mode=\"idle\"}[5m]))) * 100",
+
+                      "refId": "A"
+
+                    }
+
+                  ],
+
+                  "title": "CPU Auslastung",
+
+                  "type": "gauge"
+
+                },
+
+                {
+
+                  "datasource": {
+
+                    "type": "prometheus",
+
+                    "uid": "PBFA97CFB590B2093"
+
+                  },
+
+                  "fieldConfig": {
+
+                    "defaults": {
+
+                      "color": {
+
+                        "mode": "thresholds"
+
+                      },
+
+                      "decimals": 2,
+
+                      "mappings": [],
+
+                      "thresholds": {
+
+                        "mode": "absolute",
+
+                        "steps": [
+
+                          {
+
+                            "color": "green",
+
+                            "value": 0
+
+                          },
+
+                          {
+
+                            "color": "yellow",
+
+                            "value": 50
+
+                          },
+
+                          {
+
+                            "color": "orange",
+
+                            "value": 100
+
+                          }
+
+                        ]
+
+                      },
+
+                      "unit": "currencyUSD"
+
+                    },
+
+                    "overrides": []
+
+                  },
+
+                  "gridPos": {
+
+                    "h": 4,
+
+                    "w": 6,
+
+                    "x": 18,
+
+                    "y": 4
+
+                  },
+
+                  "id": 14,
+
+                  "options": {
+
+                    "colorMode": "value",
+
+                    "graphMode": "area",
+
+                    "justifyMode": "auto",
+
+                    "orientation": "auto",
+
+                    "percentChangeColorMode": "standard",
+
+                    "reduceOptions": {
+
+                      "calcs": [
+
+                        "lastNotNull"
+
+                      ],
+
+                      "fields": "",
+
+                      "values": false
+
+                    },
+
+                    "showPercentChange": false,
+
+                    "textMode": "auto",
+
+                    "wideLayout": true
+
+                  },
+
+                  "pluginVersion": "12.3.1",
+
+                  "targets": [
+
+                    {
+
+                      "editorMode": "code",
+
+                      "expr": "(\n  ((count(kube_node_info) OR vector(0)) * 0.0416)\n  +\n  ((count(kube_service_spec_type{type=\"LoadBalancer\"}) OR vector(0)) * 0.025)\n  +\n  ((sum(kube_persistentvolume_capacity_bytes) OR vector(0)) / 1024 / 1024 / 1024 * 0.08 / 730)\n) * 730",
+
+                      "range": true,
+
+                      "refId": "A"
+
+                    }
+
+                  ],
+
+                  "title": "Geschaetzte Kosten/Monat",
+
+                  "type": "stat"
+
+                },
+
+                {
+
+                  "datasource": {
+
+                    "type": "loki",
+
+                    "uid": "loki"
+
+                  },
+
+                  "fieldConfig": {
+
+                    "defaults": {},
+
+                    "overrides": []
+
+                  },
+
+                  "gridPos": {
+
+                    "h": 10,
+
+                    "w": 24,
+
+                    "x": 0,
+
+                    "y": 8
+
+                  },
+
+                  "id": 8,
+
+                  "options": {
+
+                    "dedupStrategy": "none",
+
+                    "enableInfiniteScrolling": false,
+
+                    "enableLogDetails": true,
+
+                    "prettifyLogMessage": false,
+
+                    "showCommonLabels": false,
+
+                    "showControls": false,
+
+                    "showLabels": true,
+
+                    "showTime": true,
+
+                    "sortOrder": "Descending",
+
+                    "wrapLogMessage": true
+
+                  },
+
+                  "pluginVersion": "12.3.1",
+
+                  "targets": [
+
+                    {
+
+                      "expr": "{namespace=~\".+\"} |~ \"(?i)error|fail|exception|crash|fatal\"",
+
+                      "refId": "A"
+
+                    }
+
+                  ],
+
                   "title": "Letzte Fehler (Logs)",
+
                   "type": "logs"
+
                 }
+
               ],
+
+              "preload": false,
+
               "refresh": "30s",
-              "schemaVersion": 38,
-              "style": "dark",
+
+              "schemaVersion": 42,
+
               "tags": [],
+
               "templating": {
+
                 "list": []
+
               },
+
               "time": {
+
                 "from": "now-1h",
+
                 "to": "now"
+
               },
+
               "timepicker": {},
+
               "timezone": "",
+
               "title": "System Overview",
+
               "uid": "system-overview",
-              "version": 6,
-              "weekStart": ""
+
+              "version": 1
             }

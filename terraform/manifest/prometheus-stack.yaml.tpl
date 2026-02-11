@@ -15,10 +15,6 @@ spec:
       prometheusSpec:
         retention: ${prometheus_retention}
         scrapeInterval: ${prometheus_scrape_interval}
-        
-      service:
-        type: NodePort
-        nodePort: 30090
 
     # Alertmanager
     alertmanager:

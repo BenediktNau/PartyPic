@@ -1,63 +1,32 @@
-import { ConsoleLogger, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule'; // Für CronJobs
+import { StorageModule } from './s3/s3.module';
+import { DatabaseModule } from './database/database.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/user.module';
+import { SessionsModule } from './sessions/sessions.module';
+import { MetricsModule } from './metrics/metrics.module';
 import { PicturesController } from './pictures/pictures.controller';
 import { PicturesDbService } from './pictures/pictures.db.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { StorageModule } from './s3/s3.module';
-import { Pool } from 'pg';
-import { SessionsController } from './sessions/sessions.controller';
-import { AuthController } from './auth/auth.controller';
-import { AuthService } from './auth/auth.service';
-import { UsersService } from './users/users.service';
-import { JwtService } from '@nestjs/jwt';
-import { SessionsDbService } from './sessions/sessions.db.service';
-import { AuthModule } from './auth/auth.module';
-import { JwtStrategy } from './auth/jwt.strategy';
-import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
-    // 3. Lade .env-Variablen global
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env.dev'
     }),
-
-    // 4. Importiere das StorageModule.
-    //    Es stellt S3Client bereit UND exportiert StorageService.
+    ScheduleModule.forRoot(), 
+    DatabaseModule,
     StorageModule,
-
-    // 5. Prometheus Metrics für Monitoring
-    MetricsModule
-
-
-  ],
-  controllers: [AppController, PicturesController, SessionsController, AuthController],
-  providers: [
-    AppService,
     AuthModule,
-    PicturesDbService,
-    SessionsDbService,
-    AuthService,
-    UsersService,
-    JwtStrategy,
-    JwtService,
-
-    // 5. Stelle den DB-Pool für AppService und PicturesDbService bereit
-    {
-      provide: 'PG_POOL',
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        return new Pool({
-          host: configService.get<string>('DB_HOST'),
-          port: configService.get<number>('DB_PORT'),
-          user: configService.get<string>('DB_USER'),
-          password: configService.get<string>('DB_PASSWORD'),
-          database: configService.get<string>('DB_NAME'),
-        });
-      },
-    }
+    UsersModule,
+    SessionsModule,
+    MetricsModule,
   ],
+  controllers: [AppController, PicturesController],
+  providers: [AppService, PicturesDbService],
 })
-export class AppModule { }
+export class AppModule {}

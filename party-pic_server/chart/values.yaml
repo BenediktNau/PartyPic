@@ -4,7 +4,7 @@ replicaCount: 1
 image:
   repository: ghcr.io/benediktnau/partypic-server
   pullPolicy: Always
-  tag: "sha-a7abb1d2b9a10b65f55733d675e593e63a86fd46"
+  tag: "sha-e88af542a8bdd3bb6b4afa70b0088db8aa5af48a"
 # App configuration (Non-Sensitive)
 nodeEnv: "production"
 port: "3000"
@@ -13,6 +13,6 @@ s3ForcePathStyle: "false"
 secretName: "party-pic-secrets"
 ingress:
   enabled: true
-  host: "api.ip.nip.io"
+  host: api.34.235.233.52.nip.io
   certManager: false
   tls: false
