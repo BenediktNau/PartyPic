@@ -9,11 +9,12 @@
  * 
  * USAGE:
  * ------
- * 1. Hole die Ingress-URL aus AWS:
+ * 1. Instaliere k6: https://k6.io/docs/getting-started/installation oder via Konsole (z.B. Homebrew, bash)
+ * 2. Hole die Ingress-URL aus AWS:
  *    export APP_URL=$(kubectl get ingress party-pic-ingress -n default -o jsonpath='{.spec.rules[0].host}')
  *    echo "http://$APP_URL"
  * 
- * 2. Fuehre das Skript aus:
+ * 3. Fuehre das Skript aus:
  *    cd k6/
  *    APP_URL=http://app.<ip>.nip.io npm run normal
  *    

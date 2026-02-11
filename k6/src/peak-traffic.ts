@@ -9,11 +9,12 @@
  * 
  * USAGE:
  * ------
- * 1. Hole die Ingress-URL aus AWS:
+ * 1. Instaliere k6: https://k6.io/docs/getting-started/installation oder via Konsole (z.B. Homebrew, bash)
+ * 2. Hole die Ingress-URL aus AWS:
  *    export APP_URL=$(kubectl get ingress party-pic-ingress -n default -o jsonpath='{.spec.rules[0].host}')
  *    echo "http://$APP_URL"
  * 
- * 2. Fuehre das Skript aus:
+ * 3. Fuehre das Skript aus:
  *    cd k6/
  *    APP_URL=http://app.<ip>.nip.io npm run peak
  *    
@@ -46,10 +47,10 @@ import {
 // k6 Test-Konfiguration
 export const options: Options = {
   stages: [
-    { duration: '2m', target: 50 },   // Langsamer Start
-    { duration: '3m', target: 150 },  // Ramp-Up
-    { duration: '3m', target: 300 },  // Peak
-    { duration: '2m', target: 0 },    // Ramp-Down
+    { duration: '2m', target: 100 },   // Langsamer Start
+    { duration: '3m', target: 300 },  // Ramp-Up
+    { duration: '3m', target: 500 },  // Peak
+    { duration: '2m', target: 100 },    // Ramp-Down
   ],
   thresholds: {
     http_req_duration: ['p(95)<3000'], // 95% der Requests unter 3s
