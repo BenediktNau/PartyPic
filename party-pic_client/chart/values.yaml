@@ -11,7 +11,7 @@ replicaCount: 2
 image:
   repository: ghcr.io/benediktnau/partypic-client
   pullPolicy: Always
-  tag: "sha-da3eda77f0f75a623eee8bd8b0b225ffa524c8ee"
+  tag: "sha-1777dadc8c8b2d4f26594ce8bd7dcde8d35b8a2f"
 # Resource Limits (wichtig fuer HPA)
 resources:
   requests:
