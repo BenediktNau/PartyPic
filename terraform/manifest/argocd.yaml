@@ -1,3 +1,9 @@
+# =============================================================================
+# ARGOCD - GitOps Continuous Deployment
+#
+# Deployed als HelmChart via RKE2.
+# ArgoCD ueberwacht das Git-Repo und deployed automatisch Aenderungen.
+# =============================================================================
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
@@ -11,4 +17,4 @@ spec:
   valuesContent: |-
     server:
       extraArgs:
-        - --insecure
+        - --insecure  # Kein TLS intern, Ingress macht das

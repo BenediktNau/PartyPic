@@ -1,20 +1,30 @@
+# =============================================================================
+# PARTYPIC INFRASTRUCTURE
+# 
+# RKE2 Kubernetes Cluster auf AWS mit:
+# - 1 Control Plane (rke2_server)
+# - N Worker Nodes (Auto Scaling Group)
+# - RDS PostgreSQL
+# - S3 Bucket fuer Bilder
+# - Monitoring Stack (Prometheus, Grafana, Loki)
+# =============================================================================
+
 data "external" "env" {
   program = ["${path.module}/env.sh"]
 }
 
-# Look up instances that belong to the ASG by filtering for the cluster tag
+# Worker-Nodes ueber Tags finden (fuer Outputs etc.)
 data "aws_instances" "worker_nodes" {
   instance_tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
-    Name                                        = "${var.cluster_name}-worker" # Must match the tag in your Launch Template
+    Name = "${var.cluster_name}-worker"
   }
 
   instance_state_names = ["running"]
-
-  # Ensure we don't try to look them up before the ASG exists
   depends_on = [aws_autoscaling_group.rke2_workers]
 }
 
+# AWS Credentials aus Environment holen (via env.sh Script)
 locals {
   aws_access_key    = data.external.env.result["aws_access_key"]
   aws_secret_key    = data.external.env.result["aws_secret_key"]
@@ -34,7 +44,11 @@ provider "aws" {
   region = var.aws_region
 }
 
-# --- Get Default VPC and Subnets ---
+# =============================================================================
+# NETWORKING
+# Wir nutzen die Default VPC - einfacher fuer ein Uni-Projekt
+# =============================================================================
+
 data "aws_vpc" "default" {
   default = true
 }
@@ -46,55 +60,72 @@ data "aws_subnets" "default" {
   }
 }
 
+# =============================================================================
+# SECURITY GROUP
+# Erlaubt SSH, Kubernetes API, HTTP/HTTPS und NodePort-Range
+# =============================================================================
+
 resource "aws_security_group" "rke2_sg" {
   name        = "${var.cluster_name}-sg"
   description = "Allow RKE2, SSH, and NodePort traffic"
 
+  # SSH
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  
+  # Kubernetes API
   ingress {
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  # RKE2 Server Registration Port
+  
+  # RKE2 Server Registration (Worker melden sich hier an)
   ingress {
     from_port   = 9345
     to_port     = 9345
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  
+  # HTTP
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  
+  # HTTPS
   ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  # NodePort Range für LoadBalancer Services
+  
+  # NodePort Range fuer LoadBalancer Services
   ingress {
     from_port   = 30000
     to_port     = 32767
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  # Internal Cluster Traffic
+  
+  # Cluster-interne Kommunikation
   ingress {
     from_port = 0
     to_port   = 0
     protocol  = "-1"
     self      = true
   }
+  
+  # Alles raus erlauben
   egress {
     from_port   = 0
     to_port     = 0
@@ -107,14 +138,13 @@ resource "aws_security_group" "rke2_sg" {
   }
 }
 
-# --- SSH Key ---
-
+# SSH Key zum Zugriff auf die Instanzen
 resource "aws_key_pair" "local_key" {
   key_name   = "${var.cluster_name}-key"
   public_key = var.public_key
 }
 
-# 1. Erstelle die feste IP
+# Feste IP fuer den Ingress LoadBalancer (bleibt gleich bei Neustart)
 resource "aws_eip" "ingress_ip" {
   domain = "vpc"
   tags = {
@@ -122,7 +152,10 @@ resource "aws_eip" "ingress_ip" {
   }
 }
 
-# --- 1. RKE2 SERVER ---
+# =============================================================================
+# RKE2 CONTROL PLANE (Server Node)
+# Hier laeuft die Kubernetes API + etcd
+# =============================================================================
 
 resource "aws_instance" "rke2_server" {
   ami           = "ami-0ecb62995f68bb549"
@@ -210,9 +243,11 @@ resource "aws_instance" "rke2_server" {
   }
 }
 
+# =============================================================================
+# RKE2 WORKER NODES (Auto Scaling Group)
+# Hier laufen die Pods - skaliert automatisch je nach Last
+# =============================================================================
 
-# --- 2. RKE2 WORKERS ---
-# --- 2. RKE2 WORKER LAUNCH TEMPLATE ---
 resource "aws_launch_template" "rke2_worker_lt" {
   name_prefix   = "${var.cluster_name}-worker-"
   image_id      = "ami-0ecb62995f68bb549"
@@ -231,7 +266,6 @@ resource "aws_launch_template" "rke2_worker_lt" {
 
   vpc_security_group_ids = [aws_security_group.rke2_sg.id]
 
-  # We use base64encode for Launch Templates
   user_data = base64encode(<<-EOF
     #!/bin/bash
     set -e
@@ -273,7 +307,7 @@ resource "aws_launch_template" "rke2_worker_lt" {
   }
 }
 
-# --- 3. AUTO SCALING GROUP ---
+# Auto Scaling Group - skaliert Worker-Nodes basierend auf Last
 resource "aws_autoscaling_group" "rke2_workers" {
   name             = "${var.cluster_name}-worker-asg"
   desired_capacity = var.worker_count
@@ -287,6 +321,7 @@ resource "aws_autoscaling_group" "rke2_workers" {
     version = "$Latest"
   }
 
+  # Tags fuer Cluster Autoscaler - so findet er unsere ASG
   tag {
     key                 = "k8s.io/cluster-autoscaler/enabled"
     value               = "true"
@@ -299,7 +334,10 @@ resource "aws_autoscaling_group" "rke2_workers" {
   }
 }
 
-# --- 4. S3 BUCKET FOR PARTYPIC ---
+# =============================================================================
+# S3 BUCKET (Bild-Speicher)
+# =============================================================================
+
 resource "aws_s3_bucket" "partypic_bucket" {
   bucket = var.partypic_s3_bucket_name
 
@@ -311,6 +349,7 @@ resource "aws_s3_bucket" "partypic_bucket" {
   }
 }
 
+# Kein oeffentlicher Zugriff - alles ueber Presigned URLs
 resource "aws_s3_bucket_public_access_block" "partypic_bucket_access" {
   bucket = aws_s3_bucket.partypic_bucket.id
 
@@ -332,7 +371,11 @@ resource "aws_s3_bucket_cors_configuration" "partypic_bucket_cors" {
   }
 }
 
-# --- 5. RDS POSTGRESQL INSTANCE FOR PARTY-PIC ---
+# =============================================================================
+# RDS POSTGRESQL DATABASE
+# Managed Database fuer PartyPic
+# =============================================================================
+
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "${var.cluster_name}-db-subnet-group"
   subnet_ids = data.aws_subnets.default.ids
@@ -342,6 +385,7 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
   }
 }
 
+# DB nur vom Cluster erreichbar
 resource "aws_security_group" "rds_sg" {
   name        = "${var.cluster_name}-rds-sg"
   description = "Allow PostgreSQL traffic from RKE2 cluster"
@@ -377,10 +421,13 @@ resource "aws_db_instance" "partypic_db" {
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
   skip_final_snapshot = true
-
 }
 
-# --- 6. MANIFEST SYNC ---
+# =============================================================================
+# MANIFEST SYNC
+# Kopiert Kubernetes Manifests auf den Server (RKE2 deployed sie automatisch)
+# =============================================================================
+
 resource "null_resource" "sync_manifests" {
   depends_on = [aws_instance.rke2_server]
 
@@ -511,16 +558,17 @@ resource "null_resource" "sync_manifests" {
   provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /var/lib/rancher/rke2/server/manifests",
-
       "sudo mv /tmp/*.yaml /var/lib/rancher/rke2/server/manifests/",
-
+      "sudo chmod 600 /var/lib/rancher/rke2/server/manifests/*.yaml",
       "sleep 30"
     ]
   }
 }
 
+# Cluster Autoscaler - braucht die ASG daher separat
 resource "null_resource" "sync_autoscaler" {
   depends_on = [aws_autoscaling_group.rke2_workers, null_resource.sync_manifests]
+  
   triggers = {
     content = templatefile("${path.module}/manifest/cluster-autoscaler.yaml.tpl", {
       cluster_name      = var.cluster_name
@@ -529,11 +577,13 @@ resource "null_resource" "sync_autoscaler" {
       aws_session_token = local.aws_session_token
     })
   }
+  
   connection {
     type = "ssh"
     user = "ubuntu"
     host = aws_instance.rke2_server.public_ip
   }
+  
   provisioner "file" {
     content     = self.triggers.content
     destination = "/tmp/cluster-autoscaler.yaml"
@@ -546,6 +596,7 @@ resource "null_resource" "sync_autoscaler" {
   }
 }
 
+# ArgoCD Applications - werden etwas spaeter deployed damit der Cluster stabil ist
 resource "null_resource" "sync_argocd_apps" {
   depends_on = [null_resource.sync_manifests]
 

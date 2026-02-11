@@ -50,8 +50,8 @@ if ! git diff --quiet; then
     git add party-pic_client/chart/values.yaml party-pic_server/chart/values.yaml
     git commit -m "chore: auto-update ingress IP to $LB_IP via remote-kubectl"
     git push
-    # 6. ArgoCD Sync Triggern
-    sleep 5
-    kubectl patch application party-pic-server-application -n argocd --type merge -p='{"operation": {"sync": {"prune": true, "syncStrategy": {"hook": {"force": true}}}}}'
-    kubectl patch application party-pic-client-application -n argocd --type merge -p='{"operation": {"sync": {"prune": true, "syncStrategy": {"hook": {"force": true}}}}}'
 fi
+# 6. ArgoCD Sync Triggern
+sleep 5
+$SSH_CMD -o StrictHostKeyChecking=no -o LogLevel=QUIET "export PATH=\$PATH:/usr/local/bin:/snap/bin:/var/lib/rancher/rke2/bin:/usr/bin:/bin; kubectl patch application party-pic-server-application -n argocd --type merge -p='{"operation": {"sync": {"prune": true, "syncStrategy": {"hook": {"force": true}}}}}'"
+$SSH_CMD -o StrictHostKeyChecking=no -o LogLevel=QUIET "export PATH=\$PATH:/usr/local/bin:/snap/bin:/var/lib/rancher/rke2/bin:/usr/bin:/bin; kubectl patch application party-pic-client-application -n argocd --type merge -p='{"operation": {"sync": {"prune": true, "syncStrategy": {"hook": {"force": true}}}}}'"

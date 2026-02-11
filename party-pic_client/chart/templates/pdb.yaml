@@ -1,0 +1,17 @@
+# =============================================================================
+# POD DISRUPTION BUDGET (PDB)
+#
+# Garantiert dass bei Updates/Wartung mindestens 1 Pod laeuft.
+# Fuer das Frontend reicht 1 Pod da stateless.
+# =============================================================================
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: party-pic-client-pdb
+  labels:
+    app: party-pic-client
+spec:
+  minAvailable: 1  # Mindestens 1 Pod muss immer laufen
+  selector:
+    matchLabels:
+      app: party-pic-client

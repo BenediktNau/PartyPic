@@ -1,3 +1,9 @@
+# =============================================================================
+# CLIENT SERVICE
+#
+# ClusterIP Service fuer interne Kommunikation.
+# Port 80 -> Container Port 80 (Nginx)
+# =============================================================================
 apiVersion: v1
 kind: Service
 metadata:
@@ -5,11 +11,11 @@ metadata:
   labels:
     app: party-pic-client
 spec:
-  type: ClusterIP
+  type: ClusterIP  # Nur cluster-intern erreichbar
   selector:
     app: party-pic-client
   ports:
     - name: http
-      port: 80
-      targetPort: 80
+      port: 80         # Service Port
+      targetPort: 80   # Container Port (Nginx)
       protocol: TCP

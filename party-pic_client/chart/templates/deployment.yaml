@@ -1,3 +1,11 @@
+# =============================================================================
+# PARTY-PIC CLIENT DEPLOYMENT
+#
+# Kubernetes Deployment fuer das React Frontend (Nginx).
+# - Rolling Updates (kein Downtime)
+# - Liveness/Readiness Probes auf /health
+# - API-URL wird als Env-Variable injiziert
+# =============================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,6 +14,11 @@ metadata:
     app: party-pic-client
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Max 1 neuer Pod waehrend Update
+      maxUnavailable: 0  # Kein Pod darf fehlen
   selector:
     matchLabels:
       app: party-pic-client
@@ -16,14 +29,15 @@ spec:
     spec:
       containers:
         - name: party-pic-client
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}" # <--- Templatized
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: Always
           ports:
             - containerPort: 80
               protocol: TCP
           env:
+            # API-URL fuer das Frontend (wird bei Build injiziert)
             - name: VITE_API_URL
-              value: "{{ .Values.apiadresse }}" # TODO: Ersetze mit der Adresse deines API-Servers
+              value: "{{ .Values.apiadresse }}"
           resources:
             requests:
               memory: "64Mi"
@@ -31,9 +45,10 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "200m"
+          # Health Checks
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health  # Nginx health endpoint
               port: 80
             initialDelaySeconds: 10
             periodSeconds: 10

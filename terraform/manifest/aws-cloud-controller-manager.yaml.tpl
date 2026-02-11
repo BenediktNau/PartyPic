@@ -1,3 +1,13 @@
+# =============================================================================
+# AWS CLOUD CONTROLLER MANAGER
+#
+# Ermoeglicht Kubernetes die Nutzung von AWS-Ressourcen:
+# - LoadBalancer Services (NLB/ALB)
+# - EBS Volumes
+# - Node-Lifecycle (EC2 Instanzen)
+#
+# Credentials werden von Terraform injiziert.
+# =============================================================================
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
@@ -8,12 +18,12 @@ spec:
   repo: https://kubernetes.github.io/cloud-provider-aws
   version: 0.0.8
   targetNamespace: kube-system
-  bootstrap: true
+  bootstrap: true  # Vor anderen Komponenten starten
   valuesContent: |-
-    # Network Configuration
+    # Netzwerk-Konfiguration
     hostNetwork: true
     
-    # Controller Arguments
+    # Controller Argumente
     args:
       - --cluster-name=${cluster_name}
       - --v=5
@@ -21,7 +31,7 @@ spec:
       - --configure-cloud-routes=false
       - --use-service-account-credentials=false
     
-    # Credentials (injected from Terraform variables)
+    # AWS Credentials (von Terraform)
     env:
       - name: AWS_ACCESS_KEY_ID
         value: "${aws_access_key}"
@@ -29,15 +39,12 @@ spec:
         value: "${aws_secret_key}"
       - name: AWS_SESSION_TOKEN
         value: "${aws_session_token}"
-      # Optional: Add region if auto-discovery fails
-      # - name: AWS_REGION
-      #   value: "us-east-1" 
 
-    # Node Placement
+    # Nur auf Control Plane laufen
     nodeSelector:
       node-role.kubernetes.io/control-plane: "true"
     
-    # Tolerations (The dashes MUST align vertically like this)
+    # Tolerations fuer Control Plane Nodes
     tolerations:
       - key: "node.cloudprovider.kubernetes.io/uninitialized"
         value: "true"

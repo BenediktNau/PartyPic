@@ -93,7 +93,7 @@ variable "alertmanager_smtp_from" {
 }
 
 variable "alertmanager_smtp_to" {
-  description = "Empfänger-Adresse fuer Alertmanager E-Mails"
+  description = "Empfaenger-Adresse fuer Alertmanager E-Mails"
   type        = string
   default     = "elias.nieweltwot+alertmanager@gmail.com"
 }

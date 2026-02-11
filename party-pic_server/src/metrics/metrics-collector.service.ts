@@ -28,13 +28,13 @@ export class MetricsCollectorService {
     }
   }
 
-  // Anzahl aktiver Sessions aus der DB holen
+  // Anzahl aktiver Sessions aus der DB holen (nicht abgelaufen)
   private async collectActiveSessions() {
     try {
       const result = await this.pool.query(`
         SELECT COUNT(*) as count 
         FROM sessions 
-        WHERE created_at > NOW() - INTERVAL '24 hours'
+        WHERE ends_at > NOW()
       `);
       const count = parseInt(result.rows[0]?.count || '0', 10);
       this.metricsService.setActiveSessions(count);

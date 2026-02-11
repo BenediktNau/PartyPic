@@ -1,0 +1,60 @@
+# =============================================================================
+# HORIZONTAL POD AUTOSCALER (HPA)
+#
+# Skaliert die Server-Pods automatisch basierend auf CPU/Memory.
+# - Scale-Up: Schnell bei Last (15s Intervall)
+# - Scale-Down: Langsam (60s Stabilisierung, 50% pro Minute)
+# =============================================================================
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: party-pic-server-hpa
+  labels:
+    app: party-pic-server
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: party-pic-server
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    # CPU-basierte Skalierung
+    {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    # Memory-basierte Skalierung
+    {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+  behavior:
+    # Scale-Down: Langsam und vorsichtig
+    scaleDown:
+      stabilizationWindowSeconds: 60  # 60s warten nach letzter Aenderung
+      policies:
+        - type: Percent
+          value: 50       # Max 50% der Pods entfernen
+          periodSeconds: 60
+    # Scale-Up: Schnell reagieren
+    scaleUp:
+      stabilizationWindowSeconds: 0   # Sofort skalieren
+      policies:
+        - type: Percent
+          value: 100      # Pods verdoppeln erlaubt
+          periodSeconds: 15
+        - type: Pods
+          value: 4        # Oder max 4 Pods hinzufuegen
+          periodSeconds: 15
+      selectPolicy: Max   # Groessere Policy waehlen
+{{- end }}

@@ -1,0 +1,25 @@
+{
+  "name": "k6-loadtests",
+  "version": "2.0.0",
+  "description": "k6 Load Tests für PartyPic - Normal & Peak Traffic",
+  "main": "dist/normal-traffic.js",
+  "scripts": {
+    "build": "webpack",
+    "normal": "npm run build && k6 run dist/normal-traffic.js",
+    "peak": "npm run build && k6 run dist/peak-traffic.js"
+  },
+  "keywords": ["k6", "loadtest", "autoscaling"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-typescript": "^7.28.5",
+    "@types/k6": "^1.5.0",
+    "babel-loader": "^10.0.0",
+    "typescript": "^5.9.3",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1"
+  }
+}

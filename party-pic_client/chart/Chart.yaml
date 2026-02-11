@@ -1,3 +1,9 @@
+# =============================================================================
+# PARTY-PIC CLIENT HELM CHART
+#
+# Helm Chart fuer das React Frontend.
+# Deployed Deployment, Service, Ingress, HPA und PDB.
+# =============================================================================
 apiVersion: v2
 name: party-pic-client
 description: A Helm chart for the party pic client

@@ -1,0 +1,17 @@
+# =============================================================================
+# POD DISRUPTION BUDGET (PDB)
+#
+# Garantiert dass bei Updates/Wartung mindestens 2 Pods laufen.
+# Verhindert Downtime bei Rolling Updates oder Node-Evictions.
+# =============================================================================
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: party-pic-server-pdb
+  labels:
+    app: party-pic-server
+spec:
+  minAvailable: 2  # Mindestens 2 Pods muessen immer laufen
+  selector:
+    matchLabels:
+      app: party-pic-server

@@ -1,5 +1,15 @@
 # =============================================================================
 # GRAFANA - Visualization & Dashboards
+#
+# Grafana wird als HelmChart deployed und enthaelt:
+# - Admin-Credentials (aus terraform.tfvars)
+# - Datasources: Prometheus (Metriken) + Loki (Logs)
+# - Vorkonfigurierte Dashboards (embedded als JSON)
+#
+# Zugang: grafana.<lb_ip>.nip.io (Login: admin / aus tfvars)
+#
+# HINWEIS: Diese Datei ist sehr gross (~3000 Zeilen) weil die
+# Dashboard-JSONs direkt eingebettet sind. Nicht manuell editieren!
 # =============================================================================
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
@@ -13,6 +23,7 @@ spec:
   targetNamespace: ${monitoring_namespace}
   createNamespace: true
   valuesContent: |-
+    # Admin-Credentials (aus terraform.tfvars)
     adminUser: admin
     adminPassword: "${grafana_admin_password}"
 
@@ -34,7 +45,7 @@ spec:
       periodSeconds: 10
       timeoutSeconds: 3
       
-    # Datasources
+    # Datasources - Prometheus fuer Metriken, Loki fuer Logs
     datasources:
       datasources.yaml:
         apiVersion: 1
@@ -329,7 +340,7 @@ spec:
                       "refId": "A"
                     }
                   ],
-                  "title": "Error Rate (%)",
+                  "title": "Error Rate (%) 5 Min",
                   "type": "gauge"
                 },
                 {
@@ -440,7 +451,7 @@ spec:
                   "targets": [
                     {
                       "editorMode": "code",
-                      "expr": "sum(partypic_active_sessions) or vector(0)",
+                      "expr": "max(partypic_active_sessions) or vector(0)",
                       "range": true,
                       "refId": "A"
                     }
@@ -500,7 +511,7 @@ spec:
                   "targets": [
                     {
                       "editorMode": "code",
-                      "expr": "sum(partypic_users_online) or vector(0)",
+                      "expr": "max(partypic_users_online) or vector(0)",
                       "range": true,
                       "refId": "A"
                     }
@@ -560,7 +571,7 @@ spec:
                   "targets": [
                     {
                       "editorMode": "code",
-                      "expr": "sum(partypic_photos_uploaded_total) or vector(0)",
+                      "expr": "max(partypic_photos_uploaded_total) or vector(0)",
                       "range": true,
                       "refId": "A"
                     }
@@ -656,6 +667,232 @@ spec:
                     }
                   ],
                   "title": "Request Duration Distribution",
+                  "type": "timeseries"
+                },
+                {
+                  "fieldConfig": {
+                    "defaults": {
+                      "color": {
+                        "mode": "thresholds"
+                      },
+                      "displayName": "Server Pods",
+                      "mappings": [],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "green",
+                            "value": 0
+                          },
+                          {
+                            "color": "yellow",
+                            "value": 5
+                          },
+                          {
+                            "color": "orange",
+                            "value": 8
+                          },
+                          {
+                            "color": "red",
+                            "value": 10
+                          }
+                        ]
+                      }
+                    },
+                    "overrides": []
+                  },
+                  "gridPos": {
+                    "h": 4,
+                    "w": 6,
+                    "x": 0,
+                    "y": 16
+                  },
+                  "id": 9,
+                  "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "percentChangeColorMode": "standard",
+                    "reduceOptions": {
+                      "calcs": [
+                        "lastNotNull"
+                      ],
+                      "fields": "",
+                      "values": false
+                    },
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
+                  },
+                  "pluginVersion": "12.3.1",
+                  "targets": [
+                    {
+                      "editorMode": "code",
+                      "expr": "sum(kube_deployment_status_replicas{deployment=\"party-pic-server\"}) or vector(0)",
+                      "range": true,
+                      "refId": "A"
+                    }
+                  ],
+                  "title": "Server Pods (HPA)",
+                  "type": "stat"
+                },
+                {
+                  "fieldConfig": {
+                    "defaults": {
+                      "color": {
+                        "mode": "thresholds"
+                      },
+                      "displayName": "Client Pods",
+                      "mappings": [],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "green",
+                            "value": 0
+                          },
+                          {
+                            "color": "yellow",
+                            "value": 5
+                          },
+                          {
+                            "color": "orange",
+                            "value": 8
+                          },
+                          {
+                            "color": "red",
+                            "value": 10
+                          }
+                        ]
+                      }
+                    },
+                    "overrides": []
+                  },
+                  "gridPos": {
+                    "h": 4,
+                    "w": 6,
+                    "x": 6,
+                    "y": 16
+                  },
+                  "id": 10,
+                  "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "percentChangeColorMode": "standard",
+                    "reduceOptions": {
+                      "calcs": [
+                        "lastNotNull"
+                      ],
+                      "fields": "",
+                      "values": false
+                    },
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
+                  },
+                  "pluginVersion": "12.3.1",
+                  "targets": [
+                    {
+                      "editorMode": "code",
+                      "expr": "sum(kube_deployment_status_replicas{deployment=\"party-pic-client\"}) or vector(0)",
+                      "range": true,
+                      "refId": "A"
+                    }
+                  ],
+                  "title": "Client Pods (HPA)",
+                  "type": "stat"
+                },
+                {
+                  "fieldConfig": {
+                    "defaults": {
+                      "color": {
+                        "mode": "palette-classic"
+                      },
+                      "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "Pods",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 20,
+                        "gradientMode": "opacity",
+                        "hideFrom": {
+                          "legend": false,
+                          "tooltip": false,
+                          "viz": false
+                        },
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                          "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": true,
+                        "stacking": {
+                          "group": "A",
+                          "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                          "mode": "line+area"
+                        }
+                      },
+                      "mappings": [],
+                      "max": 12,
+                      "min": 0,
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "color": "transparent",
+                            "value": null
+                          },
+                          {
+                            "color": "red",
+                            "value": 10
+                          }
+                        ]
+                      }
+                    },
+                    "overrides": []
+                  },
+                  "gridPos": {
+                    "h": 6,
+                    "w": 12,
+                    "x": 12,
+                    "y": 16
+                  },
+                  "id": 11,
+                  "options": {
+                    "legend": {
+                      "calcs": [],
+                      "displayMode": "list",
+                      "placement": "bottom",
+                      "showLegend": true
+                    },
+                    "tooltip": {
+                      "mode": "multi",
+                      "sort": "desc"
+                    }
+                  },
+                  "pluginVersion": "12.3.1",
+                  "targets": [
+                    {
+                      "expr": "sum(kube_deployment_status_replicas{deployment=\"party-pic-server\"}) or vector(0)",
+                      "legendFormat": "Server Pods",
+                      "refId": "A"
+                    },
+                    {
+                      "expr": "sum(kube_deployment_status_replicas{deployment=\"party-pic-client\"}) or vector(0)",
+                      "legendFormat": "Client Pods",
+                      "refId": "B"
+                    }
+                  ],
+                  "title": "Pod Scaling Timeline (HPA)",
                   "type": "timeseries"
                 }
               ],
@@ -2180,7 +2417,7 @@ spec:
 
                     {
 
-                      "expr": "partypic_active_sessions or vector(0)",
+                      "expr": "max(partypic_active_sessions) or vector(0)",
 
                       "refId": "A"
 
@@ -2288,7 +2525,7 @@ spec:
 
                     {
 
-                      "expr": "partypic_users_online or vector(0)",
+                      "expr": "max(partypic_users_online) or vector(0)",
 
                       "refId": "A"
 
