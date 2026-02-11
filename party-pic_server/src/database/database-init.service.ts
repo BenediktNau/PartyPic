@@ -12,6 +12,7 @@ export class DatabaseInitService implements OnModuleInit {
     await this.initSchema();
   }
 
+  
   private async initSchema() {
     const client = await this.pool.connect();
     try {
