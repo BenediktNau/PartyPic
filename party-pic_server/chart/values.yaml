@@ -11,14 +11,14 @@ replicaCount: 1
 image:
   repository: ghcr.io/benediktnau/partypic-server
   pullPolicy: Always # Immer aktuelles Image ziehen
-  tag: "sha-c274daf43998c6dc2f747e1cc77c1246dcce9d98"
+  tag: "sha-83e8ecdac7b8997645f199ceea1800761ca65e53"
 # Resource Limits (wichtig fuer HPA!)
 resources:
   requests:
     cpu: "250m"
     memory: "128Mi"
   limits:
-    cpu: "500m" 
+    cpu: "500m"
     memory: "512Mi"
 # Horizontal Pod Autoscaler
 autoscaling:
