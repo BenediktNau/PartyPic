@@ -1,9 +1,6 @@
 # =============================================================================
 # TERRAFORM VARIABLES EXAMPLE
 # =============================================================================
-# Kopiere diese Datei zu terraform.tfvars und passe die Werte an:
-#   cp terraform.tfvars.example terraform.tfvars
-#
 # WICHTIG: terraform.tfvars enthält sensible Daten und ist in .gitignore!
 # =============================================================================
 
@@ -17,3 +14,12 @@ rke2_token = "das-ist-ein-Testpasswort"
 
 # Grafana Admin Passwort
 grafana_admin_password = "das-ist-ein-anderes-Testpasswort"
+
+# Party-Pic Server Datenbank Zugangsdaten
+partypic_db_password    = "partypic_password"
+partypic_db_name        = "partypic_dbname"
+partypic_db_user        = "partypic_dbuser"
+partypic_s3_endpoint    = "https://s3.us-east-1.amazonaws.com"
+partypic_s3_bucket_name = "partypic_dev-foto-bucket"
+partypic_s3_region      = "us-east-1"
+partypic_jwt_secret     = "ein-sehr-starkes-jwt-secret"
