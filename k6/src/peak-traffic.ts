@@ -3,7 +3,6 @@
  * 
  * Simuliert realistisches Benutzerverhalten mit:
  * - 20 Sessions
- * - 20-30 User pro Session (insgesamt ~500 User)
  * - Menschliche Reaktionszeiten und Tippgeschwindigkeiten
  * - Registrierung -> Login -> Session erstellen -> Bilder hochladen -> Galerie anschauen
  * 
@@ -47,10 +46,10 @@ import {
 // k6 Test-Konfiguration
 export const options: Options = {
   stages: [
-    { duration: '2m', target: 100 },   // Langsamer Start
-    { duration: '3m', target: 300 },  // Ramp-Up
-    { duration: '3m', target: 500 },  // Peak
-    { duration: '2m', target: 100 },    // Ramp-Down
+    { duration: '2m', target: 100 },   // Start
+    { duration: '3m', target: 300 },   // Ramp-Up
+    { duration: '3m', target: 500 },   // Peak
+    { duration: '2m', target: 100 },   // Ramp-Down
   ],
   thresholds: {
     http_req_duration: ['p(95)<3000'], // 95% der Requests unter 3s

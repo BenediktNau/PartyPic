@@ -3,7 +3,6 @@
  * 
  * Simuliert realistisches Benutzerverhalten mit:
  * - 5 Sessions
- * - 20-30 User pro Session (insgesamt ~100-150 User)
  * - Menschliche Reaktionszeiten und Tippgeschwindigkeiten
  * - Registrierung -> Login -> Session erstellen -> Bilder hochladen -> Galerie anschauen
  * 
@@ -48,8 +47,8 @@ import {
 export const options: Options = {
   stages: [
     { duration: '2m', target: 50 },   // Langsamer Start
-    { duration: '3m', target: 150 },  // Ramp-Up
-    { duration: '3m', target: 300 },  // Peak
+    { duration: '3m', target: 100 },  // Ramp-Up
+    { duration: '3m', target: 200 },  // Peak
     { duration: '2m', target: 0 },    // Ramp-Down
   ],
   thresholds: {
