@@ -9,7 +9,7 @@
 # Zugang: grafana.<lb_ip>.nip.io (Login: admin / aus tfvars)
 #
 # HINWEIS: Diese Datei ist sehr gross (~3000 Zeilen) weil die
-# Dashboard-JSONs direkt eingebettet sind. Nicht manuell editieren!
+# Dashboard-JSONs direkt eingebettet sind.
 # =============================================================================
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
@@ -103,7 +103,7 @@ spec:
               "editable": true,
               "fiscalYearStartMonth": 0,
               "graphTooltip": 0,
-              "id": 4,
+              "id": 3,
               "links": [],
               "panels": [
                 {
@@ -791,7 +791,7 @@ spec:
                   "targets": [
                     {
                       "editorMode": "code",
-                      "expr": "partypic_photos_total or vector(0)",
+                      "expr": "max(partypic_photos_total) or vector(0)",
                       "range": true,
                       "refId": "A"
                     }

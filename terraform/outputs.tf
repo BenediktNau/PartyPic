@@ -21,7 +21,7 @@ output "loadbalancer_ip" {
 # -----------------------------------------------------------------------------
 output "app_url" {
   description = "PartyPic Frontend URL"
-  value       = "http://app.${aws_eip.ingress_ip.public_ip}.nip.io"
+  value       = "https://app.${aws_eip.ingress_ip.public_ip}.nip.io"
 }
 
 output "grafana_url" {

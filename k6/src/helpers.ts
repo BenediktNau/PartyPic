@@ -4,7 +4,6 @@
 
 import { check } from 'k6';
 import http from 'k6/http';
-import { FormData } from 'https://jslib.k6.io/formdata/0.0.2/index.js';
 
 export interface User {
   email: string;
