@@ -237,3 +237,10 @@ Das Skript holt die aktuelle IP, patcht die Helm `values.yaml` beider Apps und t
 cd terraform/
 terraform destroy
 ```
+
+> **Achtung:** `terraform destroy` entfernt **nicht** automatisch alle Ressourcen vollständig. Folgende Ressourcen müssen manuell in der AWS Console gelöscht werden:
+>
+> - **Elastic IP** – unter *EC2 → Elastic IPs* die zugehörige IP freigeben ("Release")
+> - **Load Balancer** – unter *EC2 → Load Balancers* den vom Ingress-Controller erstellten NLB/ELB löschen
+>
+> Solange diese Ressourcen existieren, entstehen weiterhin Kosten.
