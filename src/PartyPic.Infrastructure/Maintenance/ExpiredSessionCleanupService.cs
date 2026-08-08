@@ -54,9 +54,11 @@ public sealed class ExpiredSessionCleanupService(
         var db = scope.ServiceProvider.GetRequiredService<PartyPicDbContext>();
         var storage = scope.ServiceProvider.GetRequiredService<IPhotoStorage>();
 
-        var now = clock.GetUtcNow().UtcDateTime;
+        // Nicht am Party-Ende, sondern erst nach der Aufbewahrungsfrist: bis dahin bleibt
+        // die Galerie abrufbar, es kommt nur nichts Neues mehr dazu.
+        var deleteBefore = clock.GetUtcNow().UtcDateTime - options.Value.RetentionAfterEnd;
         var expired = await db.Sessions
-            .Where(s => s.EndsAt <= now)
+            .Where(s => s.EndsAt <= deleteBefore)
             .Select(s => s.Id)
             .ToListAsync(ct);
 

@@ -11,6 +11,11 @@ public sealed class PartyOptions
     /// Session-Endpoints mit 410 Gone und der Cleanup raeumt sie samt Fotos ab.</summary>
     public TimeSpan SessionLifetime { get; set; } = TimeSpan.FromDays(7);
 
+    /// <summary>Wie lange die Galerie nach dem Party-Ende noch abrufbar bleibt, bevor der
+    /// Cleanup sie samt Fotos entfernt. Ohne diese Frist waeren die Bilder eine Stunde
+    /// nach dem Ende weg — genau dann, wenn alle sie sich ansehen wollen.</summary>
+    public TimeSpan RetentionAfterEnd { get; set; } = TimeSpan.FromDays(30);
+
     /// <summary>Zeitfenster, innerhalb dessen ein Heartbeat einen Gast als "online" zaehlt.
     /// Der Client schlaegt alle 30 s an, zwei verpasste Schlaege sind also erlaubt.</summary>
     public TimeSpan OnlineWindow { get; set; } = TimeSpan.FromMinutes(1);

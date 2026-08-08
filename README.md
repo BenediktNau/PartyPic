@@ -68,8 +68,9 @@ Container-Laufzeit (Docker oder Podman).
 - Gemeinsame Galerie mit Vollbild, Wischen und Speichern
 - Eigene Fotos wieder löschen
 
-Nach dem Party-Ende (standardmäßig 7 Tage) sind keine neuen Uploads mehr möglich; die
-Galerie bleibt, bis der Aufräum-Job die Party samt Bildern entfernt.
+Nach dem Party-Ende (standardmäßig 7 Tage) sind keine neuen Uploads mehr möglich. Die
+Galerie bleibt danach noch 30 Tage abrufbar — wer den Link hat und seinen Namen eingibt,
+kommt weiter an die Bilder. Erst danach räumt der Aufräum-Job die Party samt Fotos ab.
 
 ## Konfiguration
 
@@ -84,6 +85,7 @@ Alles hat brauchbare Standardwerte — nur das JWT-Secret muss gesetzt werden.
 | `PartyPic__Storage__BucketName` | Bucket, wird bei Bedarf angelegt | `partypic` |
 | `PartyPic__AllowRegistration` | Neue Gastgeber-Accounts erlauben. Nach dem eigenen Account sinnvollerweise `false`. | `true` |
 | `PartyPic__SessionLifetime` | Laufzeit einer Party | `7.00:00:00` |
+| `PartyPic__RetentionAfterEnd` | Wie lange die Galerie nach dem Ende noch abrufbar bleibt | `30.00:00:00` |
 | `PartyPic__MaxUploadBytes` | Größtes erlaubtes Bild | 15 MB |
 | `PartyPic__CleanupInterval` | Takt des Aufräum-Jobs, `0` schaltet ihn ab | `01:00:00` |
 
@@ -123,7 +125,7 @@ Postgres noch MinIO noch Docker.
 
 - **Gastgeber** melden sich mit E-Mail und Passwort an (BCrypt) und bekommen ein JWT.
 - **Gäste** bekommen ebenfalls ein JWT — fest an *eine* Party gebunden und nie länger
-  gültig als die Party selbst. Die Session-Id in der URL allein öffnet nichts.
+  gültig als deren Aufbewahrungsfrist. Die Session-Id in der URL allein öffnet nichts.
 - Bilder laufen nie durch die Anwendung: der Browser lädt per signierter URL direkt in
   den Speicher. Bestätigt wird ein Upload erst, wenn das Objekt wirklich im Bucket liegt.
 - Erlaubt sind nur echte Bildformate (kein SVG — das wäre ausführbares XML in der Galerie).

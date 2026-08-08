@@ -75,16 +75,25 @@ public sealed class SessionEndpointTests : ApiTestBase
     }
 
     [Fact]
-    public async Task Abgelaufene_Party_nimmt_niemanden_mehr_auf()
+    public async Task Nach_dem_Party_Ende_kommt_man_noch_zum_Anschauen_herein()
     {
         await Api.RegisterHostAsync();
         var session = await Api.CreateSessionAsync();
 
         App.Clock.Advance(TimeSpan.FromDays(8));
 
-        var status = await NewClient().PostAsync($"/api/sessions/{session.Id}/join", new { Username = "Spaet" });
+        var guest = NewClient();
+        var (status, body) = await guest.PostAsync<AuthBody>($"/api/sessions/{session.Id}/join",
+            new { Username = "Spaet" });
 
-        Assert.Equal(HttpStatusCode.Gone, status);
+        // Der Beitritt bleibt offen, damit niemand von den Bildern des eigenen Abends
+        // ausgesperrt wird; gesperrt ist nur das Hochladen.
+        Assert.Equal(HttpStatusCode.OK, status);
+        guest.Token = body!.Token;
+
+        Assert.Equal(HttpStatusCode.OK, (await guest.GetAsync<GalleryBody>($"/api/sessions/{session.Id}/pictures")).Status);
+        Assert.Equal(HttpStatusCode.Gone, await guest.PostAsync($"/api/sessions/{session.Id}/pictures/upload-url",
+            new { ContentType = "image/jpeg", SizeBytes = 2048 }));
     }
 
     [Fact]

@@ -34,7 +34,13 @@ public sealed class ExpiredSessionCleanupServiceTests
         Assert.Equal(0, await cleanup.RunOnceAsync(CancellationToken.None));
         Assert.True(app.Storage.Exists(upload.ObjectKey));
 
+        // Auch direkt nach dem Ende noch nicht: die Galerie soll die Aufbewahrungsfrist
+        // ueberleben, sonst waeren die Bilder eine Stunde nach der Feier weg.
         app.Clock.Advance(TimeSpan.FromDays(8));
+        Assert.Equal(0, await cleanup.RunOnceAsync(CancellationToken.None));
+        Assert.True(app.Storage.Exists(upload.ObjectKey));
+
+        app.Clock.Advance(TimeSpan.FromDays(31));
 
         Assert.Equal(1, await cleanup.RunOnceAsync(CancellationToken.None));
         Assert.False(app.Storage.Exists(upload.ObjectKey));

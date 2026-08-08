@@ -214,6 +214,10 @@ public sealed class PictureEndpointTests : ApiTestBase
 
         App.Clock.Advance(TimeSpan.FromDays(8));
 
+        // Das alte Gast-Token ist inzwischen abgelaufen — mit demselben Namen kommt man
+        // zurueck in dieselbe Identitaet und bekommt ein frisches.
+        await guest.JoinAsync(session.Id, "Anna");
+
         Assert.Equal(HttpStatusCode.Gone, await guest.PostAsync($"/api/sessions/{session.Id}/pictures/upload-url",
             new { ContentType = "image/jpeg", SizeBytes = 2048 }));
 

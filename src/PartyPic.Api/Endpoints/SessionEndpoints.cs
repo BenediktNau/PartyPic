@@ -163,6 +163,7 @@ internal static class SessionEndpoints
             PartyPicDbContext db,
             ITokenIssuer tokens,
             PartyMetrics metrics,
+            IOptions<PartyOptions> options,
             TimeProvider clock,
             CancellationToken ct) =>
         {
@@ -176,8 +177,11 @@ internal static class SessionEndpoints
             var session = await db.Sessions.FirstOrDefaultAsync(s => s.Id == sessionId, ct);
             if (session is null)
                 return Results.Problem("Diese Party gibt es nicht.", statusCode: StatusCodes.Status404NotFound);
-            if (session.EndsAt <= clock.GetUtcNow().UtcDateTime)
-                return Results.Problem("Diese Party ist vorbei.", statusCode: StatusCodes.Status410Gone);
+
+            // Auch nach dem Party-Ende wird noch hereingelassen — nur eben zum Anschauen.
+            // Das Hochladen sperren die Bild-Endpoints selbst (requireActive). Wuerde hier
+            // abgewiesen, kaeme niemand mehr an die Bilder des eigenen Abends, sobald sein
+            // Token abgelaufen ist.
 
             // Beitreten und Wiederkommen sind derselbe Aufruf: wer denselben Namen erneut
             // eingibt, bekommt seine bestehende Identitaet zurueck. Das ersetzt den
@@ -204,7 +208,11 @@ internal static class SessionEndpoints
 
             await db.SaveChangesAsync(ct);
 
-            var token = tokens.IssueGuestToken(guest.Id, sessionId, guest.UserName, session.EndsAt);
+            // Das Token laeuft mit der Aufbewahrungsfrist ab, nicht mit der Party: bis
+            // dahin gibt es die Galerie noch, und genau dafuer wird es gebraucht.
+            var token = tokens.IssueGuestToken(guest.Id, sessionId, guest.UserName,
+                session.EndsAt + options.Value.RetentionAfterEnd);
+
             return Results.Ok(new AuthResponse(token.AccessToken, token.ExpiresAt, Host: null,
                 new GuestResponse(guest.Id, guest.UserName, sessionId)));
         })

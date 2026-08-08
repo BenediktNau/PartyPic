@@ -45,15 +45,15 @@ public sealed class TokenIssuerTests
     }
 
     [Fact]
-    public void Gast_Token_ueberlebt_die_Party_nicht()
+    public void Gast_Token_wird_auf_das_Aufbewahrungsende_gedeckelt()
     {
         var (issuer, _) = Create(new PartyOptions { GuestTokenLifetime = TimeSpan.FromDays(2) });
         var partyEnd = Now.AddHours(3);
 
         var issued = issuer.IssueGuestToken(Guid.NewGuid(), Guid.NewGuid(), "Anna", partyEnd);
 
-        // Sonst haette jemand nach dem Ende noch Schreibrecht auf eine Galerie,
-        // die es fachlich nicht mehr gibt.
+        // Der Aufrufer gibt die Obergrenze vor (Party-Ende plus Aufbewahrungsfrist);
+        // laenger darf ein Gast-Token nie gelten.
         Assert.Equal(partyEnd, issued.ExpiresAt);
     }
 

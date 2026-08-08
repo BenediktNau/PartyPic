@@ -11,7 +11,8 @@ namespace PartyPic.Api;
 /// <see cref="IConfigureOptions{TOptions}"/> und nicht inline in Program.cs, weil das
 /// Secret erst nach dem <c>PostConfigure</c> feststeht (dort entsteht ggf. das
 /// Wegwerf-Secret) — inline gelesen waere es zum falschen Zeitpunkt.</summary>
-internal sealed class ConfigureJwtBearerOptions(IOptions<JwtOptions> jwt) : IConfigureNamedOptions<JwtBearerOptions>
+internal sealed class ConfigureJwtBearerOptions(IOptions<JwtOptions> jwt, TimeProvider clock)
+    : IConfigureNamedOptions<JwtBearerOptions>
 {
     public void Configure(JwtBearerOptions options) => Configure(Options.DefaultName, options);
 
@@ -22,8 +23,21 @@ internal sealed class ConfigureJwtBearerOptions(IOptions<JwtOptions> jwt) : ICon
 
         var settings = jwt.Value;
         options.MapInboundClaims = false;
+        options.TimeProvider = clock;
         options.TokenValidationParameters = new TokenValidationParameters
         {
+            // Ausstellung und Pruefung muessen dieselbe Uhr benutzen. Die Bibliothek
+            // greift sonst fest auf DateTime.UtcNow zu, waehrend der TokenIssuer den
+            // TimeProvider verwendet — auseinanderlaufende Uhren wuerden gueltige Tokens
+            // als "noch nicht gueltig" oder "abgelaufen" abweisen.
+            LifetimeValidator = (notBefore, expires, _, parameters) =>
+            {
+                var now = clock.GetUtcNow().UtcDateTime;
+                var skew = parameters.ClockSkew;
+                return (notBefore is null || notBefore.Value <= now + skew)
+                    && (expires is null || expires.Value >= now - skew);
+            },
+
             ValidateIssuer = true,
             ValidIssuer = settings.Issuer,
             ValidateAudience = true,

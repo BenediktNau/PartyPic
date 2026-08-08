@@ -153,11 +153,14 @@ function JoinScreen({
       <div className="text-center">
         <h1 className="font-display text-3xl font-black">{partyName}</h1>
         <p className="mt-2 text-muted">
-          {hasEnded ? 'Diese Party ist schon vorbei.' : 'Sag kurz, wie du heisst — dann geht es los.'}
+          {hasEnded ? 'Diese Party ist vorbei.' : 'Sag kurz, wie du heisst — dann geht es los.'}
         </p>
       </div>
 
-      <Sheet open={!hasEnded} title="Mitmachen">
+      {/* Auch bei einer beendeten Party geht der Dialog auf: die Galerie bleibt danach
+          noch abrufbar, und ohne Beitritt käme niemand mehr an die Bilder des eigenen
+          Abends — Gast-Tokens laufen nach zwei Tagen ab. */}
+      <Sheet open title={hasEnded ? 'Galerie ansehen' : 'Mitmachen'}>
         <form
           onSubmit={event => {
             event.preventDefault()
@@ -177,13 +180,15 @@ function JoinScreen({
           />
 
           <p className="text-sm text-muted">
-            Kein Account nötig. Mit demselben Namen kommst du später wieder hinein.
+            {hasEnded
+              ? 'Trag denselben Namen ein wie damals — dann siehst du die Galerie wieder.'
+              : 'Kein Account nötig. Mit demselben Namen kommst du später wieder hinein.'}
           </p>
 
           {error && Object.keys(error.fieldErrors).length === 0 && <ErrorNote>{error.message}</ErrorNote>}
 
           <Button type="submit" className="w-full" loading={join.isPending} disabled={!username.trim()}>
-            Los geht's
+            {hasEnded ? 'Galerie öffnen' : "Los geht's"}
           </Button>
         </form>
       </Sheet>
