@@ -108,4 +108,4 @@ public sealed record UploadUrlBody(string UploadUrl, string ObjectKey, DateTime 
 public sealed record PictureBody(Guid Id, DateTime CreatedAt, string UserName, string? MissionId, string? MissionDescription, string ContentType, long FileSizeBytes, string Url, bool CanDelete);
 public sealed record GalleryBody(List<PictureBody> Items, int Total);
 public sealed record StatsBody(int PhotoCount, int GuestCount, int OnlineGuests);
-public sealed record PreviewBody(Guid Id, string Name, DateTime EndsAt, bool HasEnded, int MissionCount);
+public sealed record PreviewBody(Guid Id, string Name, DateTime EndsAt, bool HasEnded, int MissionCount, bool IsHost);

@@ -19,6 +19,13 @@ export async function captureFrame(video: HTMLVideoElement): Promise<Blob> {
     throw new Error('Die Kamera liefert noch kein Bild.')
   }
 
+  // Ein beendeter Track lässt Breite und Höhe stehen: ohne diese Prüfung würde das
+  // letzte eingefrorene Bild abgegriffen und als frisches Foto hochgeladen.
+  const stream = video.srcObject
+  if (stream instanceof MediaStream && !stream.getVideoTracks().some(track => track.readyState === 'live')) {
+    throw new Error('Die Kamera wurde unterbrochen. Bitte kurz neu starten.')
+  }
+
   const scale = Math.min(1, MAX_EDGE / Math.max(videoWidth, videoHeight))
   const width = Math.round(videoWidth * scale)
   const height = Math.round(videoHeight * scale)

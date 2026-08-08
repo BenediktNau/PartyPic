@@ -20,10 +20,13 @@ function Party() {
 
   const preview = useSessionPreview(sessionId)
 
-  // Wer ist hier drin? Ein Gast mit passendem Session-Claim oder der angemeldete
-  // Gastgeber. Alles andere sieht den Beitritts-Dialog.
+  // Wer ist hier drin? Ein Gast mit passendem Session-Claim oder der Gastgeber genau
+  // dieser Party. Alles andere sieht den Beitritts-Dialog. Die Zugehoerigkeit des
+  // Gastgebers bestaetigt der Server (preview.isHost) — ein angemeldeter Gastgeber, der
+  // den Link einer fremden Party oeffnet, saesse sonst in einer Oberflaeche fest, deren
+  // Aufrufe alle mit 403 zurueckkommen.
   const isGuestHere = identity?.kind === 'guest' && identity.guest.sessionId === sessionId
-  const isHost = identity?.kind === 'host'
+  const isHost = preview.data?.isHost === true
   const isMember = isGuestHere || isHost
 
   const [tab, setTab] = useState<Tab>('camera')
@@ -40,12 +43,16 @@ function Party() {
     )
   }
 
-  if (preview.isError) {
+  // Nur wenn nie etwas geladen wurde. Ein fehlgeschlagener Hintergrund-Abgleich — beim
+  // Zurueckwechseln zur App auf wackligem WLAN der Normalfall — darf eine laufende Party
+  // nicht durch "gibt es nicht" ersetzen.
+  if (preview.isError && !preview.data) {
     return (
       <div className="grid min-h-dvh place-items-center px-6">
         <div className="space-y-4 text-center">
           <EmptyState icon="🔍" title="Diese Party gibt es nicht" hint="Vielleicht ist der Link nicht vollständig." />
-          <Button variant="ghost" onClick={() => void navigate({ to: '/' })}>
+          <Button onClick={() => void preview.refetch()}>Nochmal versuchen</Button>
+          <Button variant="ghost" className="w-full" onClick={() => void navigate({ to: '/' })}>
             Zur Startseite
           </Button>
         </div>
@@ -53,7 +60,7 @@ function Party() {
     )
   }
 
-  const party = preview.data
+  const party = preview.data!
 
   if (!isMember) {
     return <JoinScreen sessionId={sessionId} partyName={party.name} hasEnded={party.hasEnded} />
@@ -179,17 +186,20 @@ function JoinScreen({
             error={error?.fieldError('username')}
           />
 
+          {error && Object.keys(error.fieldErrors).length === 0 && <ErrorNote>{error.message}</ErrorNote>}
+
+          {/* Knopf vor dem Hinweistext: iOS verkleinert den Viewport fuer die Tastatur
+              nicht, ein am unteren Rand verankerter Dialog verschwindet also teilweise
+              dahinter — und ausgerechnet die Haupt-Aktion waere das Verdeckte. */}
+          <Button type="submit" className="w-full" loading={join.isPending} disabled={!username.trim()}>
+            {hasEnded ? 'Galerie öffnen' : "Los geht's"}
+          </Button>
+
           <p className="text-sm text-muted">
             {hasEnded
               ? 'Trag denselben Namen ein wie damals — dann siehst du die Galerie wieder.'
               : 'Kein Account nötig. Mit demselben Namen kommst du später wieder hinein.'}
           </p>
-
-          {error && Object.keys(error.fieldErrors).length === 0 && <ErrorNote>{error.message}</ErrorNote>}
-
-          <Button type="submit" className="w-full" loading={join.isPending} disabled={!username.trim()}>
-            {hasEnded ? 'Galerie öffnen' : "Los geht's"}
-          </Button>
         </form>
       </Sheet>
     </div>

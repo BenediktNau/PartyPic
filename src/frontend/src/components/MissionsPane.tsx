@@ -23,16 +23,22 @@ export function MissionsPane({ sessionId, active }: { sessionId: string; active:
     try {
       await save.mutateAsync(next)
       toast(done, 'good')
+      return true
     } catch {
       toast('Das liess sich nicht speichern.', 'bad')
+      return false
     }
   }
 
   const add = async () => {
     const description = draft.trim()
     if (!description) return
-    setDraft('')
-    await persist([...toInput(current), { id: null, description }], 'Auftrag hinzugefügt')
+
+    // Erst nach erfolgreichem Speichern leeren — sonst ist ein muehsam getippter Auftrag
+    // weg, sobald die Verbindung einmal zickt.
+    if (await persist([...toInput(current), { id: null, description }], 'Auftrag hinzugefügt')) {
+      setDraft('')
+    }
   }
 
   const removeAt = async (id: string) =>
@@ -41,7 +47,15 @@ export function MissionsPane({ sessionId, active }: { sessionId: string; active:
   const importFile = async (file: File | undefined) => {
     if (!file) return
 
-    const text = await file.text()
+    let text: string
+    try {
+      text = await file.text()
+    } catch {
+      // Etwa eine iCloud-Datei, die noch gar nicht auf dem Geraet liegt.
+      toast('Diese Datei liess sich nicht lesen.', 'bad')
+      return
+    }
+
     const lines = text
       .split(/\r?\n/)
       .map(line => line.trim())
@@ -134,8 +148,13 @@ export function MissionsPane({ sessionId, active }: { sessionId: string; active:
                 <button
                   type="button"
                   onClick={() => void removeAt(mission.id)}
+                  // Waehrend eines laufenden Speicherns gesperrt: jede Aenderung schickt
+                  // die komplette Liste, und zwei schnell hintereinander getippte
+                  // Loeschungen bauten beide auf demselben alten Stand auf — die erste
+                  // geloeschte Mission kam dadurch zurueck.
+                  disabled={save.isPending}
                   aria-label={`Auftrag "${mission.description}" entfernen`}
-                  className="tap -mr-2 rounded-full px-3 text-muted"
+                  className="tap -mr-2 rounded-full px-3 text-muted disabled:opacity-40"
                 >
                   ✕
                 </button>

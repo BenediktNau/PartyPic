@@ -40,9 +40,10 @@ export function ShareCard({ sessionId }: { sessionId: string }) {
       try {
         await navigator.share({ title: 'PartyPic', text: 'Mach mit und lade deine Fotos hoch:', url })
         return
-      } catch {
-        // Abgebrochen — das ist keine Fehlermeldung wert.
-        return
+      } catch (cause) {
+        // Ein Abbruch durch den Nutzer ist keine Fehlermeldung wert; alles andere schon,
+        // sonst wirkt der Knopf einfach tot.
+        if (cause instanceof DOMException && cause.name === 'AbortError') return
       }
     }
 

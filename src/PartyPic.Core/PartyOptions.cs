@@ -41,8 +41,11 @@ public sealed class PartyOptions
     /// <see cref="TimeSpan.Zero"/> schaltet den Cleanup ab.</summary>
     public TimeSpan CleanupInterval { get; set; } = TimeSpan.FromHours(1);
 
-    /// <summary>Obergrenze fuer eine Galerie-Seite.</summary>
-    public int MaxGalleryPageSize { get; set; } = 200;
+    /// <summary>Obergrenze fuer eine Galerie-Seite. Die Galerie laedt von oben wachsend
+    /// nach statt seitenweise: bei einer Liste, an deren Anfang staendig neue Fotos
+    /// dazukommen, verschieben sich Seitengrenzen sonst und Bilder tauchen doppelt oder
+    /// gar nicht auf.</summary>
+    public int MaxGalleryPageSize { get; set; } = 500;
 
     /// <summary>Registrierung neuer Hosts. Auf einer privaten Instanz sinnvollerweise nach dem
     /// eigenen Account aus — die Gaeste brauchen ohnehin keinen Account.</summary>

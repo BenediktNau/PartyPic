@@ -32,7 +32,17 @@ public sealed record SessionResponse(
 
 /// <summary>Was ein noch nicht beigetretener Gast sehen darf: gerade genug, um zu
 /// erkennen, ob er beim richtigen Fest gelandet ist.</summary>
-public sealed record SessionPreviewResponse(Guid Id, string Name, DateTime EndsAt, bool HasEnded, int MissionCount);
+/// <param name="IsHost">Ob der Aufrufer der Gastgeber genau dieser Party ist. Das
+/// Frontend braucht die Auskunft, um einen angemeldeten Gastgeber, der den Link einer
+/// fremden Party öffnet, in den normalen Beitritt zu schicken statt in eine Oberfläche,
+/// deren Aufrufe allesamt mit 403 zurückkommen.</param>
+public sealed record SessionPreviewResponse(
+    Guid Id,
+    string Name,
+    DateTime EndsAt,
+    bool HasEnded,
+    int MissionCount,
+    bool IsHost);
 
 public sealed record JoinSessionRequest(string Username);
 

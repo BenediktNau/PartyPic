@@ -77,11 +77,25 @@ export function useCamera(active: boolean): CameraState {
         }
         setReady(true)
 
+        // Ein Anruf oder ein Wechsel in die Kamera-App beendet den Track dauerhaft. Ohne
+        // diese Überwachung bliebe der Auslöser scharf und würde still das letzte
+        // eingefrorene Bild hochladen — mit Erfolgsmeldung.
+        for (const track of stream.getVideoTracks()) {
+          track.addEventListener('ended', () => {
+            if (cancelled) return
+            setReady(false)
+            setError('Die Kamera wurde unterbrochen.')
+          })
+        }
+
         // Erst nach erteilter Berechtigung liefert enumerateDevices echte Gerätedaten;
-        // vorher wären die Labels leer und die Zählung unbrauchbar.
-        const devices = await navigator.mediaDevices.enumerateDevices()
-        if (!cancelled) {
-          setCanSwitch(devices.filter(d => d.kind === 'videoinput').length > 1)
+        // vorher wären die Labels leer und die Zählung unbrauchbar. Eigener Block, weil
+        // ein Fehler hier den laufenden Sucher nicht als kaputt melden darf.
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices()
+          if (!cancelled) setCanSwitch(devices.filter(d => d.kind === 'videoinput').length > 1)
+        } catch {
+          if (!cancelled) setCanSwitch(false)
         }
       } catch (cause) {
         if (cancelled) return
@@ -91,8 +105,25 @@ export function useCamera(active: boolean): CameraState {
 
     void start()
 
+    // Kommt die Seite aus dem Hintergrund zurück, prüfen, ob der Stream das überlebt hat,
+    // und ihn sonst neu anfordern.
+    const onVisible = () => {
+      if (document.hidden || cancelled) return
+
+      const live = streamRef.current?.getVideoTracks().some(t => t.readyState === 'live')
+      if (!live) {
+        setAttempt(n => n + 1)
+        return
+      }
+
+      void videoRef.current?.play().catch(() => {})
+    }
+
+    document.addEventListener('visibilitychange', onVisible)
+
     return () => {
       cancelled = true
+      document.removeEventListener('visibilitychange', onVisible)
       for (const track of streamRef.current?.getTracks() ?? []) track.stop()
       streamRef.current = null
       setReady(false)

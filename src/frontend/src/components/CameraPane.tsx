@@ -22,6 +22,11 @@ export function CameraPane({ sessionId, missions, active }: Props) {
   const [flash, setFlash] = useState(false)
   const [missionIndex, setMissionIndex] = useState(0)
 
+  /** Sperrt den Ausloeser schon waehrend des Abgreifens. Der Lade-Zustand des Uploads
+   *  setzt erst danach ein — das JPEG-Kodieren eines 2048er-Bildes dauert auf einem
+   *  aelteren Handy lange genug fuer einen zweiten Tipp und damit ein zweites Foto. */
+  const [capturing, setCapturing] = useState(false)
+
   const mission = missions.length > 0 ? missions[missionIndex % missions.length] : null
 
   const send = useCallback(
@@ -40,8 +45,9 @@ export function CameraPane({ sessionId, missions, active }: Props) {
 
   const shoot = useCallback(async () => {
     const video = videoRef.current
-    if (!video) return
+    if (!video || capturing) return
 
+    setCapturing(true)
     setFlash(true)
     window.setTimeout(() => setFlash(false), 140)
 
@@ -49,8 +55,10 @@ export function CameraPane({ sessionId, missions, active }: Props) {
       await send(await captureFrame(video))
     } catch (cause) {
       toast(cause instanceof Error ? cause.message : 'Das Foto konnte nicht aufgenommen werden.', 'bad')
+    } finally {
+      setCapturing(false)
     }
-  }, [videoRef, send, toast])
+  }, [videoRef, capturing, send, toast])
 
   const pickFromGallery = useCallback(
     async (file: File | undefined) => {
@@ -70,7 +78,9 @@ export function CameraPane({ sessionId, missions, active }: Props) {
           sieht man beim Fotografieren, worum es geht. In der Vorgängerversion liessen
           sich Missionen zwar pflegen, wurden aber nirgends angezeigt. */}
       {mission && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 pt-safe px-4">
+        // Kein pt-safe: die Kopfzeile darueber reserviert den Rand bereits, sonst
+        // rutscht das Band auf einem Geraet mit Notch tief in den Sucher hinein.
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 px-4 pt-3">
           <div className="mx-auto max-w-md rounded-2xl bg-black/55 px-4 py-3 text-center backdrop-blur">
             <p className="text-xs uppercase tracking-wide text-accent">Dein Auftrag</p>
             <p className="text-balance font-semibold">{mission.description}</p>
@@ -112,7 +122,8 @@ export function CameraPane({ sessionId, missions, active }: Props) {
         {flash && <div className="absolute inset-0 z-30 bg-white" aria-hidden />}
       </div>
 
-      <div className="relative z-20 flex items-center justify-between gap-6 px-8 pb-safe pt-5">
+      {/* Kein pb-safe: die Tab-Leiste darunter traegt ihn schon. */}
+      <div className="relative z-20 flex items-center justify-between gap-6 px-8 pb-5 pt-5">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
@@ -125,12 +136,12 @@ export function CameraPane({ sessionId, missions, active }: Props) {
         <button
           type="button"
           onClick={shoot}
-          disabled={!ready || upload.isPending}
+          disabled={!ready || capturing || upload.isPending}
           aria-label="Foto aufnehmen"
           className="grid size-20 place-items-center rounded-full bg-white ring-4 ring-white/30
             transition active:scale-90 disabled:opacity-40"
         >
-          {upload.isPending ? (
+          {capturing || upload.isPending ? (
             <Spinner className="size-7 text-ink" />
           ) : (
             <span className="size-16 rounded-full bg-accent" />

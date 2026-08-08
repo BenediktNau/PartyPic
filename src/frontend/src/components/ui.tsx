@@ -20,7 +20,10 @@ export function Button({ variant = 'primary', loading, className = '', children,
   }[variant]
 
   return (
-    <button className={`${base} ${look} ${className}`} disabled={loading || rest.disabled} {...rest}>
+    // {...rest} steht bewusst VOR disabled: andersherum überschriebe ein mitgegebenes
+    // disabled={false} den Lade-Zustand, und der Knopf bliebe während einer laufenden
+    // Anfrage tippbar — auf langsamem WLAN führte das zu doppelten Absendungen.
+    <button className={`${base} ${look} ${className}`} {...rest} disabled={loading || rest.disabled}>
       {loading && <Spinner />}
       {children}
     </button>

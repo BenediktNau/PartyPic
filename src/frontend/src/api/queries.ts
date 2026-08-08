@@ -105,14 +105,17 @@ export function useSessionStats(sessionId: string, enabled: boolean) {
   })
 }
 
-export function useGallery(sessionId: string, enabled: boolean) {
+export function useGallery(sessionId: string, enabled: boolean, take: number) {
   return useQuery({
-    queryKey: keys.gallery(sessionId),
-    queryFn: () => api.get<Gallery>(`/api/sessions/${sessionId}/pictures?take=200`),
+    queryKey: [...keys.gallery(sessionId), take],
+    queryFn: () => api.get<Gallery>(`/api/sessions/${sessionId}/pictures?take=${take}`),
     enabled,
     // Die Bild-URLs sind eine Stunde signiert; alle 60 s neu laden hält die Galerie
     // aktuell, ohne dass jemand von Hand aktualisieren muss.
     refetchInterval: 60_000,
+    // Beim Nachladen einer größeren Seite die bisherige stehen lassen — sonst blinkt die
+    // ganze Galerie kurz auf einen Ladezustand zurück.
+    placeholderData: previous => previous,
   })
 }
 

@@ -144,17 +144,30 @@ internal static class SessionEndpoints
 
         // Oeffentlich: der Beitritts-Screen muss zeigen koennen, wo man gelandet ist,
         // bevor irgendein Name eingegeben wurde.
-        group.MapGet("/{sessionId:guid}", async (Guid sessionId, PartyPicDbContext db, TimeProvider clock, CancellationToken ct) =>
+        group.MapGet("/{sessionId:guid}", async (
+            Guid sessionId,
+            ClaimsPrincipal principal,
+            PartyPicDbContext db,
+            TimeProvider clock,
+            CancellationToken ct) =>
         {
             var session = await db.Sessions.AsNoTracking().FirstOrDefaultAsync(s => s.Id == sessionId, ct);
-            return session is null
-                ? Results.Problem("Diese Party gibt es nicht.", statusCode: StatusCodes.Status404NotFound)
-                : Results.Ok(new SessionPreviewResponse(
-                    session.Id,
-                    session.Name,
-                    session.EndsAt,
-                    session.EndsAt <= clock.GetUtcNow().UtcDateTime,
-                    session.Missions.Count));
+            if (session is null)
+                return Results.Problem("Diese Party gibt es nicht.", statusCode: StatusCodes.Status404NotFound);
+
+            // Liegt ein gültiges Host-Token bei, ist der Principal auch auf diesem
+            // anonymen Endpoint gefüllt — der Abgleich kostet also keine zweite Anfrage.
+            var isHost = principal.FindFirstValue(PartyPicClaims.Role) == PartyPicClaims.HostRole
+                && Guid.TryParse(principal.FindFirstValue(PartyPicClaims.Subject), out var hostId)
+                && session.UserId == hostId;
+
+            return Results.Ok(new SessionPreviewResponse(
+                session.Id,
+                session.Name,
+                session.EndsAt,
+                session.EndsAt <= clock.GetUtcNow().UtcDateTime,
+                session.Missions.Count,
+                isHost));
         });
 
         group.MapPost("/{sessionId:guid}/join", async (

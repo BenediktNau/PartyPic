@@ -48,7 +48,13 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     body: body === undefined ? undefined : JSON.stringify(body),
   })
 
-  if (response.status === 401) {
+  // Ein 401 auf den Anmelde-Endpoints heisst "Passwort falsch" und nicht "Token
+  // abgelaufen". Würde er hier abgefangen, bekäme man ausgerechnet auf dem
+  // Anmeldebildschirm die Aufforderung, sich neu anzumelden — und die eigentliche
+  // Meldung samt Feldfehlern ginge verloren.
+  const isSignIn = path.startsWith('/api/auth/login') || path.startsWith('/api/auth/register')
+
+  if (response.status === 401 && !isSignIn) {
     // Abgelaufenes oder ungültiges Token: die gespeicherte Identität ist wertlos, sonst
     // läuft die App in eine Schleife aus 401ern, ohne je den Anmeldebildschirm zu zeigen.
     clearIdentity()

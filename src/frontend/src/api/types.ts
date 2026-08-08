@@ -41,6 +41,8 @@ export type SessionPreview = {
   endsAt: string
   hasEnded: boolean
   missionCount: number
+  /** Ob der angemeldete Aufrufer der Gastgeber genau dieser Party ist. */
+  isHost: boolean
 }
 
 export type UploadUrl = {

@@ -39,6 +39,27 @@ public sealed class SessionEndpointTests : ApiTestBase
         Assert.Equal(HttpStatusCode.OK, status);
         Assert.Equal("Sommerfest", preview!.Name);
         Assert.False(preview.HasEnded);
+        Assert.False(preview.IsHost);
+    }
+
+    [Fact]
+    public async Task Vorschau_verraet_dem_Gastgeber_dass_es_seine_Party_ist()
+    {
+        await Api.RegisterHostAsync("erster@party.test");
+        var session = await Api.CreateSessionAsync();
+
+        var (_, own) = await Api.GetAsync<PreviewBody>($"/api/sessions/{session.Id}");
+        Assert.True(own!.IsHost);
+
+        // Ein anderer Gastgeber ist hier nur Besucher. Ohne diese Auskunft zeigte das
+        // Frontend ihm eine Oberflaeche, deren Aufrufe alle mit 403 zurueckkaemen — und
+        // aus der er nicht mehr herauskaeme.
+        var other = NewClient();
+        await other.RegisterHostAsync("zweiter@party.test");
+
+        var (status, foreign) = await other.GetAsync<PreviewBody>($"/api/sessions/{session.Id}");
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.False(foreign!.IsHost);
     }
 
     [Fact]
