@@ -22,12 +22,18 @@ Bildspeicher. Kein Cluster, kein Konto bei irgendwem.
 ### Variante A — Docker Compose (zum Betreiben)
 
 ```bash
-cp .env.example .env      # JWT_SECRET setzen, Rest kann bleiben
+cp .env.example .env
+printf 'JWT_SECRET=%s\nDB_PASSWORD=%s\nSTORAGE_PASSWORD=%s\n' \
+  "$(openssl rand -base64 48)" "$(openssl rand -base64 24)" "$(openssl rand -base64 24)" >> .env
 docker compose up -d
 ```
 
 Danach läuft die App auf **http://localhost:8080**. Fertig — Datenbank, Bildspeicher und
 Anwendung starten zusammen.
+
+Die drei Geheimnisse haben bewusst keine Vorgabewerte: ein mitgeliefertes Passwort wäre
+auf jeder Instanz dasselbe und stünde obendrein öffentlich im Repo. Fehlt eines, sagt
+Compose beim Start, welches.
 
 > **Fürs Handy im WLAN:** Die Fotos laufen per signierter URL direkt zwischen Browser und
 > Bildspeicher. Damit das vom Handy klappt, muss `PUBLIC_STORAGE_URL` in der `.env` auf
@@ -74,11 +80,12 @@ kommt weiter an die Bilder. Erst danach räumt der Aufräum-Job die Party samt F
 
 ## Konfiguration
 
-Alles hat brauchbare Standardwerte — nur das JWT-Secret muss gesetzt werden.
+Bis auf die drei Geheimnisse aus dem Schnellstart hat alles brauchbare Standardwerte.
 
 | Variable | Bedeutung | Standard |
 |---|---|---|
 | `PartyPic__Jwt__Secret` | Signaturschlüssel, mindestens 32 Zeichen. Fehlt er, wird pro Start einer gewürfelt und alle müssen sich nach einem Neustart neu anmelden. | — |
+| `PartyPic__Storage__SecretKey` | Passwort des Bildspeichers. Ohne Wert startet Compose gar nicht erst. | — |
 | `ConnectionStrings__partypicdb` | Postgres-Verbindung | aus Compose/Aspire |
 | `PartyPic__Storage__ServiceUrl` | Adresse des Bildspeichers aus Sicht des Servers | aus Compose/Aspire |
 | `PartyPic__Storage__PublicUrl` | Adresse aus Sicht der Geräte (siehe Hinweis oben) | wie `ServiceUrl` |

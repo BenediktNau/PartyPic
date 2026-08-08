@@ -38,7 +38,12 @@ jobs:
         run: dotnet test PartyPic.slnx --no-build -c Release --logger "trx;LogFileName=test-results.trx"
 
       - name: Bekannte Schwachstellen in Abhaengigkeiten
+        # Ohne pipefail verschluckt die Pipe den Exit-Code von "dotnet list": ein
+        # abgebrochener Scan (NuGet nicht erreichbar) haette den Schritt still bestehen
+        # lassen, statt den Build rot zu faerben.
+        shell: bash
         run: |
+          set -o pipefail
           dotnet list PartyPic.slnx package --vulnerable --include-transitive 2>&1 | tee vuln.txt
           if grep -q "has the following vulnerable packages" vuln.txt; then
             echo "::error::Abhaengigkeiten mit bekannten Schwachstellen gefunden."
