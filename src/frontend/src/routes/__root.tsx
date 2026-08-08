@@ -1,14 +1,9 @@
-import * as React from 'react'
-import { Outlet, createRootRoute } from '@tanstack/react-router'
+import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { EmptyState } from '../components/ui'
 
 export const Route = createRootRoute({
-  component: RootComponent,
+  component: () => <Outlet />,
+  notFoundComponent: () => (
+    <EmptyState icon="🤔" title="Diese Seite gibt es nicht" hint="Prüf den Link, den du bekommen hast." />
+  ),
 })
-
-function RootComponent() {
-  return (
-    <React.Fragment>
-      <Outlet />
-    </React.Fragment>
-  )
-}

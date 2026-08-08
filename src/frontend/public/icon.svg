@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="PartyPic">
+  <rect width="512" height="512" rx="112" fill="#0b0a12"/>
+  <path d="M176 168l24-40h112l24 40h56a32 32 0 0 1 32 32v152a32 32 0 0 1-32 32H120a32 32 0 0 1-32-32V200a32 32 0 0 1 32-32z" fill="#201d2c"/>
+  <circle cx="256" cy="288" r="72" fill="none" stroke="#ff4d8d" stroke-width="26"/>
+  <circle cx="256" cy="288" r="26" fill="#ff4d8d"/>
+  <circle cx="376" cy="216" r="14" fill="#3ddc97"/>
+</svg>

@@ -22,3 +22,9 @@ dist/
 .vscode/*
 !.vscode/extensions.json
 .DS_Store
+
+# Das gebaute SPA landet im wwwroot der API. Der Inhalt ist Build-Ergebnis, das
+# Verzeichnis selbst bleibt aber im Repo: ohne es scheitert der Start an einem
+# ins Leere zeigenden Static-Web-Assets-Manifest.
+src/PartyPic.Api/wwwroot/*
+!src/PartyPic.Api/wwwroot/.gitkeep

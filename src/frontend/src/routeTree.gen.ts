@@ -9,65 +9,48 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SessionSessionIdRouteImport } from './routes/session/$sessionId'
+import { Route as PartySessionIdRouteImport } from './routes/party.$sessionId'
 
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SessionSessionIdRoute = SessionSessionIdRouteImport.update({
-  id: '/session/$sessionId',
-  path: '/session/$sessionId',
+const PartySessionIdRoute = PartySessionIdRouteImport.update({
+  id: '/party/$sessionId',
+  path: '/party/$sessionId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/session/$sessionId': typeof SessionSessionIdRoute
+  '/party/$sessionId': typeof PartySessionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/session/$sessionId': typeof SessionSessionIdRoute
+  '/party/$sessionId': typeof PartySessionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/session/$sessionId': typeof SessionSessionIdRoute
+  '/party/$sessionId': typeof PartySessionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/session/$sessionId'
+  fullPaths: '/' | '/party/$sessionId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/session/$sessionId'
-  id: '__root__' | '/' | '/about' | '/session/$sessionId'
+  to: '/' | '/party/$sessionId'
+  id: '__root__' | '/' | '/party/$sessionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  SessionSessionIdRoute: typeof SessionSessionIdRoute
+  PartySessionIdRoute: typeof PartySessionIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -75,11 +58,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/session/$sessionId': {
-      id: '/session/$sessionId'
-      path: '/session/$sessionId'
-      fullPath: '/session/$sessionId'
-      preLoaderRoute: typeof SessionSessionIdRouteImport
+    '/party/$sessionId': {
+      id: '/party/$sessionId'
+      path: '/party/$sessionId'
+      fullPath: '/party/$sessionId'
+      preLoaderRoute: typeof PartySessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -87,8 +70,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  SessionSessionIdRoute: SessionSessionIdRoute,
+  PartySessionIdRoute: PartySessionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

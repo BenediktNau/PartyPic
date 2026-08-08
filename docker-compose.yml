@@ -1,101 +1,77 @@
-version: '3.9'
+# PartyPic zum Selbsthosten: "docker compose up -d" und die App laeuft auf
+# http://localhost:8080. Alles Noetige startet mit — Datenbank, Bildspeicher, App.
 
 services:
   db:
     image: postgres:18-alpine
-    restart: always
-    shm_size: 128mb
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: partyuser
-      POSTGRES_PASSWORD: partypass
-      POSTGRES_DB: partydb
+      POSTGRES_USER: partypic
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-partypic}
+      POSTGRES_DB: partypic
     volumes:
       - db-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U partypic"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  minio:
-    image: minio/minio:latest
-    container_name: local_minio_s3
-    restart: always
-    ports:
-      - "9000:9000" # Der S3-API-Port
-      - "9001:9001" # Die Web-GUI von MinIO
-    environment:
-      MINIO_ROOT_USER: minioadmin # Dein S3 Access Key
-      MINIO_ROOT_PASSWORD: minioadmin # Dein S3 Secret Key
-    volumes:
-      - minio-data:/data
+  storage:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    restart: unless-stopped
     command: server /data --console-address ":9001"
-
-  devcontainer:
-    build:
-      context: ./.devcontainer
-      dockerfile: Dockerfile
-    image: party-pic-devcontainer:local
-    restart: no
-    tty: true
-    volumes:
-      - ./:/workspace:cached
-    working_dir: /workspace
-    depends_on:
-      - db
-      - minio
-    ports:
-      - 5173:5173
-      - 3000:3000
     environment:
-      # make the db host visible inside the container
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: partyuser
-      DB_PASSWORD: partypass
-      DB_NAME: partydb
-
-      S3_ENDPOINT: "http://minio:9000"
-      S3_ACCESS_KEY: "minioadmin"
-      S3_SECRET_KEY: "minioadmin"
-      S3_BUCKET_NAME: "dev-foto-bucket" # Name für deinen Test-Bucket
-      S3_REGION: "us-east-1"
-      S3_FORCE_PATH_STYLE: "true" # Wichtig für MinIO!
-    command: sleep infinity
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@local.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "8080:80" # Host port 8080 -> pgAdmin 80
+      MINIO_ROOT_USER: ${STORAGE_USER:-partypic}
+      MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD:-partypic-secret}
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
+      - photo-data:/data
+    ports:
+      # Die Bilder laufen per presigned URL direkt zwischen Browser und Storage —
+      # dieser Port muss also fuer die Geraete der Gaeste erreichbar sein.
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    image: ghcr.io/benediktnau/partypic:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ConnectionStrings__partypicdb: "Host=db;Database=partypic;Username=partypic;Password=${DB_PASSWORD:-partypic}"
+
+      PartyPic__Storage__ServiceUrl: "http://storage:9000"
+      # Die Adresse, unter der die Geraete der Gaeste den Storage sehen. Im heimischen
+      # WLAN die Host-IP eintragen (z. B. http://192.168.1.20:9000) — "localhost" zeigt
+      # auf dem Handy auf das Handy selbst, und die Bilder blieben grau.
+      PartyPic__Storage__PublicUrl: "${PUBLIC_STORAGE_URL:-http://localhost:9000}"
+      PartyPic__Storage__AccessKey: "${STORAGE_USER:-partypic}"
+      PartyPic__Storage__SecretKey: "${STORAGE_PASSWORD:-partypic-secret}"
+
+      # Ohne gesetztes Secret wuerfelt die App bei jedem Start ein neues — dann muessen
+      # sich nach einem Neustart alle neu anmelden.
+      PartyPic__Jwt__Secret: "${JWT_SECRET:?bitte in .env setzen, mindestens 32 Zeichen}"
+
+      # Auf "false" stellen, sobald der eigene Account angelegt ist.
+      PartyPic__AllowRegistration: "${ALLOW_REGISTRATION:-true}"
     depends_on:
-      - db
-  #server:
-  #  build:
-  #    context: ./party-pic_server
-  #    dockerfile: dockerfile
-  #    target: runner
-  #  restart: unless-stopped
-  #  env_file:
-  #    - ./party-pic_server/.env.dev
-  #  environment:
-  #    # fallback defaults (can be overridden by .env.dev)
-  #    DATABASE_URL: postgres://partyuser:partypass@db:5432/partydb
-  #    PORT: 3000
-  #    NODE_ENV: development
-  #  ports:
-  #    - "3000:3000"
-  #  depends_on:
-  #    db:
-  #      condition: service_started
-  #  volumes:
-  #    - ./party-pic_server:/app:cached
-  #    - /app/node_modules
+      db:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/alive || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   db-data:
-  minio-data:
-  pgadmin-data:
-
-
+  photo-data:

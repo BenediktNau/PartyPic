@@ -208,7 +208,7 @@ internal static class SessionEndpoints
             return Results.Ok(new AuthResponse(token.AccessToken, token.ExpiresAt, Host: null,
                 new GuestResponse(guest.Id, guest.UserName, sessionId)));
         })
-        .RequireRateLimiting(RateLimitPolicies.Auth);
+        .RequireRateLimiting(RateLimitPolicies.Join);
 
         group.MapGet("/{sessionId:guid}/missions", async (
             Guid sessionId,
