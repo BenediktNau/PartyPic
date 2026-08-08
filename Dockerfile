@@ -5,7 +5,7 @@
 # kein Cross-Origin — den Party-Link teilt man einfach.
 
 # --- Frontend bauen ---
-FROM node:22-alpine AS frontend
+FROM node:26-alpine AS frontend
 WORKDIR /frontend
 
 # Erst die Lockfiles: solange sich die Abhaengigkeiten nicht aendern, bleibt der
