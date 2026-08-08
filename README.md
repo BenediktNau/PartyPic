@@ -1,239 +1,144 @@
-# PartyPic – AWS Setup Guide
+# PartyPic
 
-## Was wird deployed?
+Fotos sammeln auf jeder Feier. Der Gastgeber legt eine Party an und teilt einen Link oder
+QR-Code, die Gäste treten ohne Account bei, bekommen Foto-Aufträge („Mach ein Foto vom
+DJ"), knipsen direkt im Browser — und alles landet in einer gemeinsamen Galerie.
 
-- **RKE2 Kubernetes Cluster** (1 Control Plane + N Worker Nodes via Auto Scaling Group)
-- **RDS PostgreSQL** (managed Datenbank)
-- **S3 Bucket** (Bildspeicher, Zugriff via Presigned URLs)
-- **Monitoring Stack** (Prometheus, Grafana, Loki)
-- **ArgoCD** (GitOps Deployment der App)
+Gedacht als **selbstgehostete Standalone-Instanz**: ein Container, eine Datenbank, ein
+Bildspeicher. Kein Cluster, kein Konto bei irgendwem.
 
----
+```
+┌──────────────┐   Link/QR    ┌──────────────┐
+│  Gastgeber   │ ───────────► │    Gäste     │
+│ legt Party   │              │ nur Name     │
+│ + Aufträge   │              │ eingeben     │
+└──────┬───────┘              └──────┬───────┘
+       │                             │
+       └──────────► Galerie ◄────────┘
+```
 
-## Erreichbare Dienste nach dem Deploy
+## Loslegen
 
-Nach `terraform apply` stehen folgende URLs zur Verfügung. Die `<IP>` ist die Elastic IP, die Terraform als Output `loadbalancer_ip` ausgibt.
-
-### PartyPic App – `https://app.<IP>.nip.io`
-
-Die Haupt-Webanwendung. Über diese URL interagieren Host und Gäste.
-
-**Routen im Frontend:**
-
-| Pfad | Beschreibung |
-|------|-------------|
-| `/` | Startseite – Login/Registrierung für den Host, Session erstellen |
-| `/session/<sessionId>` | Session-Ansicht für Gäste – Kamera, Galerie, Missionen |
-| `/admin` | Admin-Bereich für den Host – Missionen verwalten |
-
-**API-Endpunkte** (alle unter `https://app.<IP>.nip.io`):
-
-| Endpunkt | Methode | Beschreibung |
-|----------|---------|-------------|
-| `/auth/register` | POST | Host-Account registrieren |
-| `/auth/login` | POST | Host einloggen, JWT Token erhalten |
-| `/sessions/create` | POST | Neue Party-Session anlegen (JWT required) |
-| `/sessions/get?sessionId=...` | GET | Session-Details abrufen |
-| `/sessions/setmissions` | POST | Foto-Missionen für Session setzen (JWT required) |
-| `/sessions/registerSessionUser` | POST | Gast tritt Session bei (nur Username nötig) |
-| `/sessions/loginSessionUser` | POST | Gast-Login in bestehende Session |
-| `/sessions/heartbeat` | POST | Online-Status des Gastes aktualisieren (alle 30s) |
-| `/pictures/init-upload` | POST | Presigned S3-Upload-URL anfordern |
-| `/pictures/finalize-upload` | POST | Upload in DB bestätigen |
-| `/pictures/session?sessionId=...` | GET | Alle Bilder einer Session abrufen |
-| `/metrics` | GET | Prometheus-Metriken (z.B. Anzahl Sessions, Fotos) |
-
----
-
-### Grafana – `http://grafana.<IP>.nip.io`
-
-Monitoring-Dashboard für den Cluster und die Applikation.
-
-- **Login:** `admin` / (das in `terraform.tfvars` gesetzte `grafana_admin_password`)
-- **Datenquellen:** Prometheus (Metriken) + Loki (Logs)
-- **Verfügbare Metriken:** Anzahl erstellter Sessions, hochgeladene Bilder, HTTP-Requests, Node-CPU/RAM, Pod-Status
-
----
-
-### ArgoCD – `http://argo.<IP>.nip.io`
-
-GitOps-Dashboard – zeigt den Sync-Status beider Kubernetes-Deployments.
-
-- **Login:** `admin` / (Passwort per SSH abrufen: `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d`)
-- **Apps:** `party-pic-client-application` und `party-pic-server-application`
-- Jeder Git-Push auf den konfigurierten Branch triggert automatisch ein Re-Deployment
-
----
-
-## Was kann die Applikation?
-
-### Aus Sicht des Hosts (registrierter User)
-
-1. **Account erstellen** über die Startseite (Register)
-2. **Session starten** – erzeugt eine eindeutige Session-ID
-3. **Missionen definieren** im Admin-Bereich:
-   - Einzeln per Textfeld eingeben
-   - Als `.txt`-Datei mit einer Mission pro Zeile hochladen
-   - Missionen jederzeit entfernen
-4. **Session-Link teilen** – Gäste rufen `https://app.<IP>.nip.io/session/<sessionId>` auf
-5. **Galerie live verfolgen** – alle hochgeladenen Bilder erscheinen in der Galerie (Auto-Refresh alle 30s)
-
-### Aus Sicht der Gäste (ohne Account)
-
-1. **Session beitreten** über den Link des Hosts – nur ein Username wird benötigt
-2. **Zufällige Mission** angezeigt bekommen (z.B. „Mach ein Foto vom DJ")
-3. **Foto aufnehmen** direkt über die Webcam/Handykamera im Browser
-4. **Foto hochladen** – direkter Upload via Presigned URL in S3 (kein Umweg über den Server)
-5. **Galerie ansehen** – alle Fotos der Session in einer Grid-Ansicht mit Lightbox
-
----
-
-## Voraussetzungen (lokal)
+### Variante A — Docker Compose (zum Betreiben)
 
 ```bash
-# Folgendes muss installiert sein:
-terraform   # >= 1.0
-aws CLI
-ssh-keygen  # für SSH Key
+cp .env.example .env
+printf 'JWT_SECRET=%s\nDB_PASSWORD=%s\nSTORAGE_PASSWORD=%s\n' \
+  "$(openssl rand -base64 48)" "$(openssl rand -base64 24)" "$(openssl rand -base64 24)" >> .env
+docker compose up -d
 ```
 
----
+Danach läuft die App auf **http://localhost:8080**. Fertig — Datenbank, Bildspeicher und
+Anwendung starten zusammen.
 
-## Schritt 1 – AWS Credentials setzen
+Die drei Geheimnisse haben bewusst keine Vorgabewerte: ein mitgeliefertes Passwort wäre
+auf jeder Instanz dasselbe und stünde obendrein öffentlich im Repo. Fehlt eines, sagt
+Compose beim Start, welches.
 
-Im AWS Academy Portal die temporären Credentials kopieren (Format: `[default] aws_access_key_id=...`), dann:
+> **Fürs Handy im WLAN:** Die Fotos laufen per signierter URL direkt zwischen Browser und
+> Bildspeicher. Damit das vom Handy klappt, muss `PUBLIC_STORAGE_URL` in der `.env` auf
+> die **IP des Rechners** zeigen, nicht auf `localhost` — sonst sucht das Handy den
+> Speicher bei sich selbst und die Galerie bleibt grau:
+>
+> ```
+> PUBLIC_STORAGE_URL=http://192.168.1.20:9000
+> ```
+
+### Variante B — Aspire (zum Entwickeln)
 
 ```bash
-# Option A: Skript nutzen (empfohlen)
-cat credentials.txt | ./terraform/set_aws_cred.sh
-
-# Option B: Manuell in ~/.aws/credentials einfügen
+aspire run          # oder: dotnet run --project src/PartyPic.AppHost
 ```
 
-> Die Credentials sind temporär (~4h). Vor jedem `terraform apply` neu setzen!
+Startet Postgres, MinIO, die API und das Frontend zusammen und öffnet das
+Aspire-Dashboard mit Logs, Traces und Metriken.
 
----
+Voraussetzungen: [.NET 10 SDK](https://dotnet.microsoft.com/download), Node 22+, eine
+Container-Laufzeit (Docker oder Podman).
 
-## Schritt 2 – `terraform.tfvars` anlegen
+## Was die App kann
+
+**Als Gastgeber**
+
+- Account anlegen, beliebig viele Partys starten
+- Aufträge pflegen — einzeln oder als `.txt` mit einer Zeile pro Auftrag
+- Gäste per QR-Code oder Link einladen
+- Live sehen, wie viele Fotos da sind und wer gerade online ist
+- Jedes Foto löschen, die Party samt Bildern auflösen
+
+**Als Gast**
+
+- Link öffnen, Namen eingeben — kein Account, keine Installation
+- Auftrag steht direkt über dem Sucher; nach jedem Foto kommt der nächste
+- Foto knipsen oder eines aus dem Speicher hochladen
+- Gemeinsame Galerie mit Vollbild, Wischen und Speichern
+- Eigene Fotos wieder löschen
+
+Nach dem Party-Ende (standardmäßig 7 Tage) sind keine neuen Uploads mehr möglich. Die
+Galerie bleibt danach noch 30 Tage abrufbar — wer den Link hat und seinen Namen eingibt,
+kommt weiter an die Bilder. Erst danach räumt der Aufräum-Job die Party samt Fotos ab.
+
+## Konfiguration
+
+Bis auf die drei Geheimnisse aus dem Schnellstart hat alles brauchbare Standardwerte.
+
+| Variable | Bedeutung | Standard |
+|---|---|---|
+| `PartyPic__Jwt__Secret` | Signaturschlüssel, mindestens 32 Zeichen. Fehlt er, wird pro Start einer gewürfelt und alle müssen sich nach einem Neustart neu anmelden. | — |
+| `PartyPic__Storage__SecretKey` | Passwort des Bildspeichers. Ohne Wert startet Compose gar nicht erst. | — |
+| `ConnectionStrings__partypicdb` | Postgres-Verbindung | aus Compose/Aspire |
+| `PartyPic__Storage__ServiceUrl` | Adresse des Bildspeichers aus Sicht des Servers | aus Compose/Aspire |
+| `PartyPic__Storage__PublicUrl` | Adresse aus Sicht der Geräte (siehe Hinweis oben) | wie `ServiceUrl` |
+| `PartyPic__Storage__BucketName` | Bucket, wird bei Bedarf angelegt | `partypic` |
+| `PartyPic__AllowRegistration` | Neue Gastgeber-Accounts erlauben. Nach dem eigenen Account sinnvollerweise `false`. | `true` |
+| `PartyPic__SessionLifetime` | Laufzeit einer Party | `7.00:00:00` |
+| `PartyPic__RetentionAfterEnd` | Wie lange die Galerie nach dem Ende noch abrufbar bleibt | `30.00:00:00` |
+| `PartyPic__MaxUploadBytes` | Größtes erlaubtes Bild | 15 MB |
+| `PartyPic__CleanupInterval` | Takt des Aufräum-Jobs, `0` schaltet ihn ab | `01:00:00` |
+
+Für AWS S3 statt MinIO: `ServiceUrl` leer lassen, `Region` setzen und entweder Keys
+angeben oder die IAM-Rolle der Instanz greifen lassen.
+
+## Aufbau
+
+```
+src/
+  PartyPic.Core/            Domänen-Records, Abstraktionen, Upload-Regeln (keine Pakete)
+  PartyPic.Infrastructure/  EF Core, S3-Speicher, Auth, Metriken, Hintergrund-Jobs
+  PartyPic.Api/             Minimal-API + Auslieferung des SPA
+  PartyPic.AppHost/         Aspire-Orchestrierung
+  PartyPic.ServiceDefaults/ OpenTelemetry, Health-Checks, Resilience
+  frontend/                 React 19, TypeScript, Vite, Tailwind 4
+tests/
+  PartyPic.Tests/           69 Tests, laufen ohne Docker
+```
+
+Details zur Architektur und den Konventionen stehen in [CLAUDE.md](CLAUDE.md).
+
+## Entwicklung
 
 ```bash
-cd terraform/
-cp terraform.tfvars.example terraform.tfvars
+dotnet build PartyPic.slnx
+dotnet test  PartyPic.slnx
+
+cd src/frontend && npm ci && npm run lint && npm run build
 ```
 
-Dann `terraform.tfvars` befüllen:
+Die Testsuite fährt den echten Host hoch — dieselben Endpoints, dieselbe Autorisierung —
+nur mit SQLite im Arbeitsspeicher und einem Fake-Bildspeicher. Deshalb braucht sie weder
+Postgres noch MinIO noch Docker.
 
-```hcl
-# RKE2 Cluster Join Secret (beliebiger langer String)
-rke2_token = "mein-sehr-geheimes-token-123"
+## Sicherheitsmodell in Kürze
 
-# Datenbank
-partypic_db_password    = "sicheres_passwort"
-partypic_db_name        = "partypicdb"
-partypic_db_user        = "partypicuser"
+- **Gastgeber** melden sich mit E-Mail und Passwort an (BCrypt) und bekommen ein JWT.
+- **Gäste** bekommen ebenfalls ein JWT — fest an *eine* Party gebunden und nie länger
+  gültig als deren Aufbewahrungsfrist. Die Session-Id in der URL allein öffnet nichts.
+- Bilder laufen nie durch die Anwendung: der Browser lädt per signierter URL direkt in
+  den Speicher. Bestätigt wird ein Upload erst, wenn das Objekt wirklich im Bucket liegt.
+- Erlaubt sind nur echte Bildformate (kein SVG — das wäre ausführbares XML in der Galerie).
+- Anmeldung, Beitritt und Upload sind mengenmäßig begrenzt; der Beitritt wird pro Party
+  gezählt, damit ein volles Party-WLAN sich nicht selbst aussperrt.
 
-# S3 (wird automatisch von AWS bereitgestellt)
-partypic_s3_endpoint    = "https://s3.us-east-1.amazonaws.com"
-partypic_s3_bucket_name = "mein-partypic-bucket"  # muss global unique sein!
-partypic_s3_region      = "us-east-1"
+## Lizenz
 
-# JWT Secret für die App (beliebiger langer String)
-partypic_jwt_secret     = "mein-jwt-secret-xyz"
-
-# Grafana
-grafana_admin_password  = "grafana_passwort"
-
-# Alertmanager (optional, für E-Mail Alerts)
-alertmanager_smtp_username = ""
-alertmanager_smtp_password = ""
-```
-
----
-
-## Schritt 3 – SSH Key setzen
-
-Den eigenen Public Key in `terraform/variables.tf` bei `public_key` eintragen (Zeile 20), **oder** in `terraform.tfvars` überschreiben:
-
-```hcl
-public_key = "ssh-ed25519 AAAA... dein@rechner"
-```
-
-Den Key generieren falls noch keiner vorhanden:
-
-```bash
-ssh-keygen -t ed25519 -C "dein@email"
-cat ~/.ssh/id_ed25519.pub
-```
-
----
-
-## Schritt 4 – Terraform ausführen
-
-```bash
-cd terraform/
-
-terraform init
-
-terraform plan   # Prüfen was deployed wird
-
-terraform apply  # Deployment starten (~10-15 Min aufgrund RDS
-                 # und S3 Bucket)
-```
-
-Am Ende gibt Terraform die URLs aus:
-
-```
-app_url            = "https://app.<IP>.nip.io"
-grafana_url        = "http://grafana.<IP>.nip.io"
-argocd_url         = "http://argo.<IP>.nip.io"
-ssh_command_server = "ssh ubuntu@<IP>"
-```
-
----
-
-## Schritt 5 – Deployment verifizieren
-
-```bash
-# SSH auf den Control Plane
-ssh ubuntu@<IP>
-
-# Cluster Status prüfen
-kubectl get nodes
-kubectl get pods -A
-
-# ArgoCD Apps prüfen
-kubectl get applications -n argocd
-```
-
----
-
-## Schritt 6 – IP-Update (nach Neustart)
-Das sollte eigentlich nicht mehr nötig sein. Hoffe ich zumindest 
-Falls sich die Ingress-IP geändert hat (z.B. nach erneutem `terraform apply`):
-
-```bash
-./update_ip.sh
-```
-
-Das Skript holt die aktuelle IP, patcht die Helm `values.yaml` beider Apps und triggert einen ArgoCD Sync.
-
----
-
-## Wichtige Hinweise für AWS Learning Account
-
-| Thema | Hinweis |
-|-------|---------|
-| **Credentials** | Laufen nach ~4h ab – vor `terraform apply` neu setzen |
-| **S3 Bucket Name** | Muss **global unique** sein (z.B. `partypic-vorname-2024`) |
-| **Kosten** | `terraform destroy` nach dem Testen! RDS + EC2 + EIP kosten kontinuierlich |
-| **Region** | Default ist `us-east-1` – im Learning Account nicht ändern |
-| **AMI** | Das verwendete AMI (`ami-0ecb62995f68bb549`) ist Ubuntu in `us-east-1` |
-
----
-
-## Infrastruktur aufräumen
-
-```bash
-cd terraform/
-terraform destroy
-```
+Privates Projekt, keine Garantie auf gar nichts. Viel Spaß auf der Feier.

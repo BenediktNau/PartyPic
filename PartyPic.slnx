@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PartyPic.Core/PartyPic.Core.csproj" />
+    <Project Path="src/PartyPic.Infrastructure/PartyPic.Infrastructure.csproj" />
+    <Project Path="src/PartyPic.Api/PartyPic.Api.csproj" />
+    <Project Path="src/PartyPic.ServiceDefaults/PartyPic.ServiceDefaults.csproj" />
+    <Project Path="src/PartyPic.AppHost/PartyPic.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PartyPic.Tests/PartyPic.Tests.csproj" />
+  </Folder>
+</Solution>

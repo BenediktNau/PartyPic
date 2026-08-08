@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/* Tailwind 4 wird über CSS konfiguriert, nicht über eine tailwind.config.js. */
+@theme {
+  --color-ink: #0b0a12;
+  --color-surface: #16141f;
+  --color-surface-raised: #201d2c;
+  --color-line: #2e2a3d;
+  --color-muted: #9b95b0;
+  --color-accent: #ff4d8d;
+  --color-accent-strong: #ff2d78;
+  --color-good: #3ddc97;
+  --color-bad: #ff5c5c;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+
+    /* Die Safe-Area-Werte einmal als Variablen: so lassen sie sich in Tailwind-Klassen
+       per var() nutzen, ohne env() überall zu wiederholen. */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: white;
+    -webkit-font-smoothing: antialiased;
+    /* Kein Gummiband-Effekt beim Überscrollen — auf iOS wirkt das sonst, als würde die
+       ganze Seite verrutschen, sobald man in der Galerie schnell wischt. */
+    overscroll-behavior-y: none;
+  }
+
+  /* Eingabefelder unter 16px lassen iOS beim Fokussieren in die Seite zoomen und
+     danach schief stehen. */
+  input,
+  textarea,
+  select,
+  button {
+    font-size: max(16px, 1rem);
+    font-family: inherit;
+  }
+
+  /* Der graue Aufblitz-Kasten beim Antippen sieht auf einer dunklen Oberfläche aus wie
+     ein Darstellungsfehler; die sichtbare Rückmeldung liefern die :active-Zustände. */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Abstand zur Systemleiste, damit die untere Navigation nicht unter dem
+     Home-Indicator klebt. */
+  .pb-safe {
+    padding-bottom: calc(var(--safe-bottom) + 0.5rem);
+  }
+
+  .pt-safe {
+    padding-top: calc(var(--safe-top) + 0.5rem);
+  }
+
+  /* Mindestgröße für alles, was man mit dem Daumen trifft. */
+  .tap {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
