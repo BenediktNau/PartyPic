@@ -8,6 +8,11 @@ using PartyPic.Infrastructure;
 using PartyPic.Infrastructure.Auth;
 using PartyPic.Infrastructure.Data;
 
+// Der Container-Healthcheck ruft dieselbe Anwendung mit --healthcheck auf, statt einen
+// HTTP-Client aus dem Image zu benutzen (das aspnet-Image bringt weder curl noch wget mit).
+if (args.Contains(HealthProbe.Argument, StringComparer.Ordinal))
+    return await HealthProbe.RunAsync();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Telemetrie, Health-Checks, Service Discovery und Resilience — gemeinsam fuer alles,
@@ -73,3 +78,5 @@ app.MapFallbackToFile("index.html");
 await app.StartupAsync();
 
 await app.RunAsync();
+
+return 0;

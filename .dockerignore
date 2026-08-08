@@ -9,3 +9,9 @@ tests
 src/PartyPic.AppHost
 docs
 *.md
+
+# Niemals Geheimnisse in den Build-Kontext: heute referenziert das Dockerfile die
+# Datei nicht, aber ein spaeteres COPY wuerde sie sonst in eine Image-Schicht brennen.
+.env
+.env.*
+!.env.example

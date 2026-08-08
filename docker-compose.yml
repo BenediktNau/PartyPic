@@ -71,12 +71,8 @@ services:
         condition: service_healthy
       storage:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/alive || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+    # Der Healthcheck steht im Dockerfile — so gilt er auch fuer alle, die das Image
+    # ohne Compose starten.
 
 volumes:
   db-data:

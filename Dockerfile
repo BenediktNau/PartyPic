@@ -46,4 +46,9 @@ USER $APP_UID
 EXPOSE 8080
 ENV ASPNETCORE_HTTP_PORTS=8080
 
+# Die Anwendung prueft sich selbst: das Image enthaelt weder curl noch wget, und ein
+# Paket dafuer nachzuinstallieren waere Pflegeaufwand fuer eine einzige HTTP-Anfrage.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD ["dotnet", "/app/PartyPic.Api.dll", "--healthcheck"]
+
 ENTRYPOINT ["dotnet", "PartyPic.Api.dll"]
