@@ -1,9 +1,24 @@
-*node_modules
-.pnpm-store/
-test.pem
-.terraform*
-rke2/
-terraform.tfstate*
-*input.txt
-terraform.tfvars
+# .NET
+bin/
+obj/
+*.user
+artifacts/
+.vs/
+
+# Aspire
+.aspire/
+
+# Node
+node_modules/
+dist/
+
+# Umgebung
+.env
+.env.local
+*.local
+
+# Editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
 .DS_Store

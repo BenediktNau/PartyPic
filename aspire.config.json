@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "src/PartyPic.AppHost/PartyPic.AppHost.csproj"
+  }
+}

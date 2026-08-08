@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>partypic-api-3f1c0b26-6d5c-4c8e-9a5c-8f4c8a3d0a11</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PartyPic.Core\PartyPic.Core.csproj" />
+    <ProjectReference Include="..\PartyPic.Infrastructure\PartyPic.Infrastructure.csproj" />
+    <ProjectReference Include="..\PartyPic.ServiceDefaults\PartyPic.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+    <!-- Transitiv-Bump: Microsoft.AspNetCore.OpenApi 10.0.10 zieht Microsoft.OpenApi 2.0.0
+         mit GHSA-v5pm-xwqc-g5wc (HIGH). Innerhalb der 2.x-Linie gepatcht, also ohne
+         Bruch anhebbar — mit dem naechsten AspNetCore.OpenApi-Release faellt der Pin weg. -->
+    <PackageReference Include="Microsoft.OpenApi" Version="2.11.0" />
+    <!-- Aspire-Integration: bringt Connection-String, Retry-Policy, Health-Check und
+         Tracing fuer den DbContext mit, statt das alles einzeln zu verdrahten. -->
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.4.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PartyPic.Tests" />
+  </ItemGroup>
+
+</Project>
