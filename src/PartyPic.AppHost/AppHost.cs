@@ -4,12 +4,36 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+const int FrontendPort = 5174;
+
+// Der Datenbank-Browser. Fester Port aus demselben Grund wie beim Frontend.
+const int PgWebPort = 8082;
+
 var postgres = builder.AddPostgres("postgres")
     // Ohne Volume waere nach jedem Neustart die Party weg — samt Accounts.
-    .WithDataVolume("partypic-db")
-    .WithPgWeb();
+    .WithDataVolume("partypic-db");
 
 var database = postgres.AddDatabase("partypicdb");
+
+// pgweb landet sonst auf seinem Verbindungsdialog: Aspire startet ihn mit "--sessions",
+// und in diesem Modus verlangt jede Anfrage erst eine Session, die man im Browser per
+// Hand aufmacht. Das Lesezeichen, das Aspire fuer die Datenbank hinterlegt, enthaelt aber
+// bereits Host, Benutzer, Passwort und Datenbankname — also direkt damit verbinden,
+// statt es sich anklicken zu lassen. Der Name des Lesezeichens ist der der
+// Datenbank-Ressource; ueber database.Resource.Name bleibt beides zusammen, falls sie
+// einmal umbenannt wird.
+postgres.WithPgWeb(pgweb => pgweb
+    .WithHostPort(PgWebPort)
+    .WithArgs(context =>
+    {
+        context.Args.Remove("--sessions");
+        context.Args.Add($"--bookmark={database.Resource.Name}");
+    })
+    // Ohne "--sessions" verbindet pgweb schon beim Start statt erst beim Anklicken.
+    // Beim allerersten Lauf legt Postgres in dem Moment noch sein Datenverzeichnis an und
+    // die Datenbank gibt es noch gar nicht — ohne dieses Warten liefe pgweb in seinen
+    // Verbindungs-Timeout und stuende danach tot da.
+    .WaitFor(database));
 
 // MinIO als S3-Ersatz. Aspire bringt dafuer keine eigene Integration mit, ein normaler
 // Container reicht aber vollkommen.
@@ -46,6 +70,11 @@ var frontend = builder.AddViteApp("frontend", "../frontend")
     // Installiert die npm-Pakete vor dem Start — ein frisch geklontes Repo laeuft damit
     // ohne vorheriges "npm install".
     .WithNpm()
+    // Fester Port fuer die Adresse, die im Browser steht. Aspire wuerfelt sie sonst bei
+    // jedem Start neu — jedes Lesezeichen und jeder schon geteilte Party-Link waeren nach
+    // einem Neustart tot. Nur der aeussere Port ist gesetzt; auf welchem Port Vite
+    // dahinter tatsaechlich lauscht, darf Aspire weiter selbst waehlen.
+    .WithEndpoint("http", endpoint => endpoint.Port = FrontendPort, createIfNotExists: false)
     .WithExternalHttpEndpoints();
 
 // Beim Publish wandert das gebaute SPA in das wwwroot des API-Containers — heraus kommt

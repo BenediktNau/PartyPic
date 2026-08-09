@@ -15,6 +15,9 @@ Die Solution-Datei ist `PartyPic.slnx` (XML-Format) — **nicht** `PartyPic.sln`
 
 ```bash
 # Alles zusammen starten (Postgres + MinIO + API + Frontend, mit Dashboard)
+# Frontend :5174, API :5290, Dashboard :17123, pgweb :8082, Bildspeicher :9000 — fest
+# vergeben, damit die Adressen einen Neustart ueberleben. Wo welcher Port steht, sagt die
+# README. pgweb haengt direkt an partypicdb, ohne Verbindungsdialog.
 aspire run                       # oder: dotnet run --project src/PartyPic.AppHost
 
 dotnet build PartyPic.slnx

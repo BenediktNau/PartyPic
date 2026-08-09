@@ -28,8 +28,8 @@ printf 'JWT_SECRET=%s\nDB_PASSWORD=%s\nSTORAGE_PASSWORD=%s\n' \
 docker compose up -d
 ```
 
-Danach läuft die App auf **http://localhost:8080**. Fertig — Datenbank, Bildspeicher und
-Anwendung starten zusammen.
+Danach läuft die App auf **http://localhost:8088**. Fertig — Datenbank, Bildspeicher und
+Anwendung starten zusammen. Ist der Port schon vergeben, `APP_PORT` in der `.env` ändern.
 
 Die drei Geheimnisse haben bewusst keine Vorgabewerte: ein mitgeliefertes Passwort wäre
 auf jeder Instanz dasselbe und stünde obendrein öffentlich im Repo. Fehlt eines, sagt
@@ -55,6 +55,37 @@ Aspire-Dashboard mit Logs, Traces und Metriken.
 
 Voraussetzungen: [.NET 10 SDK](https://dotnet.microsoft.com/download), Node 22+, eine
 Container-Laufzeit (Docker oder Podman).
+
+Die Adressen stehen fest, überleben also einen Neustart:
+
+| Was              | Adresse                  | Wo eingestellt                                       |
+| ---------------- | ------------------------ | ---------------------------------------------------- |
+| Frontend         | http://localhost:5174    | `FrontendPort` in `src/PartyPic.AppHost/AppHost.cs`   |
+| API              | http://localhost:5290    | `src/PartyPic.Api/Properties/launchSettings.json`     |
+| Aspire-Dashboard | https://localhost:17123  | `src/PartyPic.AppHost/Properties/launchSettings.json` |
+| Datenbank (pgweb)| http://localhost:8082    | `PgWebPort` in `src/PartyPic.AppHost/AppHost.cs`      |
+| Bildspeicher     | http://localhost:9000    | `AppHost.cs`                                          |
+
+Aspire vergäbe sonst bei jedem Start neue Ports. Kollidiert einer mit etwas anderem auf
+dem Rechner, an der genannten Stelle ändern — Frontend und API finden sich danach von
+selbst wieder, die Adresse reicht Aspire durch.
+
+pgweb öffnet direkt die Tabellen von `partypicdb`, ohne vorgeschalteten
+Verbindungsdialog.
+
+> **Fürs Handy im WLAN:** Die Kamera gibt der Browser nur in einem sicheren Kontext frei.
+> Auf dem Rechner selbst zählt `http://localhost` schon als sicher, dort ist nichts zu
+> tun. Vom Handy aus braucht es HTTPS — einmalig die lokale CA installieren (fragt nach
+> dem Passwort) und den Devserver danach mit Zertifikat starten:
+>
+> ```bash
+> ~/.vite-plugin-mkcert/mkcert -install
+> VITE_HTTPS=1 aspire run
+> ```
+>
+> Ohne `VITE_HTTPS` bleibt mkcert aus. Das ist Absicht: es will seine CA per `sudo` ins
+> System-Trust-Store schreiben, und unter `aspire run` hängt kein Terminal am Prozess,
+> an dem jemand das Passwort eingeben könnte — der Devserver stürbe beim Start.
 
 ## Was die App kann
 
