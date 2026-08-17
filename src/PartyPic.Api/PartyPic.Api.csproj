@@ -19,7 +19,7 @@
     <!-- Transitiv-Bump: Microsoft.AspNetCore.OpenApi 10.0.10 zieht Microsoft.OpenApi 2.0.0
          mit GHSA-v5pm-xwqc-g5wc (HIGH). Innerhalb der 2.x-Linie gepatcht, also ohne
          Bruch anhebbar — mit dem naechsten AspNetCore.OpenApi-Release faellt der Pin weg. -->
-    <PackageReference Include="Microsoft.OpenApi" Version="2.11.0" />
+    <PackageReference Include="Microsoft.OpenApi" Version="3.10.0" />
     <!-- Aspire-Integration: bringt Connection-String, Retry-Policy, Health-Check und
          Tracing fuer den DbContext mit, statt das alles einzeln zu verdrahten. -->
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.4.6" />
