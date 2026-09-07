@@ -20,7 +20,7 @@
          der NestJS-Version tragen bcrypt-Hashes mit Cost 10. Ein anderer Algorithmus haette
          jeden existierenden Host-Account ausgesperrt. -->
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.1" />
-    <PackageReference Include="AWSSDK.S3" Version="4.0.102" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.102.5" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.10" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.10" />
