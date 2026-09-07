@@ -22,7 +22,7 @@
     <PackageReference Include="Microsoft.OpenApi" Version="2.11.0" />
     <!-- Aspire-Integration: bringt Connection-String, Retry-Policy, Health-Check und
          Tracing fuer den DbContext mit, statt das alles einzeln zu verdrahten. -->
-    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.4.6" />
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.5.3" />
   </ItemGroup>
 
   <ItemGroup>
